@@ -26,7 +26,10 @@
       "Bash(python3:*)",
       "Bash(/c/Python313/python:*)",
       "Bash(git remote add:*)",
-      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Add PP codec project files and sample videos\n\nThis commit includes:\n- Documentation and specifications \\(PDFs, Markdown, LaTeX\\)\n- Codec implementations and agents\n- Sample video files for testing\n- Brochures and presentation materials\n- Development tools and configurations\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Add PP codec project files and sample videos\n\nThis commit includes:\n- Documentation and specifications \\(PDFs, Markdown, LaTeX\\)\n- Codec implementations and agents\n- Sample video files for testing\n- Brochures and presentation materials\n- Development tools and configurations\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git push:*)",
+      "Bash(git lfs:*)",
+      "Bash(git reset:*)"
     ]
   }
 }

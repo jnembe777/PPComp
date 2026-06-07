@@ -1,0 +1,23 @@
+numpy>=1.21.0
+scipy>=1.7.0
+numba>=0.54.0
+pytest>=7.0.0
+pytest-cov>=3.0.0
+dataclasses-json>=0.5.7
+bitarray>=2.6.0
+heapq-max>=0.21
+pillow>=9.0.0
+opencv-python>=4.5.0
+matplotlib>=3.5.0
+tqdm>=4.62.0
+
+# Benchmark dependencies
+scikit-image>=0.19.0   # SSIM computation
+jinja2>=3.0.0          # HTML templates
+pandas>=1.4.0          # Data analysis
+seaborn>=0.11.0        # Visualizations
+requests>=2.27.0       # Dataset download
+tabulate>=0.8.9        # CLI tables
+
+# Optional: PDF generation
+# weasyprint>=54.0     # HTML to PDF (requires system dependencies)

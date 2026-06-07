@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPV Player — Lecteur de processus ponctuels video</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0d0d0d;--bg2:#1a1a1a;--bg3:#252525;--bg4:#333;
+  --fg:#e8e8e8;--fg2:#999;--fg3:#666;
+  --accent:#0fa06a;--accent2:#0d7a52;
+  --warn:#d4880f;--err:#c44;
+  --mono:'JetBrains Mono','Fira Code','Consolas',monospace;
+  --sans:'Segoe UI','Helvetica Neue',sans-serif;
+  --radius:6px;
+}
+body{font-family:var(--sans);background:var(--bg);color:var(--fg);font-size:13px;overflow-x:hidden}
+.app{max-width:1200px;margin:0 auto;padding:16px}
+.header{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--bg3);margin-bottom:12px}
+.header h1{font-size:16px;font-weight:500;color:var(--accent)}
+.header h1 span{color:var(--fg3);font-weight:400}
+.drop-zone{border:2px dashed var(--bg4);border-radius:var(--radius);padding:48px;text-align:center;color:var(--fg3);cursor:pointer;transition:border-color .2s}
+.drop-zone:hover,.drop-zone.drag{border-color:var(--accent);color:var(--fg2)}
+.drop-zone input{display:none}
+.main{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,3fr);gap:12px}
+.viewport-wrap{background:var(--bg2);border-radius:var(--radius);overflow:hidden}
+.vp-topbar{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:11px;color:var(--fg2)}
+.vp-topbar .tag{padding:2px 8px;border-radius:4px;font-size:10px;font-weight:600}
+.vp-topbar .tag-g{background:#0fa06a22;color:var(--accent)}
+.vp-topbar .tag-w{background:#d4880f22;color:var(--warn)}
+.viewport{position:relative;background:#000;cursor:crosshair}
+.viewport canvas{width:100%;display:block;image-rendering:pixelated}
+.crosshair{position:absolute;pointer-events:none;display:none}
+.crosshair .ch{position:absolute;background:rgba(255,80,80,0.4)}
+.ch-h{height:1px;width:100%;left:0}.ch-v{width:1px;height:100%;top:0}
+.controls{display:flex;align-items:center;gap:6px;padding:8px 10px}
+.ctrl-btn{width:30px;height:30px;border-radius:50%;border:1px solid var(--bg4);background:var(--bg2);color:var(--fg);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:12px;transition:background .15s}
+.ctrl-btn:hover{background:var(--bg3)}
+.ctrl-btn.active{background:var(--accent2);border-color:var(--accent);color:#fff}
+.timeline{flex:1;height:24px;background:var(--bg3);border-radius:4px;position:relative;cursor:pointer;overflow:hidden}
+.tl-bar{height:100%;background:var(--accent);border-radius:4px;transition:width .05s}
+.tl-marks{position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none}
+.tl-mark{position:absolute;top:0;width:1px;height:100%;background:rgba(255,255,255,0.15)}
+.tl-label{position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:10px;color:var(--fg3);font-family:var(--mono)}
+.sidebar{display:flex;flex-direction:column;gap:8px;overflow-y:auto;max-height:80vh}
+.panel{background:var(--bg2);border:1px solid var(--bg3);border-radius:var(--radius);padding:10px}
+.panel-title{font-size:10px;font-weight:600;color:var(--fg3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+.stat-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+.stat-label{color:var(--fg3)}
+.stat-val{font-family:var(--mono);font-weight:500;color:var(--fg)}
+.stat-val.g{color:var(--accent)}.stat-val.w{color:var(--warn)}.stat-val.r{color:var(--err)}
+.trace-canvas{width:100%;height:50px;background:var(--bg3);border-radius:4px;margin:6px 0}
+.block-grid{display:grid;gap:2px;margin:6px 0}
+.block-cell{border-radius:2px;aspect-ratio:1;cursor:pointer;opacity:.85;transition:opacity .1s}
+.block-cell:hover{opacity:1}
+.block-cell.selected{outline:2px solid #fff;outline-offset:-1px}
+.legend{display:flex;gap:10px;font-size:10px;color:var(--fg3);flex-wrap:wrap}
+.legend span{display:flex;align-items:center;gap:3px}
+.legend i{width:8px;height:8px;border-radius:2px;display:inline-block}
+.status-bar{display:flex;justify-content:space-between;padding:8px 0;font-size:11px;color:var(--fg3);border-top:1px solid var(--bg3);margin-top:8px}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="header">
+    <h1>PPV Player <span>v1.0 — processus ponctuels video</span></h1>
+    <div style="font-size:11px;color:var(--fg3)" id="file-info"></div>
+  </div>
+
+  <div id="drop-section">
+    <div class="drop-zone" id="drop-zone">
+      <div style="font-size:14px;margin-bottom:6px">Deposer un fichier .ppv ici</div>
+      <div style="font-size:11px">ou cliquer pour parcourir</div>
+      <input type="file" id="file-input" accept=".ppv">
+      <div style="margin-top:16px;font-size:11px;color:var(--fg3)">
+        Produit par ppv_encode (Python ou C++)
+      </div>
+    </div>
+  </div>
+
+  <div class="main hidden" id="player-section">
+    <div>
+      <div class="viewport-wrap">
+        <div class="vp-topbar">
+          <span id="vp-file" style="font-weight:500"></span>
+          <span class="tag tag-g" id="vp-tag-pred"></span>
+          <span class="tag tag-w" id="vp-tag-temp"></span>
+          <span style="flex:1"></span>
+          <span id="vp-frame-label" style="font-family:var(--mono)"></span>
+        </div>
+        <div class="viewport" id="viewport">
+          <canvas id="vpCanvas"></canvas>
+          <div class="crosshair" id="crosshair">
+            <div class="ch ch-h" id="ch-h"></div>
+            <div class="ch ch-v" id="ch-v"></div>
+          </div>
+        </div>
+        <div class="controls">
+          <button class="ctrl-btn" id="btn-start" title="Debut">&#9198;</button>
+          <button class="ctrl-btn" id="btn-prev" title="Frame -1">&#9664;</button>
+          <button class="ctrl-btn" id="btn-play" title="Lecture">&#9654;</button>
+          <button class="ctrl-btn" id="btn-next" title="Frame +1">&#9654;</button>
+          <button class="ctrl-btn" id="btn-end" title="Fin">&#9197;</button>
+          <div class="timeline" id="timeline">
+            <div class="tl-bar" id="tl-bar"></div>
+            <div class="tl-marks" id="tl-marks"></div>
+            <span class="tl-label" id="tl-label"></span>
+          </div>
+          <button class="ctrl-btn" id="btn-grid" title="Grille blocs">&#9638;</button>
+          <button class="ctrl-btn" id="btn-heat" title="Heatmap sauts">H</button>
+        </div>
+      </div>
+      <div class="status-bar">
+        <span id="status-size"></span>
+        <span id="status-ratio"></span>
+        <span id="status-decode"></span>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="panel">
+        <div class="panel-title">Pixel inspector</div>
+        <div class="stat-row"><span class="stat-label">Position</span><span class="stat-val" id="px-pos">—</span></div>
+        <div class="stat-row"><span class="stat-label">Bloc</span><span class="stat-val" id="px-blk">—</span></div>
+        <div class="stat-row"><span class="stat-label">Valeur</span><span class="stat-val g" id="px-val">—</span></div>
+        <div class="stat-row"><span class="stat-label">Sauts (n)</span><span class="stat-val" id="px-jumps">—</span></div>
+        <div class="stat-row"><span class="stat-label">Couleurs</span><span class="stat-val" id="px-colors">—</span></div>
+        <div class="stat-row"><span class="stat-label">Instants de saut</span><span class="stat-val" id="px-times">—</span></div>
+        <div style="font-size:10px;color:var(--fg3);margin:8px 0 4px">Trace temporelle :</div>
+        <canvas class="trace-canvas" id="trace-canvas" height="50"></canvas>
+        <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--fg3)">
+          <span>t=0</span><span id="trace-info"></span><span id="trace-end">t=?</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Video</div>
+        <div class="stat-row"><span class="stat-label">Dimensions</span><span class="stat-val" id="v-dim">—</span></div>
+        <div class="stat-row"><span class="stat-label">Frames</span><span class="stat-val" id="v-frames">—</span></div>
+        <div class="stat-row"><span class="stat-label">GOP</span><span class="stat-val" id="v-gop">—</span></div>
+        <div class="stat-row"><span class="stat-label">Blocs</span><span class="stat-val" id="v-blocks">—</span></div>
+        <div class="stat-row"><span class="stat-label">Ratio</span><span class="stat-val g" id="v-ratio">—</span></div>
+        <div class="stat-row"><span class="stat-label">Taille</span><span class="stat-val" id="v-size">—</span></div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Carte des blocs</div>
+        <div class="block-grid" id="block-grid"></div>
+        <div class="legend" style="margin-top:6px">
+          <span><i style="background:#0fa06a"></i> PP</span>
+          <span><i style="background:#7f77dd"></i> Mono</span>
+          <span><i style="background:#d85a30"></i> Spatial</span>
+          <span><i style="background:#888"></i> Markov</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-title">Bloc selectionne</div>
+        <div class="stat-row"><span class="stat-label">Position</span><span class="stat-val" id="blk-pos">—</span></div>
+        <div class="stat-row"><span class="stat-label">Processus</span><span class="stat-val" id="blk-proc">—</span></div>
+        <div class="stat-row"><span class="stat-label">Couleurs (m)</span><span class="stat-val" id="blk-m">—</span></div>
+        <div class="stat-row"><span class="stat-label">Sauts moyen</span><span class="stat-val" id="blk-njmean">—</span></div>
+        <div class="stat-row"><span class="stat-label">Pixels mono</span><span class="stat-val" id="blk-mono">—</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+//  PPV DECODER — Pure JavaScript
+// ═══════════════════════════════════════════════════════
+
+class BitReader {
+  constructor(buf) {
+    this.buf = new Uint8Array(buf);
+    this.pos = 0; this.bitPos = 0;
+  }
+  readBit() {
+    if (this.pos >= this.buf.length) return 0;
+    const bit = (this.buf[this.pos] >> (7 - this.bitPos)) & 1;
+    this.bitPos++;
+    if (this.bitPos >= 8) { this.bitPos = 0; this.pos++; }
+    return bit;
+  }
+  readBits(n) {
+    let val = 0;
+    for (let i = 0; i < n; i++) val = (val << 1) | this.readBit();
+    return val;
+  }
+  readBool() { return this.readBit() === 1; }
+  readUint16() { return this.readBits(16); }
+  readEliasGamma() {
+    let zeros = 0;
+    while (this.readBit() === 0) zeros++;
+    if (zeros === 0) return 1;
+    return (1 << zeros) | this.readBits(zeros);
+  }
+}
+
+// Precompute C(n,k) via Pascal's triangle
+const CMAX = 129;
+const COMB = new Array(CMAX);
+for (let n = 0; n < CMAX; n++) {
+  COMB[n] = new Float64Array(CMAX);
+  COMB[n][0] = 1;
+  for (let k = 1; k <= n; k++)
+    COMB[n][k] = COMB[n-1][k-1] + COMB[n-1][k];
+}
+function C(n, k) { return (k < 0 || k > n || n >= CMAX) ? 0 : COMB[n][k]; }
+function bitsFor(r, n) {
+  const c = C(r, n);
+  if (c <= 1) return 0;
+  return Math.ceil(Math.log2(c));
+}
+
+function unrank(s, r, n) {
+  const bits = new Uint8Array(r);
+  let k = n;
+  for (let i = r - 1; i >= 0 && k > 0; i--) {
+    const c = C(i, k);
+    if (c <= s) { s -= c; bits[i] = 1; k--; }
+  }
+  return bits;
+}
+
+function readHuffmanTable(reader, colorBits) {
+  const nSym = reader.readEliasGamma();
+  const syms = [];
+  for (let i = 0; i < nSym; i++) {
+    syms.push({ symbol: reader.readBits(colorBits), length: reader.readBits(5) });
+  }
+  // Assign canonical codes
+  let code = 0, prevLen = 0;
+  const encMap = new Map(), decMap = new Map();
+  let maxLen = 0;
+  for (const s of syms) {
+    if (prevLen > 0) { code++; code <<= (s.length - prevLen); }
+    encMap.set(s.symbol, { code, length: s.length });
+    decMap.set(code + ',' + s.length, s.symbol);
+    prevLen = s.length;
+    maxLen = Math.max(maxLen, s.length);
+  }
+  return { encMap, decMap, maxLen, syms };
+}
+
+function huffDecode(reader, table) {
+  let code = 0;
+  for (let len = 1; len <= table.maxLen; len++) {
+    code = (code << 1) | reader.readBit();
+    const key = code + ',' + len;
+    if (table.decMap.has(key)) return table.decMap.get(key);
+  }
+  return 0;
+}
+
+function invertPredictionFrame(residual, nl, nc, mode) {
+  if (mode === 0) return residual.slice();
+  const frame = new Uint8Array(nl * nc);
+  for (let i = 0; i < nl; i++) {
+    for (let j = 0; j < nc; j++) {
+      const left = j > 0 ? frame[i*nc+j-1] : 0;
+      const top = i > 0 ? frame[(i-1)*nc+j] : 0;
+      const tl = (i > 0 && j > 0) ? frame[(i-1)*nc+j-1] : 0;
+      let pred = 0;
+      switch (mode) {
+        case 1: pred = left; break;
+        case 2: pred = top; break;
+        case 3: pred = (left + top) >> 1; break;
+        case 4: { // Paeth
+          const p = left + top - tl;
+          const pa = Math.abs(p-left), pb = Math.abs(p-top), pc = Math.abs(p-tl);
+          pred = (pa<=pb && pa<=pc) ? left : (pb<=pc) ? top : tl;
+          break;
+        }
+        case 5: { // MED
+          const mn = Math.min(left,top), mx = Math.max(left,top);
+          pred = (tl>=mx) ? mn : (tl<=mn) ? mx : left+top-tl;
+          break;
+        }
+      }
+      frame[i*nc+j] = (residual[i*nc+j] + pred) & 0xFF;
+    }
+  }
+  return frame;
+}
+
+function decodePPV(arrayBuffer) {
+  const t0 = performance.now();
+  const data = new Uint8Array(arrayBuffer);
+  const dv = new DataView(arrayBuffer);
+
+  // Header
+  const magic = String.fromCharCode(data[0],data[1],data[2],data[3]);
+  if (magic !== 'PPV1') throw new Error('Not a PPV file');
+  const nl = dv.getUint16(6);
+  const nc = dv.getUint16(8);
+  const r = dv.getUint16(10);
+  const colorBits = data[12];
+  const fps = data[13];
+  const gopSize = dv.getUint16(14);
+  const nbGops = dv.getUint16(16);
+
+  const frames = new Uint8Array(r * nl * nc);
+  const pixelMeta = new Array(nl * nc); // per-pixel metadata
+
+  // Init pixel metadata
+  for (let i = 0; i < nl * nc; i++)
+    pixelMeta[i] = { nJumps: 0, jumpTimes: [], colors: [], procType: -1 };
+
+  const reader = new BitReader(arrayBuffer.slice(24));
+  const blockInfos = [];
+
+  for (let g = 0; g < nbGops; g++) {
+    const gopIdx = reader.readUint16();
+    const gopR = reader.readUint16();
+    const nbPlanes = reader.readBits(2);
+    const blockSize = reader.readBits(8);
+    const tOffset = g * gopSize;
+
+    for (let pl = 0; pl < nbPlanes; pl++) {
+      const temporalMode = reader.readBits(2);
+      const predBs = 8;
+      const nbPi = Math.ceil(nl / predBs);
+      const nbPj = Math.ceil(nc / predBs);
+      const hasPred = reader.readBool();
+      const modeMap = [];
+      if (hasPred) {
+        for (let i = 0; i < nbPi * nbPj; i++)
+          modeMap.push(reader.readBits(3));
+      }
+
+      const hasAdaptive = reader.readBool();
+      const blocks = [];
+      if (hasAdaptive) {
+        const nsi = Math.ceil(nl/16), nsj = Math.ceil(nc/16);
+        const sm = [];
+        for (let i = 0; i < nsi*nsj; i++) sm.push(reader.readBool());
+        for (let si = 0; si < nsi; si++) for (let sj = 0; sj < nsj; sj++) {
+          const i0=si*16, i1=Math.min(i0+16,nl), j0=sj*16, j1=Math.min(j0+16,nc);
+          if (sm[si*nsj+sj]) {
+            const mi=i0+Math.min(8,i1-i0), mj=j0+Math.min(8,j1-j0);
+            if(mi>i0&&mj>j0) blocks.push({i0,i1:mi,j0,j1:mj});
+            if(mi>i0&&j1>mj) blocks.push({i0,i1:mi,j0:mj,j1});
+            if(i1>mi&&mj>j0) blocks.push({i0:mi,i1,j0,j1:mj});
+            if(i1>mi&&j1>mj) blocks.push({i0:mi,i1,j0:mj,j1});
+          } else blocks.push({i0,i1,j0,j1});
+        }
+      } else {
+        for (let bi=0;bi<nl;bi+=blockSize)
+          for (let bj=0;bj<nc;bj+=blockSize)
+            blocks.push({i0:bi,i1:Math.min(bi+blockSize,nl),
+                         j0:bj,j1:Math.min(bj+blockSize,nc)});
+      }
+
+      const hasCmHuff = reader.readBool();
+      let cmHt = null;
+      if (hasCmHuff) cmHt = readHuffmanTable(reader, 7);
+
+      const resBuf = new Uint8Array(gopR * nl * nc);
+
+      for (const blk of blocks) {
+        const bh=blk.i1-blk.i0, bw=blk.j1-blk.j0, npx=bh*bw;
+        const hasPal = reader.readBool();
+        let effBits = colorBits, palM = 0, palC = [];
+        if (hasPal) {
+          palM = reader.readEliasGamma();
+          for (let i = 0; i < palM; i++) palC.push(reader.readBits(colorBits));
+          effBits = palM <= 1 ? 1 : Math.ceil(Math.log2(palM));
+          if (palM === 1) effBits = 1;
+        }
+
+        const cm = hasCmHuff ? huffDecode(reader, cmHt) : reader.readBits(7);
+        const proc = (cm >> 5) & 3;
+
+        const blkInfo = { i0:blk.i0, j0:blk.j0, bh, bw, proc, m:0, nJumpsMean:0, monoCount:0 };
+
+        if (proc === 0) { // MONO
+          let c = reader.readBits(effBits);
+          if (hasPal && c < palM) c = palC[c];
+          for (let t=0;t<gopR;t++)
+            for (let i=blk.i0;i<blk.i1;i++)
+              for (let j=blk.j0;j<blk.j1;j++)
+                resBuf[t*nl*nc+i*nc+j] = c;
+          blkInfo.m = 1; blkInfo.monoCount = npx;
+          for (let i=blk.i0;i<blk.i1;i++)
+            for (let j=blk.j0;j<blk.j1;j++) {
+              const pi = i*nc+j;
+              pixelMeta[pi] = { nJumps:1, jumpTimes:[0], colors:[c], procType:0 };
+            }
+        } else { // PP
+          const hasHuff = reader.readBool();
+          let blkHt = null;
+          if (hasHuff) blkHt = readHuffmanTable(reader, effBits);
+
+          const distinctColors = new Set();
+          let totalJumps = 0, monoC = 0;
+
+          for (let pi=0;pi<bh;pi++) for (let pj=0;pj<bw;pj++) {
+            const nj = reader.readEliasGamma();
+            const sb = bitsFor(gopR, nj);
+            const si = sb > 0 ? reader.readBits(sb) : 0;
+            const bv = unrank(si, gopR, nj);
+            const cols = [];
+            for (let k=0;k<nj;k++) {
+              let c = hasHuff ? huffDecode(reader, blkHt) : reader.readBits(effBits);
+              if (hasPal && c < palM) c = palC[c];
+              cols.push(c);
+              distinctColors.add(c);
+            }
+            // Reconstruct sequence
+            let ci = 0, cur = 0;
+            const jumpTimes = [];
+            for (let t=0;t<gopR;t++) {
+              if (bv[t]) { cur = cols[ci++]; jumpTimes.push(t); }
+              resBuf[t*nl*nc+(blk.i0+pi)*nc+(blk.j0+pj)] = cur;
+            }
+            totalJumps += nj;
+            if (nj === 1) monoC++;
+
+            const absI = blk.i0+pi, absJ = blk.j0+pj;
+            pixelMeta[absI*nc+absJ] = { nJumps:nj, jumpTimes, colors:cols, procType:1 };
+          }
+          blkInfo.m = distinctColors.size;
+          blkInfo.nJumpsMean = totalJumps / npx;
+          blkInfo.monoCount = monoC;
+        }
+        blockInfos.push(blkInfo);
+      }
+
+      // Invert prediction
+      if (hasPred) {
+        for (let t=0;t<gopR;t++) {
+          let midx = 0;
+          for (let bi=0;bi<nl;bi+=predBs) for (let bj=0;bj<nc;bj+=predBs) {
+            const bh2 = Math.min(predBs,nl-bi), bw2 = Math.min(predBs,nc-bj);
+            const mode = modeMap[midx++];
+            const res = new Uint8Array(bh2*bw2);
+            for (let i=0;i<bh2;i++) for (let j=0;j<bw2;j++)
+              res[i*bw2+j] = resBuf[t*nl*nc+(bi+i)*nc+(bj+j)];
+            const rec = invertPredictionFrame(res, bh2, bw2, mode);
+            for (let i=0;i<bh2;i++) for (let j=0;j<bw2;j++)
+              resBuf[t*nl*nc+(bi+i)*nc+(bj+j)] = rec[i*bw2+j];
+          }
+        }
+      }
+
+      // Invert temporal
+      if (temporalMode === 1) {
+        for (let t=1;t<gopR;t++) {
+          const off = t*nl*nc, prev = (t-1)*nl*nc;
+          for (let p=0;p<nl*nc;p++) resBuf[off+p] ^= resBuf[prev+p];
+        }
+      } else if (temporalMode === 2) {
+        for (let t=1;t<gopR;t++) {
+          const off = t*nl*nc, prev = (t-1)*nl*nc;
+          for (let p=0;p<nl*nc;p++) resBuf[off+p] = (resBuf[off+p]+resBuf[prev+p])&0xFF;
+        }
+      }
+
+      // Copy to output
+      for (let t=0;t<gopR;t++) {
+        const ta = tOffset + t;
+        if (ta < r) frames.set(resBuf.subarray(t*nl*nc, (t+1)*nl*nc), ta*nl*nc);
+      }
+    }
+  }
+
+  return {
+    nl, nc, r, fps, gopSize, nbGops, colorBits,
+    frames, pixelMeta, blockInfos,
+    decodeTimeMs: performance.now() - t0,
+    fileSize: arrayBuffer.byteLength,
+  };
+}
+
+// ═══════════════════════════════════════════════════════
+//  PLAYER UI
+// ═══════════════════════════════════════════════════════
+
+let video = null;
+let curFrame = 0;
+let playing = false;
+let playInterval = null;
+let showGrid = false;
+let showHeat = false;
+let selectedPixel = null;
+let selectedBlock = -1;
+
+const $ = id => document.getElementById(id);
+
+// File loading
+$('drop-zone').onclick = () => $('file-input').click();
+$('file-input').onchange = e => { if (e.target.files[0]) loadFile(e.target.files[0]); };
+$('drop-zone').ondragover = e => { e.preventDefault(); $('drop-zone').classList.add('drag'); };
+$('drop-zone').ondragleave = () => $('drop-zone').classList.remove('drag');
+$('drop-zone').ondrop = e => {
+  e.preventDefault(); $('drop-zone').classList.remove('drag');
+  if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]);
+};
+
+function loadFile(file) {
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      video = decodePPV(e.target.result);
+      initPlayer();
+    } catch (err) {
+      alert('Erreur de decodage: ' + err.message);
+      console.error(err);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function initPlayer() {
+  $('drop-section').classList.add('hidden');
+  $('player-section').classList.remove('hidden');
+
+  const v = video;
+  const canvas = $('vpCanvas');
+  canvas.width = v.nc; canvas.height = v.nl;
+
+  // File info
+  $('file-info').textContent = `${v.nc}x${v.nl} | ${v.r} frames | GOP=${v.gopSize}`;
+  $('vp-file').textContent = `${v.nc}x${v.nl}`;
+  $('vp-tag-pred').textContent = 'Paeth';
+  $('vp-tag-temp').textContent = v.gopSize > 0 ? 'Delta' : 'Brut';
+
+  // Stats
+  $('v-dim').textContent = `${v.nc} x ${v.nl}`;
+  $('v-frames').textContent = v.r;
+  $('v-gop').textContent = v.gopSize;
+  const bs = v.blockInfos.length > 0 ? Math.sqrt(v.blockInfos[0].bh * v.blockInfos[0].bw) : 16;
+  const nbBlocks = Math.ceil(v.nl/16) * Math.ceil(v.nc/16);
+  $('v-blocks').textContent = `${v.blockInfos.length} (${Math.ceil(v.nc/16)}x${Math.ceil(v.nl/16)})`;
+  const rawSize = v.r * v.nl * v.nc;
+  const ratio = rawSize / v.fileSize;
+  $('v-ratio').textContent = ratio.toFixed(2) + 'x';
+  $('v-size').textContent = (v.fileSize / 1024).toFixed(1) + ' KB';
+
+  $('status-size').textContent = `${(v.fileSize/1024).toFixed(1)} KB / ${(rawSize/1024).toFixed(0)} KB brut`;
+  $('status-ratio').textContent = `Ratio: ${ratio.toFixed(2)}x`;
+  $('status-decode').textContent = `Decode: ${v.decodeTimeMs.toFixed(0)} ms`;
+
+  // GOP marks on timeline
+  const marks = $('tl-marks');
+  marks.innerHTML = '';
+  for (let g = 1; g < v.nbGops; g++) {
+    const mk = document.createElement('div');
+    mk.className = 'tl-mark';
+    mk.style.left = (g * v.gopSize / v.r * 100) + '%';
+    marks.appendChild(mk);
+  }
+
+  // Block grid
+  buildBlockGrid();
+
+  curFrame = 0;
+  renderFrame();
+}
+
+function buildBlockGrid() {
+  const grid = $('block-grid');
+  grid.innerHTML = '';
+  const nbj = Math.ceil(video.nc / 16);
+  grid.style.gridTemplateColumns = `repeat(${nbj}, 1fr)`;
+
+  const procColors = ['#7f77dd', '#0fa06a', '#d85a30', '#888'];
+  video.blockInfos.forEach((bi, idx) => {
+    const cell = document.createElement('div');
+    cell.className = 'block-cell';
+    cell.style.background = procColors[bi.proc];
+    cell.title = `B(${Math.floor(bi.i0/16)},${Math.floor(bi.j0/16)}) proc=${bi.proc} m=${bi.m}`;
+    cell.onclick = () => selectBlock(idx);
+    grid.appendChild(cell);
+  });
+}
+
+function selectBlock(idx) {
+  selectedBlock = idx;
+  document.querySelectorAll('.block-cell').forEach((c,i) => {
+    c.classList.toggle('selected', i === idx);
+  });
+  const bi = video.blockInfos[idx];
+  $('blk-pos').textContent = `(${bi.i0},${bi.j0}) ${bi.bh}x${bi.bw}`;
+  $('blk-proc').textContent = ['Mono','PP','Spatial','Markov'][bi.proc];
+  $('blk-proc').className = 'stat-val ' + (bi.proc===0?'w':bi.proc===1?'g':'');
+  $('blk-m').textContent = bi.m;
+  $('blk-njmean').textContent = bi.nJumpsMean.toFixed(1);
+  $('blk-mono').textContent = `${bi.monoCount} / ${bi.bh*bi.bw}`;
+}
+
+function renderFrame() {
+  const v = video;
+  const canvas = $('vpCanvas');
+  const ctx = canvas.getContext('2d');
+  const img = ctx.createImageData(v.nc, v.nl);
+  const off = curFrame * v.nl * v.nc;
+
+  if (showHeat) {
+    // Heatmap: n_jumps
+    let maxJ = 1;
+    for (let p = 0; p < v.nl*v.nc; p++)
+      maxJ = Math.max(maxJ, v.pixelMeta[p].nJumps);
+    for (let p = 0; p < v.nl*v.nc; p++) {
+      const nj = v.pixelMeta[p].nJumps;
+      const t = nj / maxJ;
+      const r2 = Math.round(t * 255);
+      const g2 = Math.round((1-t) * 200);
+      img.data[p*4] = r2; img.data[p*4+1] = g2; img.data[p*4+2] = 50; img.data[p*4+3] = 255;
+    }
+  } else {
+    for (let p = 0; p < v.nl*v.nc; p++) {
+      const val = v.frames[off + p];
+      img.data[p*4] = val; img.data[p*4+1] = val; img.data[p*4+2] = val; img.data[p*4+3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+
+  // Grid overlay
+  if (showGrid) {
+    ctx.strokeStyle = 'rgba(15,160,106,0.35)';
+    ctx.lineWidth = 0.5;
+    for (const bi of v.blockInfos) {
+      ctx.strokeRect(bi.j0+0.5, bi.i0+0.5, bi.bw-1, bi.bh-1);
+    }
+  }
+
+  // Selected block highlight
+  if (selectedBlock >= 0 && selectedBlock < v.blockInfos.length) {
+    const bi = v.blockInfos[selectedBlock];
+    ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bi.j0, bi.i0, bi.bw, bi.bh);
+  }
+
+  // UI
+  $('tl-bar').style.width = ((curFrame+1)/v.r*100)+'%';
+  $('tl-label').textContent = `${curFrame} / ${v.r-1}`;
+  $('vp-frame-label').textContent = `Frame ${curFrame}/${v.r-1}`;
+  $('trace-end').textContent = `t=${v.r-1}`;
+
+  if (selectedPixel) updatePixelInspector(selectedPixel.i, selectedPixel.j);
+}
+
+function updatePixelInspector(pi, pj) {
+  if (!video || pi < 0 || pi >= video.nl || pj < 0 || pj >= video.nc) return;
+  selectedPixel = { i: pi, j: pj };
+  const v = video;
+  const meta = v.pixelMeta[pi * v.nc + pj];
+  const val = v.frames[curFrame * v.nl * v.nc + pi * v.nc + pj];
+
+  $('px-pos').textContent = `(${pj}, ${pi})`;
+  $('px-blk').textContent = `B(${Math.floor(pi/16)},${Math.floor(pj/16)})`;
+  $('px-val').textContent = val;
+  $('px-jumps').textContent = meta.nJumps;
+  $('px-colors').textContent = meta.colors.slice(0,8).join(', ') + (meta.colors.length>8?'...':'');
+  $('px-times').textContent = meta.jumpTimes.slice(0,8).join(', ') + (meta.jumpTimes.length>8?'...':'');
+  $('trace-info').textContent = `n=${meta.nJumps}`;
+
+  // Draw trace
+  const tc = $('trace-canvas');
+  const w = tc.offsetWidth || 200;
+  tc.width = w; tc.height = 50;
+  const tctx = tc.getContext('2d');
+  tctx.fillStyle = '#252525'; tctx.fillRect(0,0,w,50);
+
+  const barW = Math.max(1, w / v.r - 0.5);
+  for (let t = 0; t < v.r; t++) {
+    const fval = v.frames[t * v.nl * v.nc + pi * v.nc + pj];
+    const h = (fval / 255) * 46;
+    const isJump = meta.jumpTimes.includes(t);
+    tctx.fillStyle = isJump ? '#d85a30' : '#0fa06a';
+    tctx.fillRect(t / v.r * w, 48 - h, barW, h);
+  }
+  // Current frame marker
+  tctx.fillStyle = 'rgba(255,255,255,0.7)';
+  tctx.fillRect(curFrame / v.r * w, 0, 1.5, 50);
+}
+
+// Controls
+$('btn-prev').onclick = () => { curFrame = Math.max(0, curFrame-1); renderFrame(); };
+$('btn-next').onclick = () => { curFrame = Math.min(video.r-1, curFrame+1); renderFrame(); };
+$('btn-start').onclick = () => { curFrame = 0; renderFrame(); };
+$('btn-end').onclick = () => { curFrame = video.r-1; renderFrame(); };
+$('btn-play').onclick = () => {
+  playing = !playing;
+  $('btn-play').innerHTML = playing ? '&#9646;&#9646;' : '&#9654;';
+  if (playing) {
+    playInterval = setInterval(() => {
+      curFrame++; if (curFrame >= video.r) { curFrame = 0; }
+      renderFrame();
+    }, 1000 / (video.fps || 10));
+  } else { clearInterval(playInterval); }
+};
+$('btn-grid').onclick = function() {
+  showGrid = !showGrid; this.classList.toggle('active', showGrid); renderFrame();
+};
+$('btn-heat').onclick = function() {
+  showHeat = !showHeat; this.classList.toggle('active', showHeat); renderFrame();
+};
+$('timeline').onclick = function(e) {
+  const r = this.getBoundingClientRect();
+  curFrame = Math.round((e.clientX - r.left) / r.width * (video.r - 1));
+  curFrame = Math.max(0, Math.min(video.r-1, curFrame));
+  renderFrame();
+};
+
+// Viewport interaction
+const vp = $('viewport');
+vp.onmousemove = function(e) {
+  const r = this.getBoundingClientRect();
+  const x = e.clientX - r.left, y = e.clientY - r.top;
+  $('crosshair').style.display = 'block';
+  $('ch-h').style.top = y + 'px';
+  $('ch-v').style.left = x + 'px';
+  if (video) {
+    const pj = Math.floor(x / r.width * video.nc);
+    const pi = Math.floor(y / r.height * video.nl);
+    updatePixelInspector(pi, pj);
+  }
+};
+vp.onmouseleave = () => { $('crosshair').style.display = 'none'; };
+vp.onclick = function(e) {
+  const r = this.getBoundingClientRect();
+  const pj = Math.floor((e.clientX - r.left) / r.width * video.nc);
+  const pi = Math.floor((e.clientY - r.top) / r.height * video.nl);
+  selectedPixel = { i: pi, j: pj };
+  // Select the block too
+  const bi = Math.floor(pi/16) * Math.ceil(video.nc/16) + Math.floor(pj/16);
+  if (bi < video.blockInfos.length) selectBlock(bi);
+  renderFrame();
+};
+
+// Keyboard
+document.onkeydown = e => {
+  if (!video) return;
+  if (e.key === 'ArrowLeft') { curFrame = Math.max(0, curFrame-1); renderFrame(); }
+  if (e.key === 'ArrowRight') { curFrame = Math.min(video.r-1, curFrame+1); renderFrame(); }
+  if (e.key === ' ') { e.preventDefault(); $('btn-play').click(); }
+  if (e.key === 'g') $('btn-grid').click();
+  if (e.key === 'h') $('btn-heat').click();
+};
+</script>
+</body>
+</html>

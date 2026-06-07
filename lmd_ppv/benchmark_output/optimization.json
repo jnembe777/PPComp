@@ -1,0 +1,158 @@
+{
+  "best_config": {
+    "threshold_H_s": 0.5,
+    "threshold_rho_high": 0.6,
+    "threshold_rho_low": 0.05,
+    "threshold_chi2": 0.01,
+    "density_R1_max": 0.05,
+    "density_R4b_R2": 0.7,
+    "density_R4a_min": 0.4
+  },
+  "best_result": {
+    "config": {
+      "threshold_H_s": 0.5,
+      "threshold_rho_high": 0.6,
+      "threshold_rho_low": 0.05,
+      "threshold_chi2": 0.01,
+      "density_R1_max": 0.05,
+      "density_R4b_R2": 0.7,
+      "density_R4a_min": 0.4
+    },
+    "total_cost": 217539.73769071468,
+    "encoding_cost": 199614.06090747842,
+    "penalty_cost": 35851.35356647251,
+    "n_blocks": 500,
+    "exact_matches": 130,
+    "exact_accuracy": 0.26,
+    "accuracy_A": 1.0,
+    "accuracy_B": 1.0,
+    "accuracy_C": 0.26,
+    "mean_penalty": 71.70270713294501,
+    "max_penalty": 131.13078780746076
+  },
+  "n_evaluated": 32000,
+  "total_time_sec": 961.4908721446991,
+  "evaluations_per_sec": 33.281647207550584,
+  "top_k": [
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7,
+        "density_R4a_min": 0.4
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7,
+        "density_R4a_min": 0.48333333333333334
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7,
+        "density_R4a_min": 0.5666666666666667
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7,
+        "density_R4a_min": 0.65
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7666666666666666,
+        "density_R4a_min": 0.4
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7666666666666666,
+        "density_R4a_min": 0.48333333333333334
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7666666666666666,
+        "density_R4a_min": 0.5666666666666667
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7666666666666666,
+        "density_R4a_min": 0.65
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.8333333333333334,
+        "density_R4a_min": 0.4
+      },
+      "cost": 217539.73769071468
+    },
+    {
+      "config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.8333333333333334,
+        "density_R4a_min": 0.48333333333333334
+      },
+      "cost": 217539.73769071468
+    }
+  ]
+}

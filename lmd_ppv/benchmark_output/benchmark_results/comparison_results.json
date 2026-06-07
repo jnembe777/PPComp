@@ -1,0 +1,1061 @@
+{
+  "reference_codec": "h265",
+  "results": {
+    "akiyo_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "akiyo_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 72431,
+          "compression_ratio": 629.8552277339813,
+          "bitrate_kbps": 57.88691308691308,
+          "bits_per_pixel": 0.019052767255892257,
+          "encode_time_sec": 1.3957188999993377,
+          "decode_time_sec": 0.0,
+          "encode_fps": 214.9429946102631,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "akiyo_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 78000,
+          "compression_ratio": 584.8851794871795,
+          "bitrate_kbps": 62.33766233766234,
+          "bits_per_pixel": 0.020517676767676768,
+          "encode_time_sec": 2.4341495000007853,
+          "decode_time_sec": 0.0,
+          "encode_fps": 123.24633306208317,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "foreman_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "foreman_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 288366,
+          "compression_ratio": 158.20535014530145,
+          "bitrate_kbps": 230.46233766233766,
+          "bits_per_pixel": 0.075853851010101,
+          "encode_time_sec": 1.9130269000015687,
+          "decode_time_sec": 0.0,
+          "encode_fps": 156.81954080193748,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "foreman_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 298146,
+          "compression_ratio": 153.01578421310364,
+          "bitrate_kbps": 238.2785214785215,
+          "bits_per_pixel": 0.07842645202020201,
+          "encode_time_sec": 5.351620499997807,
+          "decode_time_sec": 0.0,
+          "encode_fps": 56.05778660877073,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "bus_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "bus_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 22810538,
+          "output_size_bytes": 248119,
+          "compression_ratio": 91.93386238055126,
+          "bitrate_kbps": 396.9904,
+          "bits_per_pixel": 0.1305339856902357,
+          "encode_time_sec": 1.784374700000626,
+          "decode_time_sec": 0.0,
+          "encode_fps": 84.06306141862882,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 150,
+          "duration_sec": 5.0
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "bus_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 22810538,
+          "output_size_bytes": 313337,
+          "compression_ratio": 72.7987374615829,
+          "bitrate_kbps": 501.3392,
+          "bits_per_pixel": 0.1648448021885522,
+          "encode_time_sec": 3.8914550000008603,
+          "decode_time_sec": 0.0,
+          "encode_fps": 38.545993722133964,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 150,
+          "duration_sec": 5.0
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "bowing_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "bowing_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 100116,
+          "compression_ratio": 455.6818490550961,
+          "bitrate_kbps": 80.01278721278722,
+          "bits_per_pixel": 0.026335227272727274,
+          "encode_time_sec": 0.9913921000006667,
+          "decode_time_sec": 0.0,
+          "encode_fps": 302.6047917870218,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "bowing_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 85176,
+          "compression_ratio": 535.6091387245233,
+          "bitrate_kbps": 68.07272727272728,
+          "bits_per_pixel": 0.02240530303030303,
+          "encode_time_sec": 2.603057699998317,
+          "decode_time_sec": 0.0,
+          "encode_fps": 115.2490780362625,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "coastguard_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "coastguard_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 438565,
+          "compression_ratio": 104.02344920365282,
+          "bitrate_kbps": 350.50149850149853,
+          "bits_per_pixel": 0.11536326809764309,
+          "encode_time_sec": 1.7360649000002013,
+          "decode_time_sec": 0.0,
+          "encode_fps": 172.80459964369143,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "coastguard_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 521124,
+          "compression_ratio": 87.54354817663358,
+          "bitrate_kbps": 416.4827172827173,
+          "bits_per_pixel": 0.13708017676767678,
+          "encode_time_sec": 11.532300099999702,
+          "decode_time_sec": 0.0,
+          "encode_fps": 26.01389119244371,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "container_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "container_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 151494,
+          "compression_ratio": 301.14092967378247,
+          "bitrate_kbps": 121.07412587412588,
+          "bits_per_pixel": 0.03985006313131313,
+          "encode_time_sec": 2.103221000001213,
+          "decode_time_sec": 0.0,
+          "encode_fps": 142.63836277777133,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "container_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 170066,
+          "compression_ratio": 268.2549363188409,
+          "bitrate_kbps": 135.91688311688313,
+          "bits_per_pixel": 0.044735374579124576,
+          "encode_time_sec": 4.205532500000118,
+          "decode_time_sec": 0.0,
+          "encode_fps": 71.33460507081841,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "crew_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "crew_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621038,
+          "output_size_bytes": 497708,
+          "compression_ratio": 91.6622557804978,
+          "bitrate_kbps": 398.1664,
+          "bits_per_pixel": 0.13092066498316499,
+          "encode_time_sec": 2.826588100000663,
+          "decode_time_sec": 0.0,
+          "encode_fps": 106.13502547468082,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.0
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "crew_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621038,
+          "output_size_bytes": 481972,
+          "compression_ratio": 94.65495505963003,
+          "bitrate_kbps": 385.57759999999996,
+          "bits_per_pixel": 0.12678135521885522,
+          "encode_time_sec": 9.575677600001654,
+          "decode_time_sec": 0.0,
+          "encode_fps": 31.3293755838175,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.0
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "flower_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "flower_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 38017544,
+          "output_size_bytes": 541748,
+          "compression_ratio": 70.17569792597295,
+          "bitrate_kbps": 519.5585007169432,
+          "bits_per_pixel": 0.17100631313131312,
+          "encode_time_sec": 1.6972950999988825,
+          "decode_time_sec": 0.0,
+          "encode_fps": 147.29318431436266,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 250,
+          "duration_sec": 8.341667
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "flower_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 38017544,
+          "output_size_bytes": 668360,
+          "compression_ratio": 56.88183613621402,
+          "bitrate_kbps": 640.9845897708457,
+          "bits_per_pixel": 0.21097222222222223,
+          "encode_time_sec": 7.640343999999459,
+          "decode_time_sec": 0.0,
+          "encode_fps": 32.72103978564547,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 250,
+          "duration_sec": 8.341667
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "highway_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "highway_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 304140044,
+          "output_size_bytes": 1004552,
+          "compression_ratio": 302.76187195884336,
+          "bitrate_kbps": 120.42581478734174,
+          "bits_per_pixel": 0.03965650754670264,
+          "encode_time_sec": 10.454683799998747,
+          "decode_time_sec": 0.0,
+          "encode_fps": 191.2061654126966,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 1999,
+          "duration_sec": 66.733333
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "highway_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 304140044,
+          "output_size_bytes": 1010667,
+          "compression_ratio": 300.9300234399659,
+          "bitrate_kbps": 121.15888172407034,
+          "bits_per_pixel": 0.03989790823442024,
+          "encode_time_sec": 28.968262999998842,
+          "decode_time_sec": 0.0,
+          "encode_fps": 69.00655382754844,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 1999,
+          "duration_sec": 66.733333
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "mobile_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "mobile_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621054,
+          "output_size_bytes": 539459,
+          "compression_ratio": 84.56815809913265,
+          "bitrate_kbps": 431.1360639360639,
+          "bits_per_pixel": 0.14190314604377105,
+          "encode_time_sec": 2.0251761999970768,
+          "decode_time_sec": 0.0,
+          "encode_fps": 148.1352585520376,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "mobile_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621054,
+          "output_size_bytes": 646416,
+          "compression_ratio": 70.57537870349744,
+          "bitrate_kbps": 516.6161838161838,
+          "bits_per_pixel": 0.1700378787878788,
+          "encode_time_sec": 5.430058999998437,
+          "decode_time_sec": 0.0,
+          "encode_fps": 55.24801848379297,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "paris_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "paris_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 161954594,
+          "output_size_bytes": 792287,
+          "compression_ratio": 204.41404945430128,
+          "bitrate_kbps": 178.36518411166298,
+          "bits_per_pixel": 0.05870671207378954,
+          "encode_time_sec": 3.5703835999993316,
+          "decode_time_sec": 0.0,
+          "encode_fps": 298.287276470853,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 1065,
+          "duration_sec": 35.5355
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "paris_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 161954594,
+          "output_size_bytes": 946219,
+          "compression_ratio": 171.15973574827814,
+          "bitrate_kbps": 213.01943127295243,
+          "bits_per_pixel": 0.0701127323706549,
+          "encode_time_sec": 12.032470100002683,
+          "decode_time_sec": 0.0,
+          "encode_fps": 88.51050458872633,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 1065,
+          "duration_sec": 35.5355
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "silent_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "silent_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 191262,
+          "compression_ratio": 238.52644017107423,
+          "bitrate_kbps": 152.85674325674327,
+          "bits_per_pixel": 0.05031092171717172,
+          "encode_time_sec": 1.1992744999988645,
+          "decode_time_sec": 0.0,
+          "encode_fps": 250.15123726910232,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "silent_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 45621044,
+          "output_size_bytes": 200576,
+          "compression_ratio": 227.4501635290364,
+          "bitrate_kbps": 160.3004995004995,
+          "bits_per_pixel": 0.05276094276094276,
+          "encode_time_sec": 3.6800976999984414,
+          "decode_time_sec": 0.0,
+          "encode_fps": 81.51957487436462,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 300,
+          "duration_sec": 10.01
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "stefan_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "stefan_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 13686344,
+          "output_size_bytes": 140732,
+          "compression_ratio": 97.25111559560015,
+          "bitrate_kbps": 374.9104229104229,
+          "bits_per_pixel": 0.12339716610549945,
+          "encode_time_sec": 0.6098702999988745,
+          "decode_time_sec": 0.0,
+          "encode_fps": 147.5723608776589,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 90,
+          "duration_sec": 3.003
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "stefan_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 13686344,
+          "output_size_bytes": 173927,
+          "compression_ratio": 78.69016311441007,
+          "bitrate_kbps": 463.34199134199133,
+          "bits_per_pixel": 0.15250333193041526,
+          "encode_time_sec": 1.9794351999989885,
+          "decode_time_sec": 0.0,
+          "encode_fps": 45.46751517809019,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 90,
+          "duration_sec": 3.003
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "tempete_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "tempete_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 39538244,
+          "output_size_bytes": 393356,
+          "compression_ratio": 100.51516692258413,
+          "bitrate_kbps": 362.7351249802169,
+          "bits_per_pixel": 0.1198507761007761,
+          "encode_time_sec": 1.6946725000016158,
+          "decode_time_sec": 0.0,
+          "encode_fps": 152.83188934720604,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 259,
+          "duration_sec": 8.675333
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "tempete_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 39538244,
+          "output_size_bytes": 464865,
+          "compression_ratio": 85.05317457756553,
+          "bitrate_kbps": 428.6774928409088,
+          "bits_per_pixel": 0.14163869632619633,
+          "encode_time_sec": 4.810980000002019,
+          "decode_time_sec": 0.0,
+          "encode_fps": 53.83518534682982,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 259,
+          "duration_sec": 8.675333
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "waterfall_cif.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "waterfall_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 39538244,
+          "output_size_bytes": 187312,
+          "compression_ratio": 211.0822798325788,
+          "bitrate_kbps": 172.7306605982733,
+          "bits_per_pixel": 0.05707168207168207,
+          "encode_time_sec": 1.2698559000018577,
+          "decode_time_sec": 0.0,
+          "encode_fps": 203.96015012382202,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 259,
+          "duration_sec": 8.675333
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "waterfall_cif.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 39538244,
+          "output_size_bytes": 204999,
+          "compression_ratio": 192.87042375816466,
+          "bitrate_kbps": 189.04081261203459,
+          "bits_per_pixel": 0.062460695273195276,
+          "encode_time_sec": 3.2636281000013696,
+          "decode_time_sec": 0.0,
+          "encode_fps": 79.35953241727859,
+          "decode_fps": 0.0,
+          "width": 352,
+          "height": 288,
+          "n_frames": 259,
+          "duration_sec": 8.675333
+        },
+        "success": true,
+        "error": null
+      }
+    },
+    "blue_sky_1080p25.y4m": {
+      "H.264": {
+        "codec_name": "H.264",
+        "video_name": "blue_sky_1080p25.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 674958138,
+          "output_size_bytes": 3116091,
+          "compression_ratio": 216.60411650365793,
+          "bitrate_kbps": 2871.973271889401,
+          "bits_per_pixel": 0.055400718979348014,
+          "encode_time_sec": 19.574528699999064,
+          "decode_time_sec": 0.0,
+          "encode_fps": 11.085835236483133,
+          "decode_fps": 0.0,
+          "width": 1920,
+          "height": 1080,
+          "n_frames": 217,
+          "duration_sec": 8.68
+        },
+        "success": true,
+        "error": null
+      },
+      "H.265": {
+        "codec_name": "H.265",
+        "video_name": "blue_sky_1080p25.y4m",
+        "quality_param": "28",
+        "quality": {
+          "psnr": 0.0,
+          "psnr_min": 0.0,
+          "psnr_max": 0.0,
+          "psnr_variance": 0.0,
+          "ssim": 0.0,
+          "ssim_min": 0.0,
+          "ssim_max": 0.0,
+          "ssim_variance": 0.0
+        },
+        "performance": {
+          "input_size_bytes": 674958138,
+          "output_size_bytes": 3097998,
+          "compression_ratio": 217.8691329045403,
+          "bitrate_kbps": 2855.2976958525346,
+          "bits_per_pixel": 0.055079045058883766,
+          "encode_time_sec": 51.152900600001885,
+          "decode_time_sec": 0.0,
+          "encode_fps": 4.242183677849776,
+          "decode_fps": 0.0,
+          "width": 1920,
+          "height": 1080,
+          "n_frames": 217,
+          "duration_sec": 8.68
+        },
+        "success": true,
+        "error": null
+      }
+    }
+  }
+}

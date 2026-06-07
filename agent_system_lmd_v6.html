@@ -1,0 +1,1108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPV — LMD · Cartouche ABCDEFGH · Dim. B = 3 modes couleur</title>
+<style>
+:root{
+  --bg:#0d1117;--s1:#161b22;--s2:#21262d;--s3:#2d333b;--bd:#30363d;
+  --bl:#58a6ff;--gr:#3fb950;--pu:#d2a8ff;--or:#ffa657;--rd:#f85149;
+  --tl:#39c5cf;--yw:#e3b341;--pk:#f778ba;--tx:#e6edf3;--mu:#8b949e;
+  --r:8px;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;
+  height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* ── TOP BAR ─────────────────────────────────────────────────────── */
+.top{display:flex;align-items:center;gap:10px;padding:8px 16px;
+  background:linear-gradient(90deg,#0d1117,#161b22);
+  border-bottom:1px solid var(--bd);flex-shrink:0;}
+.top h1{font-size:.85rem;font-weight:700;color:var(--bl);}
+.top p{font-size:.58rem;color:var(--mu);}
+.chips{margin-left:auto;display:flex;gap:5px;}
+.chip{padding:2px 8px;border-radius:8px;font-size:.59rem;font-weight:700;border:1px solid;}
+.chip-b{background:#1f3a5f;color:var(--bl);border-color:var(--bl);}
+.chip-g{background:#1a3a2a;color:var(--gr);border-color:var(--gr);}
+.chip-o{background:#3a2e0a;color:var(--yw);border-color:var(--yw);}
+.chip-r{background:#3d1f1f;color:var(--or);border-color:var(--or);animation:blink 1.3s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.45}}
+.gbar{height:3px;background:var(--s2);flex-shrink:0;}
+.gbar-f{height:100%;background:linear-gradient(90deg,var(--bl),var(--gr),var(--pk));
+  transition:width .6s ease;width:0;}
+
+/* ── LAYOUT ──────────────────────────────────────────────────────── */
+.body{display:flex;flex:1;overflow:hidden;}
+
+/* ── RAIL ────────────────────────────────────────────────────────── */
+.rail{width:220px;background:var(--s1);border-right:1px solid var(--bd);
+  display:flex;flex-direction:column;overflow-y:auto;flex-shrink:0;}
+.rsec{padding:8px 11px 3px;font-size:.56rem;font-weight:700;
+  text-transform:uppercase;letter-spacing:1px;color:var(--mu);}
+.ri{display:flex;align-items:center;gap:7px;padding:6px 11px;cursor:pointer;
+  border:none;background:none;color:var(--tx);width:100%;text-align:left;
+  transition:background .1s;border-left:3px solid transparent;}
+.ri:hover{background:var(--s2);}
+.ri.active{background:var(--s2);border-left-color:var(--bl);}
+.rdot{width:7px;height:7px;border-radius:50%;background:var(--mu);flex-shrink:0;}
+.rn{font-size:.7rem;font-weight:600;}
+.rr{font-size:.57rem;color:var(--mu);}
+.rsep{border:none;border-top:1px solid var(--bd);margin:4px 0;}
+.run-all{margin:7px 9px;background:linear-gradient(135deg,#1f6feb,#388bfd);
+  color:#fff;border:none;padding:7px 10px;border-radius:var(--r);cursor:pointer;
+  font-size:.72rem;font-weight:600;width:calc(100% - 18px);
+  display:flex;align-items:center;justify-content:center;gap:5px;}
+.run-all:hover{opacity:.85;}
+.run-all:disabled{opacity:.35;cursor:not-allowed;}
+.pb-wrap{padding:3px 11px 7px;}
+.pb-lbl{font-size:.58rem;color:var(--mu);display:flex;justify-content:space-between;margin-bottom:2px;}
+.pb-bg{background:var(--s2);border-radius:3px;height:3px;overflow:hidden;}
+.pb-f{height:100%;background:linear-gradient(90deg,var(--bl),var(--gr));
+  transition:width .5s;border-radius:3px;}
+
+/* selectors */
+.sel-box{padding:0 10px 8px;}
+.sel-lbl{font-size:.58rem;color:var(--mu);margin:5px 0 2px;}
+select.sel{width:100%;background:var(--s2);color:var(--tx);border:1px solid var(--bd);
+  padding:3px 6px;border-radius:4px;font-size:.65rem;}
+select.sel.hi-b{border-color:var(--or);background:#2d1a05;}
+
+/* ── CONTENT ─────────────────────────────────────────────────────── */
+.cnt{flex:1;display:flex;flex-direction:column;overflow:hidden;}
+.tabs{display:flex;background:var(--s1);border-bottom:1px solid var(--bd);
+  padding:0 12px;flex-shrink:0;overflow-x:auto;}
+.tab{padding:7px 12px;cursor:pointer;font-size:.67rem;font-weight:500;
+  color:var(--mu);border-bottom:2px solid transparent;white-space:nowrap;}
+.tab:hover{color:var(--tx);}
+.tab.active{color:var(--bl);border-bottom-color:var(--bl);}
+.pnl{flex:1;overflow-y:auto;padding:12px 16px;display:none;}
+.pnl.active{display:block;}
+
+/* ── AGENT CARD ──────────────────────────────────────────────────── */
+.ac{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);
+  margin-bottom:9px;overflow:hidden;}
+.ac.new-dim{border-color:var(--or);}
+.ach{display:flex;align-items:center;gap:8px;padding:8px 12px;
+  background:var(--s2);border-bottom:1px solid var(--bd);cursor:pointer;}
+.ac.new-dim .ach{background:#1e1507;}
+.aci{font-size:1.1rem;}
+.act{font-weight:600;font-size:.8rem;}
+.acs{font-size:.6rem;color:var(--mu);margin-top:1px;}
+.badge{margin-left:auto;padding:2px 7px;border-radius:6px;font-size:.58rem;
+  font-weight:700;border:1px solid;flex-shrink:0;}
+.bi{background:var(--s3);color:var(--mu);border-color:var(--bd);}
+.br{background:#1f3a5f;color:var(--bl);border-color:var(--bl);animation:blink 1.3s infinite;}
+.bd{background:#1a3a2a;color:var(--gr);border-color:var(--gr);}
+.be{background:#3d1f1f;color:var(--rd);border-color:var(--rd);}
+.acb{padding:10px 12px;}
+.phase-tag{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;
+  border-radius:4px;font-size:.57rem;font-weight:600;margin-bottom:7px;}
+textarea.prompt{width:100%;background:var(--s2);border:1px solid var(--bd);color:var(--tx);
+  padding:7px 9px;border-radius:5px;font-size:.68rem;min-height:60px;resize:vertical;
+  font-family:inherit;line-height:1.5;}
+textarea.prompt:focus{outline:none;border-color:var(--bl);}
+.exec-btn{margin-top:5px;background:var(--s2);border:1px solid var(--bd);color:var(--tx);
+  padding:4px 10px;border-radius:4px;cursor:pointer;font-size:.68rem;
+  display:inline-flex;align-items:center;gap:4px;}
+.exec-btn:hover:not(:disabled){border-color:var(--bl);color:var(--bl);}
+.exec-btn:disabled{opacity:.35;cursor:not-allowed;}
+.resp{margin-top:7px;background:#0a0e14;border:1px solid var(--bd);border-radius:5px;
+  padding:8px 10px;font-size:.68rem;line-height:1.75;min-height:32px;
+  max-height:290px;overflow-y:auto;white-space:pre-wrap;display:none;}
+.resp.show{display:block;}
+
+/* ── COMPONENTS ──────────────────────────────────────────────────── */
+.sh{font-size:.79rem;font-weight:700;color:var(--bl);margin-bottom:9px;
+  display:flex;align-items:center;gap:7px;}
+.sh::after{content:'';flex:1;height:1px;background:var(--bd);}
+.nb{background:#1f3a5f14;border:1px solid #1f6feb44;border-radius:6px;
+  padding:8px 11px;font-size:.65rem;color:#79c0ff;margin-bottom:9px;line-height:1.55;}
+.nb b{color:#a5d6ff;}
+.nb code{background:var(--s2);border-radius:2px;padding:0 3px;
+  font-family:'Consolas',monospace;font-size:.61rem;color:var(--pu);}
+.warn{background:#2d1a0a;border:1px solid var(--or);border-radius:6px;
+  padding:8px 11px;font-size:.65rem;color:#ffd08a;margin-bottom:10px;line-height:1.6;}
+.warn b{color:var(--or);}
+.warn code{background:var(--s3);border-radius:2px;padding:0 3px;
+  font-family:'Consolas',monospace;font-size:.61rem;color:var(--yw);}
+
+/* ── CARTOUCHE GRID ──────────────────────────────────────────────── */
+.cart{display:grid;grid-template-columns:repeat(8,1fr);
+  border:2px solid var(--bl);border-radius:var(--r);overflow:hidden;margin-bottom:14px;}
+.cs{border-right:1px solid var(--bd);display:flex;flex-direction:column;}
+.cs:last-child{border-right:none;}
+.cs.new{border-color:var(--or);}
+.csh{background:var(--s2);padding:5px 6px;text-align:center;
+  font-size:.64rem;font-weight:800;border-bottom:1px solid var(--bd);}
+.cs.new .csh{background:#2d1a05;color:var(--or);}
+.csb{padding:6px 5px;font-size:.59rem;line-height:1.55;color:var(--mu);min-height:105px;}
+.csb b{color:var(--tx);display:block;margin-bottom:3px;font-size:.62rem;}
+.opt{display:block;padding:2px 4px;border-radius:3px;font-size:.57rem;
+  margin-bottom:1px;cursor:pointer;}
+.opt:hover{background:var(--s2);}
+.opt.on{background:var(--s2);font-weight:700;}
+.oa.on{color:var(--bl);} .ob.on{color:var(--gr);} .oc.on{color:var(--or);}
+.od.on{color:var(--pu);} .oe.on{color:var(--tl);} .of.on{color:var(--yw);}
+.og.on{color:var(--pk);} .oh.on{color:var(--gr);}
+.bits{font-size:.54rem;color:var(--mu);margin-top:5px;border-top:1px solid var(--bd);padding-top:3px;}
+
+/* ── TABLES ──────────────────────────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse;margin-bottom:11px;font-size:.65rem;}
+.tbl th{background:var(--s2);padding:5px 8px;text-align:left;
+  border:1px solid var(--bd);font-size:.61rem;}
+.tbl td{padding:5px 8px;border:1px solid var(--bd);}
+.tbl tr:nth-child(even){background:#0a0e1455;}
+.tbl code{font-family:'Consolas',monospace;font-size:.61rem;color:var(--pu);}
+.hi{color:var(--or);font-weight:700;} .lo{color:var(--gr);font-weight:700;}
+.me{color:var(--bl);font-weight:700;}
+
+/* ── METRICS ─────────────────────────────────────────────────────── */
+.mg{display:grid;grid-template-columns:repeat(auto-fill,minmax(152px,1fr));gap:8px;margin-bottom:12px;}
+.mc{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:9px 11px;}
+.ml{font-size:.57rem;color:var(--mu);text-transform:uppercase;letter-spacing:.4px;}
+.mv{font-size:.98rem;font-weight:700;margin:3px 0 1px;}
+.mt{font-size:.55rem;color:var(--mu);}
+.mb{height:3px;background:var(--s2);border-radius:2px;margin-top:5px;}
+.mbf{height:100%;border-radius:2px;transition:width .9s ease;}
+.sli-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:11px;}
+.sli label{font-size:.59rem;color:var(--mu);display:block;margin-bottom:2px;}
+input[type=range]{width:100%;accent-color:var(--bl);}
+.sv{font-size:.63rem;color:var(--bl);font-weight:600;}
+
+/* ── CODE ────────────────────────────────────────────────────────── */
+.cb{background:#0a0e14;border:1px solid var(--bd);border-radius:7px;
+  padding:11px;font-family:'Consolas',monospace;font-size:.63rem;
+  line-height:1.75;overflow-x:auto;margin-bottom:10px;max-height:430px;overflow-y:auto;}
+.kw{color:#ff7b72;}.fn{color:#d2a8ff;}.st{color:#a5d6ff;}
+.cm{color:#8b949e;font-style:italic;}.nm{color:#79c0ff;}.op{color:#ffa657;}
+.dc{color:#e3b341;}
+
+/* ── CARDS ───────────────────────────────────────────────────────── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:11px;}
+.card{background:var(--s1);border:1px solid var(--bd);border-radius:var(--r);padding:10px 12px;}
+.ctitle{font-size:.7rem;font-weight:700;margin-bottom:6px;}
+.cbody{font-size:.63rem;line-height:1.65;color:var(--mu);}
+.cbody b{color:var(--tx);}
+.cbody code{background:var(--s2);border-radius:2px;padding:0 3px;
+  font-family:'Consolas',monospace;font-size:.6rem;color:var(--pu);}
+.formula{text-align:center;padding:7px 10px;background:#0a0e14;
+  border:1px solid var(--bd);border-radius:5px;
+  font-family:'Consolas',monospace;font-size:.7rem;color:var(--yw);
+  margin:6px 0;letter-spacing:.3px;}
+
+/* ── LOG ─────────────────────────────────────────────────────────── */
+.lb{background:#0a0e14;border:1px solid var(--bd);border-radius:7px;
+  padding:9px;font-family:'Consolas',monospace;font-size:.62rem;
+  line-height:1.8;max-height:460px;overflow-y:auto;}
+.li{color:var(--bl);}.ls{color:var(--gr);}.lw{color:var(--or);}
+.le{color:var(--rd);}.ld{color:var(--mu);}
+
+.spin{display:inline-block;width:9px;height:9px;border:1.5px solid currentColor;
+  border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+</style>
+</head>
+<body>
+
+<!-- TOP -->
+<div class="top">
+  <span style="font-size:1.4rem;">🧬</span>
+  <div>
+    <h1>PPV · Codage LMD Versatile · Cartouche <span style="color:var(--or)">ABCDEFGH</span> · Dimension B = 3 modes couleur</h1>
+    <p>L1–L4 corrigés · Ba Séquentiel · Bb Uniforme (formules actuelles) · Bc Huffman / H(P̂) · Bd Universel Elias · 9 Agents</p>
+  </div>
+  <div class="chips">
+    <div class="chip chip-b">9 Agents</div>
+    <div class="chip chip-g" id="cnt-done">0 / 9</div>
+    <div class="chip chip-o">Cartouche ABCDEFGH</div>
+    <div class="chip chip-r" id="chip-run" style="display:none;">⏳ En cours</div>
+  </div>
+</div>
+<div class="gbar"><div class="gbar-f" id="gbar"></div></div>
+
+<div class="body">
+
+<!-- ═══ RAIL ══════════════════════════════════════════════════════ -->
+<div class="rail">
+  <div class="rsec">Phase 1 — Données</div>
+  <button class="ri active" onclick="sel(0)" id="nav-0">
+    <span class="rdot" id="dot-0" style="background:var(--mu)"></span>
+    <div><div class="rn">🎬 Extraction Bitwise</div><div class="rr">XOR · POPCOUNT · H_color</div></div>
+  </button>
+  <button class="ri" onclick="sel(1)" id="nav-1">
+    <span class="rdot" id="dot-1"></span>
+    <div><div class="rn">🔬 Classification</div><div class="rr">5 types · dim. A</div></div>
+  </button>
+
+  <div class="rsec">Phase 2 — Représentation</div>
+  <button class="ri" onclick="sel(2)" id="nav-2" style="border-left:3px solid var(--or);">
+    <span class="rdot" id="dot-2" style="background:var(--or)"></span>
+    <div><div class="rn">🎨 Codage Couleur ★</div><div class="rr">Dim. B — Ba/Bb/Bc/Bd</div></div>
+  </button>
+  <button class="ri" onclick="sel(3)" id="nav-3">
+    <span class="rdot" id="dot-3"></span>
+    <div><div class="rn">🗂️ Structures + Features</div><div class="rr">5 dataclasses · color_cost(B)</div></div>
+  </button>
+  <button class="ri" onclick="sel(4)" id="nav-4">
+    <span class="rdot" id="dot-4"></span>
+    <div><div class="rn">🔄 Précodage R1–R4b</div><div class="rr">Dim. C · L_i(B) corrigées</div></div>
+  </button>
+
+  <div class="rsec">Phase 3 — Compression</div>
+  <button class="ri" onclick="sel(5)" id="nav-5">
+    <span class="rdot" id="dot-5"></span>
+    <div><div class="rn">📊 Métriques LMD</div><div class="rr">L1–L4 paramétrées par B</div></div>
+  </button>
+  <button class="ri" onclick="sel(6)" id="nav-6">
+    <span class="rdot" id="dot-6"></span>
+    <div><div class="rn">💻 Codeur · Dim. D</div><div class="rr">Header ABCDEFGH · 17 bits</div></div>
+  </button>
+
+  <div class="rsec">Phase 4 — Fonctionnalités</div>
+  <button class="ri" onclick="sel(7)" id="nav-7">
+    <span class="rdot" id="dot-7"></span>
+    <div><div class="rn">🌳 Hiérar. + Arbre + Zoom</div><div class="rr">Dim. E,F,G · C_color_hier(Bc)</div></div>
+  </button>
+
+  <div class="rsec">Phase 5 — Tests</div>
+  <button class="ri" onclick="sel(8)" id="nav-8">
+    <span class="rdot" id="dot-8"></span>
+    <div><div class="rn">🧪 Tests E2E</div><div class="rr">Roundtrip Ba/Bb/Bc/Bd</div></div>
+  </button>
+  <hr class="rsep">
+
+  <button class="run-all" id="btn-all" onclick="runAll()">▶ Pipeline Complet</button>
+  <div class="pb-wrap">
+    <div class="pb-lbl"><span>Progression</span><span id="pct-lbl">0 %</span></div>
+    <div class="pb-bg"><div class="pb-f" id="pbf"></div></div>
+  </div>
+  <hr class="rsep">
+
+  <!-- Selectors for cartouche dimensions -->
+  <div class="sel-box">
+    <div class="sel-lbl" style="color:var(--or);font-weight:700;">B — Mode codage couleur ★</div>
+    <select class="sel hi-b" id="sB" onchange="sim()">
+      <option value="a">Ba — Séquentiel (1 terme en tête)</option>
+      <option value="b" selected>Bb — Uniforme → L1–L4 actuels</option>
+      <option value="c">Bc — Huffman / Entropique</option>
+      <option value="d">Bd — Universel Elias (m inconnu)</option>
+    </select>
+    <div class="sel-lbl">C — Représentation temporelle</div>
+    <select class="sel" id="sC" onchange="sim()">
+      <option value="R1">R1 — Timestamps</option>
+      <option value="R2">R2 — Count</option>
+      <option value="R3">R3 — Intervalles</option>
+      <option value="R4a">R4a — Boolean</option>
+      <option value="R4b" selected>R4b — Combinatoire (N, Index) ★</option>
+    </select>
+    <div class="sel-lbl">D — Mode compression</div>
+    <select class="sel" id="sD">
+      <option value="u">Uniforme min(L1–L4)</option>
+      <option value="e">Universel entiers</option>
+      <option value="m" selected>MDL Statistique 3 étapes</option>
+    </select>
+    <div class="sel-lbl">E — Famille intensité α̂(t)</div>
+    <select class="sel" id="sE">
+      <option value="h">Histogrammes adaptatifs</option>
+      <option value="s" selected>Splines cubiques</option>
+      <option value="w">Ondelettes</option>
+      <option value="t">Trigonométrique</option>
+    </select>
+    <div class="sel-lbl">F — Niveau chromatique</div>
+    <select class="sel" id="sF" onchange="sim()">
+      <option value="1">F1 — 8 bits (256 couleurs)</option>
+      <option value="2" selected>F2 — 16 bits (65 536)</option>
+      <option value="3">F3 — 24 bits HDR</option>
+    </select>
+    <div class="sel-lbl">G — Résolution spatiale</div>
+    <select class="sel" id="sG">
+      <option value="0">G0 — 16×16 px</option>
+      <option value="1" selected>G1 — 8×8 px</option>
+      <option value="2">G2 — 4×4 px</option>
+      <option value="3">G3 — 2×2 px (Ultra HD)</option>
+    </select>
+  </div>
+</div><!-- rail -->
+
+<!-- ═══ CONTENT ═══════════════════════════════════════════════════ -->
+<div class="cnt">
+<div class="tabs">
+  <div class="tab active" onclick="sw('agents',this)">🤖 Agents</div>
+  <div class="tab" onclick="sw('cartouche',this)">🗃️ Cartouche ABCDEFGH</div>
+  <div class="tab" onclick="sw('formules',this)">📐 L1–L4 Corrigées</div>
+  <div class="tab" onclick="sw('sim',this)">📈 Simulateur</div>
+  <div class="tab" onclick="sw('code',this)">📝 Code Python</div>
+  <div class="tab" onclick="sw('logs',this)">🪵 Logs</div>
+</div>
+
+<!-- ══ AGENTS ════════════════════════════════════════════════════ -->
+<div class="pnl active" id="pnl-agents">
+
+<div class="warn">
+  <b>⚠ Correction théorique fondamentale — Dimension B :</b>
+  Les formules <code>L1 = r·log m</code>, <code>L2 = logN + N·log(rm)</code>, <code>L3 = r + N·log m</code>, <code>L4 = logN + logC(r,N) + N·log m</code>
+  ne sont valables que lorsque le <b>codage de la couleur est uniforme (mode Bb)</b>. Le terme <code>N·log₂m</code> est le <i>coût couleur uniforme</i>.
+  Ce terme est remplacé par <code>C_color(B)</code> selon le mode :<br>
+  <b>Ba</b> = séquentiel : 1 terme en tête de bloc uniquement (+ transitions explicites) ·
+  <b>Bc</b> = Huffman : <code>N·H(P̂) + D_huf ≤ N·log m</code> ·
+  <b>Bd</b> = Elias universel : <code>N·L*(m)</code> si m non fixé.
+  Le codage couleur devient la <b>dimension B</b> du cartouche ABCDEFGH.
+</div>
+
+<!-- Agent 0 -->
+<div class="ac" id="card-0">
+  <div class="ach" onclick="tog(0)">
+    <span class="aci">🎬</span>
+    <div><div class="act">Agent Extraction Bitwise</div>
+    <div class="acs">Masques M_c · XOR · POPCOUNT · Distribution P̂(m_k) pour dim. B</div></div>
+    <span class="badge bi" id="badge-0">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#1a2a3a;color:var(--bl);border:1px solid #1f6feb44;">Phase 1 · Dim. A, B</span>
+    <div class="nb">L'extraction calcule les masques binaires <b>M_c(t,p)</b> et la <b>distribution empirique P̂(m_k)</b> des marques couleur sur les sauts détectés. Cette distribution conditionne le choix du mode B : si <code>H(P̂) ≪ log₂m</code>, Huffman (Bc) est avantageux ; si la couleur varie très lentement, le mode séquentiel (Ba) est optimal.</div>
+    <textarea class="prompt" id="pr-0">Pour un bloc 16×16 sur T=64 frames, m=16 couleurs : (1) structure BinaryMask uint64 alignée 32 octets, extract_jumps_bitwise(frames, c) utilisant XOR+POPCOUNT+TZCNT, (2) calcule les 7 features bitwise (lambda_avg, H_s, rho_corr, R_temp, m_eff, var_delta_tau, N_total), (3) construit la distribution empirique P̂(m_k) = fréquences des couleurs dans les N sauts, (4) calcule H_color = -Σ p_c·log2(p_c) et N_transitions = #{k : m_k ≠ m_{k-1}}, (5) compare C_color pour les 4 modes Ba/Bb/Bc/Bd avec ces valeurs numériques. Exemple : P̂ = {rouge:0.45, bleu:0.30, vert:0.15, jaune:0.10} sur N=80 sauts.</textarea>
+    <button class="exec-btn" id="btn-0" onclick="run(0)">▶ Exécuter</button>
+    <div class="resp" id="resp-0"></div>
+  </div>
+</div>
+
+<!-- Agent 1 -->
+<div class="ac" id="card-1">
+  <div class="ach" onclick="tog(1)">
+    <span class="aci">🔬</span>
+    <div><div class="act">Agent Classification — 5 types · Dim. A</div>
+    <div class="acs">Réel Marqué · Monochromatique · Vectoriel · Markovien · Impact sur dim. B</div></div>
+    <span class="badge bi" id="badge-1">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#1a2a3a;color:var(--bl);border:1px solid #1f6feb44;">Phase 1 · Dim. A</span>
+    <div class="nb">La dimension A interagit avec B : le mode <b>Monochromatique (Ab)</b> supprime entièrement le terme couleur (<code>C_color = 0</code>) quelle que soit la valeur de B, car la couleur est portée par l'indice du processus. La comparaison Marqué vs Monochromatique dépend donc du mode B choisi : <code>Σ_c log₂C(r,N_c) vs L_temporel + C_color(B)</code>.</div>
+    <textarea class="prompt" id="pr-1">Implémente classify_5types(features) avec seuils calibrés. Pour chaque type, indique explicitement le terme couleur applicable selon la dimension B : (1) Aa Réel Marqué → C_color(B) au choix, (2) Ab Monochromatique → C_color=0 toujours, (3) Ac Vectoriel Marginal → C_color par composante, (4) Ad Vectoriel Joint → C_color de la loi jointe, (5) Ae Markovien → C_color des transitions. Règle compare_mono_vs_marked : choisit Ab si Σ_c log2(C(r,N_c)) < L_temporel(R4b) + C_color(B_optimal). Donne les valeurs numériques pour r=256, m=8, N=60 avec distribution P̂ concentrée.</textarea>
+    <button class="exec-btn" id="btn-1" onclick="run(1)">▶ Exécuter</button>
+    <div class="resp" id="resp-1"></div>
+  </div>
+</div>
+
+<!-- Agent 2 — NOUVELLE DIMENSION B -->
+<div class="ac new-dim" id="card-2">
+  <div class="ach" onclick="tog(2)">
+    <span class="aci">🎨</span>
+    <div><div class="act">Agent Codage Couleur — Dimension B ★ (nouvelle)</div>
+    <div class="acs">Ba Séquentiel · Bb Uniforme (L1–L4 actuels) · Bc Huffman N·H(P̂) · Bd Elias universel</div></div>
+    <span class="badge bi" id="badge-2">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#2d1a05;color:var(--or);border:1px solid #ffa65744;">Phase 2 · Dim. B — Correction fondamentale</span>
+    <div class="nb">
+      <b>Ba — Séquentiel :</b> la couleur n'est indiquée qu'<i>une seule fois en tête de bloc</i>. Chaque saut hérite de la couleur courante. Seules les transitions explicites <code>(τ_k, nouvelle_couleur)</code> sont codées. Coût : <code>log₂m + N_trans·log₂m</code> bits.<br>
+      <b>Bb — Uniforme :</b> chaque saut porte sa marque codée uniformément sur m couleurs. <code>N·log₂m</code> bits. C'est le terme dans L1–L4 actuels.<br>
+      <b>Bc — Huffman :</b> codes de longueur variable sur P̂(m_k). Coût = <code>N·H(P̂) + D_huf</code>. Avantageux si <code>N &gt; N* = D_huf / (log₂m − H(P̂))</code>.<br>
+      <b>Bd — Universel (Elias) :</b> si m n'est pas connu au décodeur. Coût ≈ <code>N·(log₂m + 2·log₂log₂m)</code>, proche de l'entropie si m grand.
+    </div>
+    <textarea class="prompt" id="pr-2">Implémente les 4 modes de codage couleur pour N=80 sauts, m=16, P̂={rouge:0.40, bleu:0.30, vert:0.15, autres×13:0.15/13 chacun}, N_transitions=18.
+
+color_cost_Ba : log2(m) + N_transitions * log2(m) — 1 couleur en tête + les seuls changements
+color_cost_Bb : N * log2(m) = 80*4 = 320 bits ← terme des formules L1-L4 actuelles
+color_cost_Bc : construire l'arbre de Huffman sur P̂, coût_données = N * H(P̂) bits + D_huf overhead dictionnaire ≈ m*(log2(m)+1) bits
+color_cost_Bd : Σ_k elias_delta_len(m_k+1) pour m inconnu au décodeur
+
+Tableau comparatif des 4 modes avec valeurs numériques. Calcule N* le seuil où Bc < Bb. Indique dans quels cas Ba < Bc.</textarea>
+    <button class="exec-btn" id="btn-2" onclick="run(2)">▶ Exécuter</button>
+    <div class="resp" id="resp-2"></div>
+  </div>
+</div>
+
+<!-- Agent 3 -->
+<div class="ac" id="card-3">
+  <div class="ach" onclick="tog(3)">
+    <span class="aci">🗂️</span>
+    <div><div class="act">Agent Structures + Features</div>
+    <div class="acs">Dataclasses avec color_cost(B) · select_color_mode() · Primitives P̂</div></div>
+    <span class="badge bi" id="badge-3">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#1a2e1a;color:var(--gr);border:1px solid #3fb95044;">Phase 2 · Dim. A, B</span>
+    <div class="nb">Les dataclasses intègrent le mode B comme paramètre explicite. La méthode <code>color_cost(B)</code> calcule le terme couleur selon le mode. <code>select_color_mode()</code> choisit le mode B optimal en comparant Ba, Bb, Bc, Bd pour les paramètres courants.</div>
+    <textarea class="prompt" id="pr-3">Définis MarkedProcess et MonochromaticProcess avec color_cost(mode_B, color_dist=None) → float retournant le coût couleur selon Ba/Bb/Bc/Bd. Ajoute get_color_distribution() → dict {c: fréquence} pour Huffman. CompressedVideoProcessor avec select_color_mode(N, m, color_dist, N_transitions) → (best_B, costs_dict) qui retourne le mode optimal et le tableau des coûts. Montre l'intégration : L_total = L_temporel(R4b) + color_cost(B_optimal). Exemple numérique avec r=256, N=60, m=8, H_color=2.1 bits, N_transitions=8.</textarea>
+    <button class="exec-btn" id="btn-3" onclick="run(3)">▶ Exécuter</button>
+    <div class="resp" id="resp-3"></div>
+  </div>
+</div>
+
+<!-- Agent 4 -->
+<div class="ac" id="card-4">
+  <div class="ach" onclick="tog(4)">
+    <span class="aci">🔄</span>
+    <div><div class="act">Agent Précodage R1–R4b · Dim. C</div>
+    <div class="acs">L_i(B) = L_temporel_i + C_color(B) · 20 combinaisons C×B</div></div>
+    <span class="badge bi" id="badge-4">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#1a2e1a;color:var(--gr);border:1px solid #3fb95044;">Phase 2 · Dim. C</span>
+    <div class="nb">Les longueurs L_i sont maintenant paramétrées par B. La partie temporelle est indépendante de B ; seul le terme couleur change. R4b reste la borne inférieure de la partie temporelle dans tous les cas. L'optimisation explore les 5×4 = 20 combinaisons (représentation × mode couleur).</div>
+    <textarea class="prompt" id="pr-4">Implémente VersatileEncoder avec encode_process(process, repr_id, color_mode_B) → L_total. Pour chaque représentation R1-R4b, calcule L_temporel_i (partie indépendante de B) et ajoute C_color(B). select_repr_and_color(N, r, m, color_dist, N_transitions) → (repr_id, mode_B, L_total) explore les 20 combinaisons et retourne l'optimum global. Exemple : N=60, r=256, m=8, H_color=2.1, N_transitions=8. Donne la matrice 5×4 complète des longueurs.</textarea>
+    <button class="exec-btn" id="btn-4" onclick="run(4)">▶ Exécuter</button>
+    <div class="resp" id="resp-4"></div>
+  </div>
+</div>
+
+<!-- Agent 5 -->
+<div class="ac" id="card-5">
+  <div class="ach" onclick="tog(5)">
+    <span class="aci">📊</span>
+    <div><div class="act">Agent Métriques LMD — L1–L4 corrigées</div>
+    <div class="acs">Formules généralisées · Gain Bc vs Bb · Seuil N* · H²</div></div>
+    <span class="badge bi" id="badge-5">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#2a1a3a;color:var(--pu);border:1px solid #d2a8ff44;">Phase 3 · Dim. B, C</span>
+    <div class="nb">
+      Formules généralisées par mode B. <b>La partie temporelle est commune</b> ; seul C_color(B) diffère :<br>
+      <code>L4(Bb) = log₂N + log₂C(r,N) + N·log₂m</code> ← formule classique<br>
+      <code>L4(Bc) = log₂N + log₂C(r,N) + N·H(P̂) + D_huf</code> ← Huffman<br>
+      <code>L4_mono = log₂N + log₂C(r,N)</code> ← C_color = 0 (monochromatique)
+    </div>
+    <textarea class="prompt" id="pr-5">Calcule les métriques complètes pour N=80, r=512, m=16, H_color=2.8 bits, N_transitions=22, D_huf=80 bits (overhead Huffman). Pour R4b × 4 modes B : L4(Ba), L4(Bb), L4(Bc), L4(Bd), L4_mono. Calcule : gain Bc vs Bb en bits et %, seuil N* = D_huf/(log2(m)-H_color), condition Ba < Bc (N_transitions vs N*'). Tableau synthétique + cartouche ABCDEFGH optimal pour ces paramètres. Inclut aussi les longueurs H²(P,P̂_n) borne Hellinger.</textarea>
+    <button class="exec-btn" id="btn-5" onclick="run(5)">▶ Exécuter</button>
+    <div class="resp" id="resp-5"></div>
+  </div>
+</div>
+
+<!-- Agent 6 -->
+<div class="ac" id="card-6">
+  <div class="ach" onclick="tog(6)">
+    <span class="aci">💻</span>
+    <div><div class="act">Agent Codeur · Dim. D · Header ABCDEFGH</div>
+    <div class="acs">17 bits · encode/decode selon B · Dictionnaire Huffman · MDL 3 étapes</div></div>
+    <span class="badge bi" id="badge-6">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#2a1a3a;color:var(--pu);border:1px solid #d2a8ff44;">Phase 3 · Dim. D</span>
+    <div class="nb">Le bitstream commence par le header ABCDEFGH (17 bits), puis les données temporelles (selon C), puis les données couleur (selon B). Pour Bc : le dictionnaire Huffman précède les codes. Pour Ba : la couleur initiale est écrite une fois, seules les transitions sont encodées ensuite.</div>
+    <textarea class="prompt" id="pr-6">Implémente encode_block(process, cartouche_ABCDEFGH) → bitstream. Le header 17 bits encode A(3b)+B(2b)+C(3b)+D(2b)+E(2b)+F(2b)+G(2b)+H(1b). Pour chaque mode B : Ba → écrire couleur_init(log2m bits) + pour chaque transition (tau_k, couleur), Bb → écrire N marques uniformément sur log2m bits, Bc → écrire D_huf bits (dictionnaire de Huffman) + N codes de longueur variable, Bd → écrire code Elias-delta pour chaque m_k+1. decode_block(bitstream) symétrique. Calcul numérique : L_total_Bc = 17 + L_temporel + N*H(P̂) + D_huf pour N=80, m=16, H=2.8.</textarea>
+    <button class="exec-btn" id="btn-6" onclick="run(6)">▶ Exécuter</button>
+    <div class="resp" id="resp-6"></div>
+  </div>
+</div>
+
+<!-- Agent 7 -->
+<div class="ac" id="card-7">
+  <div class="ach" onclick="tog(7)">
+    <span class="aci">🌳</span>
+    <div><div class="act">Agent Hiérarchique + Arbre + Zoom · Dim. E,F,G</div>
+    <div class="acs">C_color_hier(Bc, L) = N·Σ H(P̂_i) + Σ D_huf_i · Critère MDL avec B</div></div>
+    <span class="badge bi" id="badge-7">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#2a1a0a;color:var(--or);border:1px solid #ffa65744;">Phase 4 · Dim. E, F, G</span>
+    <div class="nb">Avec couleurs hiérarchiques (F) et Huffman (B=Bc), le coût couleur devient <code>N·Σᵢ H(P̂_i) + Σᵢ D_huf_i</code> — un dictionnaire Huffman par niveau actif. Si niveaux indépendants : <code>H(m₁,…,mL) = Σ H(mᵢ) ≤ L·8 bits</code>. Le critère MDL de subdivision de l'arbre quadtree est indépendant de B pour la partie structurelle.</div>
+    <textarea class="prompt" id="pr-7">HierarchicalMark avec color_cost_hier(mode_B, level_dists) → float. Pour Bc multiniveau avec L=2 niveaux actifs : C_color_hier = N*(H(P̂_1)+H(P̂_2)) + D_huf_1 + D_huf_2, montre que Bc_hier ≤ Bb_hier = N*16 bits. Arbre quadtree : SpatialProcessTree avec critère MDL L4(parent,B) > Σ L4(enfant,B) + log2(4), valide pour tous B. ZoomController : adapte B selon bande passante (downgrade Ba ou F=1 si bande faible). Cartouche ABCDEFGH complet pour un exemple concret (A=Aa, B=Bc, C=R4b, D=MDL, E=Splines, F=2, G=1, H=0).</textarea>
+    <button class="exec-btn" id="btn-7" onclick="run(7)">▶ Exécuter</button>
+    <div class="resp" id="resp-7"></div>
+  </div>
+</div>
+
+<!-- Agent 8 -->
+<div class="ac" id="card-8">
+  <div class="ach" onclick="tog(8)">
+    <span class="aci">🧪</span>
+    <div><div class="act">Agent Tests · Validation Cartouche + Modes Couleur</div>
+    <div class="acs">Roundtrip Ba/Bb/Bc/Bd · L4(Bc) ≤ L4(Bb) · Huffman valide · E2E</div></div>
+    <span class="badge bi" id="badge-8">Inactif</span>
+  </div>
+  <div class="acb">
+    <span class="phase-tag" style="background:#1a1a2a;color:var(--pk);border:1px solid #f778ba44;">Phase 5</span>
+    <div class="nb">Suite pytest couvrant toutes les dimensions ABCDEFGH, en particulier la correction des formules L1–L4 (Bb ≠ Bc ≠ Ba) et le roundtrip pour les 4 modes couleur.</div>
+    <textarea class="prompt" id="pr-8">Suite pytest 8 classes : (1) TestColorModes : roundtrip encode/decode pour Ba/Bb/Bc/Bd sur 20 processus aléatoires — les marques décodées sont identiques aux originales, (2) TestColorCost : L4(Bc) ≤ L4(Bb) si et seulement si N > N* = D_huf/(log2(m)-H), (3) TestHuffman : arbre sans préfixe, longueur moyenne ≤ H(P̂)+1 bits (théorème de Shannon), (4) TestSequential : Ba < Bc si N_transitions*log2(m) < N*H(P̂)+D_huf, (5) TestCartouche : encode_ABCDEFGH(cartouche) puis decode = identité sur 17 bits, (6) TestFormules : L_R4b(Bb) = formule L4 classique — validation numérique de la correction, (7) TestHierarchique : C_color_hier(Bc,L=2) ≤ N*16 bits (Huffman ≤ uniforme), (8) TestE2E : bloc 16×16×64 → cartouche ABCDEFGH optimal sélectionné automatiquement, L_total ≤ min sur tous (A,B,C,D).</textarea>
+    <button class="exec-btn" id="btn-8" onclick="run(8)">▶ Exécuter</button>
+    <div class="resp" id="resp-8"></div>
+  </div>
+</div>
+
+</div><!-- pnl-agents -->
+
+<!-- ══ CARTOUCHE ══════════════════════════════════════════════════ -->
+<div class="pnl" id="pnl-cartouche">
+  <div class="sh">🗃️ Cartouche ABCDEFGH — Header 17 bits par bloc</div>
+
+  <div class="cart">
+    <div class="cs">
+      <div class="csh" style="color:var(--bl);">A</div>
+      <div class="csb">
+        <b>Type processus</b>
+        <span class="opt oa on">Aa Réel Marqué</span>
+        <span class="opt oa">Ab Monochromatique</span>
+        <span class="opt oa">Ac Vect. Marginal</span>
+        <span class="opt oa">Ad Vect. Joint</span>
+        <span class="opt oa">Ae Markovien</span>
+        <div class="bits">3 bits · 5 valeurs</div>
+      </div>
+    </div>
+    <div class="cs new">
+      <div class="csh">B ★ nouveau</div>
+      <div class="csb">
+        <b style="color:var(--or);">Mode couleur</b>
+        <span class="opt ob">Ba Séquentiel</span>
+        <span class="opt ob on">Bb Uniforme</span>
+        <span class="opt ob">Bc Huffman</span>
+        <span class="opt ob">Bd Elias (m?)</span>
+        <div class="bits">2 bits · 4 valeurs<br><span style="color:var(--or);">★ modifie L1–L4</span></div>
+      </div>
+    </div>
+    <div class="cs">
+      <div class="csh" style="color:var(--gr);">C</div>
+      <div class="csb">
+        <b>Représentation</b>
+        <span class="opt oc">Ca R1 Timestamps</span>
+        <span class="opt oc">Cb R2 Count</span>
+        <span class="opt oc">Cc R3 Intervalles</span>
+        <span class="opt oc">Cd R4a Boolean</span>
+        <span class="opt oc on">Ce R4b (N,Index)</span>
+        <div class="bits">3 bits · 5 valeurs</div>
+      </div>
+    </div>
+    <div class="cs">
+      <div class="csh" style="color:var(--pu);">D</div>
+      <div class="csb">
+        <b>Compression</b>
+        <span class="opt od">Da Uniforme</span>
+        <span class="opt od">Db Universel</span>
+        <span class="opt od on">Dc MDL Stat.</span>
+        <div class="bits">2 bits · 3 valeurs</div>
+      </div>
+    </div>
+    <div class="cs">
+      <div class="csh" style="color:var(--tl);">E</div>
+      <div class="csb">
+        <b>Famille α̂(t)</b>
+        <span class="opt oe">Ea Histogr.</span>
+        <span class="opt oe on">Eb Splines ★</span>
+        <span class="opt oe">Ec Ondelettes</span>
+        <span class="opt oe">Ed Trigono.</span>
+        <div class="bits">2 bits · 4 valeurs</div>
+      </div>
+    </div>
+    <div class="cs">
+      <div class="csh" style="color:var(--yw);">F</div>
+      <div class="csb">
+        <b>Niv. chromatique</b>
+        <span class="opt of">F1 8 bits</span>
+        <span class="opt of on">F2 16 bits ★</span>
+        <span class="opt of">F3 24 bits HDR</span>
+        <div class="bits">2 bits · 3 valeurs</div>
+      </div>
+    </div>
+    <div class="cs">
+      <div class="csh" style="color:var(--pk);">G</div>
+      <div class="csb">
+        <b>Résol. spatiale</b>
+        <span class="opt og">G0 16×16 px</span>
+        <span class="opt og on">G1 8×8 px ★</span>
+        <span class="opt og">G2 4×4 px</span>
+        <span class="opt og">G3 2×2 px</span>
+        <div class="bits">2 bits · 4 valeurs</div>
+      </div>
+    </div>
+    <div class="cs">
+      <div class="csh" style="color:var(--gr);">H</div>
+      <div class="csb">
+        <b>Mode temps</b>
+        <span class="opt oh on">H0 Continu ★</span>
+        <span class="opt oh">H1 Discret</span>
+        <div class="bits">1 bit · 2 valeurs<br><br><span style="color:var(--yw);">Total : 3+2+3+2+2+2+2+1 = <b>17 bits</b></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail dim B -->
+  <div class="sh" style="font-size:.74rem;">Dimension B — 4 modes de codage couleur</div>
+  <table class="tbl">
+    <tr>
+      <th>Mode B</th><th>Terme couleur C_color(B)</th><th>Quand optimal</th><th>Lien L1–L4</th>
+    </tr>
+    <tr>
+      <td><b style="color:var(--bl);">Ba — Séquentiel</b></td>
+      <td><code>log₂m + N_trans · log₂m</code></td>
+      <td>Processus couleur lentement variable (N_trans ≪ N)</td>
+      <td>N_trans bits de transitions vs N·log₂m uniforme</td>
+    </tr>
+    <tr>
+      <td><b style="color:var(--gr);">Bb — Uniforme</b></td>
+      <td class="hi"><code>N · log₂m</code> ← formules L1–L4</td>
+      <td>Distribution P̂ uniforme, ou m ≤ 4</td>
+      <td>C'est exactement le terme dans L1 à L4</td>
+    </tr>
+    <tr>
+      <td><b style="color:var(--or);">Bc — Huffman</b></td>
+      <td class="lo"><code>N · H(P̂) + D_huf</code></td>
+      <td>P̂ non-uniforme et N &gt; N* = D_huf / (log₂m − H)</td>
+      <td>Remplace N·log₂m par N·H(P̂) &lt; N·log₂m</td>
+    </tr>
+    <tr>
+      <td><b style="color:var(--pu);">Bd — Elias</b></td>
+      <td class="me"><code>N · (log₂m + 2·log₂log₂m)</code></td>
+      <td>m non connu au décodeur a priori</td>
+      <td>Universel : proche entropie, sans coder m</td>
+    </tr>
+    <tr style="background:#1a2e1a;">
+      <td colspan="2"><b style="color:var(--tl);">Ab (Monochromatique) · C_color = 0 quel que soit B</b></td>
+      <td colspan="2" style="color:var(--tl);">La couleur est l'indice du processus — aucun terme couleur, aucune marque explicite. L4_mono = log₂N + log₂C(r,N) uniquement.</td>
+    </tr>
+  </table>
+
+  <div class="g2">
+    <div class="card">
+      <div class="ctitle" style="color:var(--or);">Seuil N* — Huffman (Bc) vs Uniforme (Bb)</div>
+      <div class="cbody">
+        Bc est avantageux si :<br>
+        <code>N · H(P̂) + D_huf &lt; N · log₂m</code><br><br>
+        soit : <code>N &gt; <b>N* = D_huf / (log₂m − H(P̂))</b></code><br><br>
+        Exemple m=16, H=2.8 bits, D_huf=80 bits :<br>
+        <b style="color:var(--gr);">N* = 80 / (4 − 2.8) = 67 sauts</b><br><br>
+        Au-delà de 67 sauts, Huffman compresse mieux que l'uniforme.
+      </div>
+    </div>
+    <div class="card">
+      <div class="ctitle" style="color:var(--bl);">Condition Ba (séquentiel) &lt; Bc (Huffman)</div>
+      <div class="cbody">
+        Ba est avantageux sur Bc si les transitions sont rares :<br><br>
+        <code>log₂m + N_trans·log₂m &lt; N·H(P̂) + D_huf</code><br><br>
+        soit : <code>N_trans &lt; <b>(N·H(P̂) + D_huf − log₂m) / log₂m</b></code><br><br>
+        Exemple N=80, m=16, H=2.8, D_huf=80 :<br>
+        <b style="color:var(--gr);">N_trans &lt; (80·2.8 + 80 − 4) / 4 ≈ 75 transitions</b><br>
+        → Ba presque toujours avantageux sur processus couleur lents.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══ FORMULES ══════════════════════════════════════════════════ -->
+<div class="pnl" id="pnl-formules">
+  <div class="sh">📐 Formules L1–L4 Généralisées selon le Mode B</div>
+
+  <div class="warn">
+    <b>Principe :</b> <code>L_i(B) = L_temporel_i + C_color(B)</code>. La partie temporelle est indépendante de B. Seul le terme couleur change. Le mode <b>Bb</b> (uniforme) redonne exactement les formules L1–L4 classiques.
+  </div>
+
+  <table class="tbl">
+    <tr>
+      <th>Code</th>
+      <th>L_temporel (indép. de B)</th>
+      <th>+ C_color(Ba) séq.</th>
+      <th>+ C_color(Bb) unif. ← L actuel</th>
+      <th>+ C_color(Bc) Huffman</th>
+      <th>+ C_color(Bd) Elias</th>
+    </tr>
+    <tr>
+      <td><b>L1</b></td>
+      <td><code>r</code></td>
+      <td><code>log₂m + N_t·log₂m</code></td>
+      <td class="hi"><code>r · log₂m</code></td>
+      <td class="lo"><code>r · H(P̂) + D_huf</code></td>
+      <td class="me"><code>r · L*(m)</code></td>
+    </tr>
+    <tr>
+      <td><b>L2</b></td>
+      <td><code>log₂N + N·log₂r</code></td>
+      <td><code>log₂m + N_t·log₂m</code></td>
+      <td class="hi"><code>N · log₂(rm)</code></td>
+      <td class="lo"><code>N · H(P̂) + D_huf</code></td>
+      <td class="me"><code>N · L*(m)</code></td>
+    </tr>
+    <tr>
+      <td><b>L3</b></td>
+      <td><code>r</code></td>
+      <td><code>log₂m + N_t·log₂m</code></td>
+      <td class="hi"><code>N · log₂m</code> → <b>r + N·log₂m</b></td>
+      <td class="lo"><code>N · H(P̂) + D_huf</code></td>
+      <td class="me"><code>N · L*(m)</code></td>
+    </tr>
+    <tr>
+      <td><b>L4 ★</b></td>
+      <td><code>log₂N + log₂C(r,N)</code></td>
+      <td><code>log₂m + N_t·log₂m</code></td>
+      <td class="hi"><code>N · log₂m</code> → <b>L4 classique</b></td>
+      <td class="lo"><code>N · H(P̂) + D_huf</code></td>
+      <td class="me"><code>N · L*(m)</code></td>
+    </tr>
+    <tr style="background:#1a2e1a;">
+      <td><b style="color:var(--tl);">L4_mono</b></td>
+      <td><code>log₂N + log₂C(r,N)</code></td>
+      <td colspan="4" style="color:var(--tl);"><b>C_color = 0</b> — mode Ab monochromatique, couleur portée par l'indice du processus. Borne inférieure absolue, indépendante de B.</td>
+    </tr>
+  </table>
+
+  <div class="sh" style="font-size:.73rem;">Formules compactes — mode Bc (Huffman)</div>
+  <div class="formula">L4(Bc) = log₂N + log₂C(r,N) + N·H(P̂) + D_huf</div>
+  <div class="formula">Gain(Bc vs Bb) = N·(log₂m − H(P̂)) − D_huf   [&gt; 0 si N &gt; N*]</div>
+  <div class="formula">N* = D_huf / (log₂m − H(P̂))   [seuil de rentabilité Huffman]</div>
+
+  <div class="sh" style="font-size:.73rem;">Couleurs hiérarchiques avec Huffman (F × B = Bc)</div>
+  <div class="formula">C_color_hier(Bc, L niveaux) = N · Σᵢ₌₁ᴸ H(P̂ᵢ) + Σᵢ₌₁ᴸ D_huf_i</div>
+  <div style="font-size:.64rem;color:var(--mu);margin-bottom:10px;">
+    Si niveaux indépendants : H(m₁,…,mL) = ΣH(mᵢ) ≤ L·8 bits → C_color_hier(Bc) ≤ C_color_hier(Bb) = N·8L<br>
+    Si niveaux corrélés : codage conditionnel → gain supplémentaire H(m₂|m₁) &lt; H(m₂)
+  </div>
+</div>
+
+<!-- ══ SIMULATEUR ════════════════════════════════════════════════ -->
+<div class="pnl" id="pnl-sim">
+  <div class="sh">📈 Simulateur — Comparaison des 4 modes B pour R4b</div>
+  <div class="sli-grid">
+    <div class="si"><label>N — Nombre de sauts</label><input type="range" id="sN" min="5" max="500" value="80" oninput="sim()"><span class="sv" id="vN">80</span></div>
+    <div class="si"><label>r — Bins temporels</label><input type="range" id="sR" min="16" max="1024" value="256" step="16" oninput="sim()"><span class="sv" id="vR">256</span></div>
+    <div class="si"><label>m — Nombre de couleurs</label><input type="range" id="sM" min="2" max="256" value="16" oninput="sim()"><span class="sv" id="vM">16</span></div>
+    <div class="si"><label>H_color — Entropie couleur (bits)</label><input type="range" id="sH" min="0.3" max="8" step="0.1" value="2.8" oninput="sim()"><span class="sv" id="vH">2.8</span></div>
+    <div class="si"><label>N_trans — Transitions couleur</label><input type="range" id="sNt" min="0" max="200" value="20" oninput="sim()"><span class="sv" id="vNt">20</span></div>
+    <div class="si"><label>D_huf — Overhead dict. Huffman</label><input type="range" id="sDh" min="8" max="400" value="80" oninput="sim()"><span class="sv" id="vDh">80</span></div>
+  </div>
+  <div class="mg">
+    <div class="mc"><div class="ml">L4 Bb — Référence</div><div class="mv" id="v0" style="color:var(--mu)">—</div><div class="mt">logN + logC(r,N) + N·log m</div><div class="mb"><div class="mbf" id="b0" style="background:var(--mu)"></div></div></div>
+    <div class="mc"><div class="ml">L4 Ba — Séquentiel</div><div class="mv" id="v1" style="color:var(--bl)">—</div><div class="mt">+ log m + N_trans·log m</div><div class="mb"><div class="mbf" id="b1" style="background:var(--bl)"></div></div></div>
+    <div class="mc"><div class="ml">L4 Bc — Huffman</div><div class="mv" id="v2" style="color:var(--gr)">—</div><div class="mt">+ N·H(P̂) + D_huf</div><div class="mb"><div class="mbf" id="b2" style="background:var(--gr)"></div></div></div>
+    <div class="mc"><div class="ml">L4 Bd — Elias</div><div class="mv" id="v3" style="color:var(--or)">—</div><div class="mt">+ N·(log m + 2·log log m)</div><div class="mb"><div class="mbf" id="b3" style="background:var(--or)"></div></div></div>
+    <div class="mc"><div class="ml">L4_mono (Ab)</div><div class="mv" id="v4" style="color:var(--tl)">—</div><div class="mt">log N + log C(r,N) seulement</div><div class="mb"><div class="mbf" id="b4" style="background:var(--tl)"></div></div></div>
+    <div class="mc"><div class="ml">Gain Bc vs Bb</div><div class="mv" id="v5" style="color:var(--yw)">—</div><div class="mt">N* seuil de rentabilité</div><div class="mb"><div class="mbf" id="b5" style="background:var(--yw)"></div></div></div>
+    <div class="mc"><div class="ml">Mode B optimal</div><div class="mv" id="v6" style="color:var(--pk);font-size:.8rem">—</div><div class="mt">Selon N, H, N_trans</div><div class="mb"><div class="mbf" id="b6" style="background:var(--pk)"></div></div></div>
+    <div class="mc"><div class="ml">Cartouche recommandé</div><div class="mv" id="v7" style="color:var(--gr);font-size:.67rem">—</div><div class="mt">ABCDEFGH optimal</div><div class="mb"><div class="mbf" id="b7" style="background:var(--gr)"></div></div></div>
+  </div>
+</div>
+
+<!-- ══ CODE ══════════════════════════════════════════════════════ -->
+<div class="pnl" id="pnl-code">
+  <div class="sh">📝 color_coding.py — Dimension B du cartouche ABCDEFGH</div>
+  <div class="cb">
+<span class="cm">"""color_coding.py — Dimension B du cartouche ABCDEFGH
+Référence : J. Nembé, versatile_pp.tex, uniform_temp_coding.tex
+
+CORRECTION FONDAMENTALE :
+  L_i(B) = L_temporel_i + C_color(B)
+  Bb (uniforme) → C_color = N·log₂m   ← terme des formules L1-L4 actuelles
+  Ba (séquentiel) → C_color = log₂m + N_trans·log₂m
+  Bc (Huffman) → C_color = N·H(P̂) + D_huf
+  Bd (Elias)   → C_color = N·L*(m_k)  [m inconnu au décodeur]
+"""</span>
+<span class="kw">from</span> math <span class="kw">import</span> log2, floor
+<span class="kw">from</span> typing <span class="kw">import</span> Literal
+<span class="kw">import</span> numpy <span class="kw">as</span> np
+
+ColorMode = Literal[<span class="st">"Ba"</span>, <span class="st">"Bb"</span>, <span class="st">"Bc"</span>, <span class="st">"Bd"</span>]
+
+<span class="cm"># ── Utilitaires ──────────────────────────────────────────────────────</span>
+<span class="kw">def</span> <span class="fn">empirical_entropy</span>(marks: np.ndarray, m: <span class="fn">int</span>) -> <span class="fn">float</span>:
+    <span class="st">"""H(P̂) — entropie empirique des marques couleur"""</span>
+    counts = np.bincount(marks, minlength=m).astype(<span class="fn">float</span>)
+    probs = counts / counts.<span class="fn">sum</span>()
+    <span class="kw">return</span> float(-np.<span class="fn">sum</span>(p * log2(p) <span class="kw">for</span> p <span class="kw">in</span> probs <span class="kw">if</span> p > <span class="nm">0</span>))
+
+<span class="kw">def</span> <span class="fn">huffman_dict_overhead</span>(m: <span class="fn">int</span>) -> <span class="fn">int</span>:
+    <span class="st">"""D_huf ≈ m·(⌊log₂m⌋+1) bits pour encoder le dictionnaire"""</span>
+    <span class="kw">return</span> m * (floor(log2(m)) + <span class="nm">1</span>)
+
+<span class="kw">def</span> <span class="fn">elias_delta_len</span>(n: <span class="fn">int</span>) -> <span class="fn">int</span>:
+    <span class="st">"""Longueur du code δ d'Elias pour n ≥ 1"""</span>
+    k = floor(log2(n)) <span class="kw">if</span> n >= <span class="nm">1</span> <span class="kw">else</span> <span class="nm">0</span>
+    <span class="kw">return</span> <span class="nm">1</span> + k + <span class="nm">2</span> * floor(log2(<span class="nm">1</span> + k + <span class="nm">1e-9</span>))
+
+<span class="cm"># ── Dimension B — 4 modes de codage couleur ──────────────────────────</span>
+<span class="kw">def</span> <span class="fn">color_cost</span>(marks: np.ndarray, m: <span class="fn">int</span>, mode: ColorMode) -> <span class="fn">float</span>:
+    <span class="st">"""Coût de codage de la couleur selon le mode B.
+
+    L_i(B) = L_temporel_i + color_cost(marks, m, mode_B)
+
+    Ba — séquentiel : 1 terme en tête + transitions seulement
+    Bb — uniforme   : N·log₂m  ← terme ACTUEL des formules L1–L4
+    Bc — Huffman    : N·H(P̂) + D_huf  (si N > N*, Bc &lt; Bb)
+    Bd — Elias      : N·L*(m_k)  si m non connu au décodeur
+    """</span>
+    N = <span class="fn">len</span>(marks)
+    <span class="kw">if</span> mode == <span class="st">"Ba"</span>:                              <span class="cm"># séquentiel</span>
+        N_trans = <span class="fn">int</span>(np.<span class="fn">sum</span>(marks[<span class="nm">1</span>:] != marks[:-<span class="nm">1</span>]))
+        <span class="kw">return</span> log2(m) + N_trans * log2(m)
+
+    <span class="kw">elif</span> mode == <span class="st">"Bb"</span>:                            <span class="cm"># uniforme — L1–L4 actuels</span>
+        <span class="kw">return</span> N * log2(m)
+
+    <span class="kw">elif</span> mode == <span class="st">"Bc"</span>:                            <span class="cm"># Huffman</span>
+        H = <span class="fn">empirical_entropy</span>(marks, m)
+        D = <span class="fn">huffman_dict_overhead</span>(m)
+        <span class="kw">return</span> N * H + D
+
+    <span class="kw">elif</span> mode == <span class="st">"Bd"</span>:                            <span class="cm"># universel Elias</span>
+        <span class="kw">return</span> <span class="fn">float</span>(<span class="fn">sum</span>(<span class="fn">elias_delta_len</span>(<span class="fn">int</span>(c)+<span class="nm">1</span>) <span class="kw">for</span> c <span class="kw">in</span> marks))
+
+<span class="kw">def</span> <span class="fn">select_color_mode</span>(
+        marks: np.ndarray, m: <span class="fn">int</span>, m_known: <span class="fn">bool</span> = <span class="nm">True</span>
+) -> <span class="fn">tuple</span>[ColorMode, <span class="fn">dict</span>]:
+    <span class="st">"""Retourne le mode B optimal et le tableau comparatif des coûts."""</span>
+    modes = [<span class="st">"Ba"</span>, <span class="st">"Bb"</span>, <span class="st">"Bc"</span>] + ([<span class="st">"Bd"</span>] <span class="kw">if not</span> m_known <span class="kw">else</span> [])
+    costs = {b: <span class="fn">color_cost</span>(marks, m, b) <span class="kw">for</span> b <span class="kw">in</span> modes}
+    best  = <span class="fn">min</span>(costs, key=costs.get)
+    <span class="kw">return</span> best, costs
+
+<span class="kw">def</span> <span class="fn">huffman_threshold</span>(m: <span class="fn">int</span>, H: <span class="fn">float</span>, D_huf: <span class="fn">int</span> = <span class="nm">None</span>) -> <span class="fn">float</span>:
+    <span class="st">"""N* au-delà duquel Huffman (Bc) bat l'uniforme (Bb)."""</span>
+    <span class="kw">if</span> D_huf <span class="kw">is None</span>:
+        D_huf = <span class="fn">huffman_dict_overhead</span>(m)
+    delta = log2(m) - H                 <span class="cm"># gain par saut</span>
+    <span class="kw">return</span> D_huf / delta <span class="kw">if</span> delta > <span class="nm">0</span> <span class="kw">else</span> float(<span class="st">"inf"</span>)
+
+<span class="cm"># ── Cartouche ABCDEFGH — Header 17 bits ──────────────────────────────</span>
+<span class="kw">from</span> dataclasses <span class="kw">import</span> dataclass
+
+<span class="dc">@dataclass</span>
+<span class="kw">class</span> <span class="fn">Cartouche</span>:
+    <span class="cm"># bits :  3   2   3   2   2   2   2   1  = 17 total</span>
+    A: <span class="fn">int</span>  <span class="cm"># type PP  : 0=Marqué 1=Mono 2=VecMarg 3=VecJoint 4=Markov</span>
+    B: <span class="fn">int</span>  <span class="cm"># couleur  : 0=Ba 1=Bb 2=Bc 3=Bd</span>
+    C: <span class="fn">int</span>  <span class="cm"># repr.    : 0=R1 1=R2 2=R3 3=R4a 4=R4b</span>
+    D: <span class="fn">int</span>  <span class="cm"># compress : 0=Unif 1=Univ 2=MDL</span>
+    E: <span class="fn">int</span>  <span class="cm"># famille  : 0=Hist 1=Splines 2=Ondel 3=Trig</span>
+    F: <span class="fn">int</span>  <span class="cm"># chromatiq: 1=8b 2=16b 3=24b</span>
+    G: <span class="fn">int</span>  <span class="cm"># spatiale : 0=16px 1=8px 2=4px 3=2px</span>
+    H: <span class="fn">int</span>  <span class="cm"># temps    : 0=continu 1=discret</span>
+
+    <span class="kw">def</span> <span class="fn">encode</span>(self) -> <span class="fn">int</span>:
+        <span class="kw">return</span> ((self.A &<span class="nm">7</span>)&lt;&lt;<span class="nm">14</span> | (self.B &<span class="nm">3</span>)&lt;&lt;<span class="nm">12</span>
+               | (self.C &<span class="nm">7</span>)&lt;&lt;<span class="nm">9</span>  | (self.D &<span class="nm">3</span>)&lt;&lt;<span class="nm">7</span>
+               | (self.E &<span class="nm">3</span>)&lt;&lt;<span class="nm">5</span>  | (self.F &<span class="nm">3</span>)&lt;&lt;<span class="nm">3</span>
+               | (self.G &<span class="nm">3</span>)&lt;&lt;<span class="nm">1</span>  | (self.H &<span class="nm">1</span>))
+
+    <span class="dc">@staticmethod</span>
+    <span class="kw">def</span> <span class="fn">decode</span>(bits: <span class="fn">int</span>) -> <span class="st">"Cartouche"</span>:
+        <span class="kw">return</span> <span class="fn">Cartouche</span>(
+            A=(bits>><span class="nm">14</span>)&<span class="nm">7</span>, B=(bits>><span class="nm">12</span>)&<span class="nm">3</span>,
+            C=(bits>><span class="nm">9</span>) &<span class="nm">7</span>, D=(bits>><span class="nm">7</span>) &<span class="nm">3</span>,
+            E=(bits>><span class="nm">5</span>) &<span class="nm">3</span>, F=(bits>><span class="nm">3</span>) &<span class="nm">3</span>,
+            G=(bits>><span class="nm">1</span>) &<span class="nm">3</span>, H=bits      &<span class="nm">1</span>)
+  </div>
+</div>
+
+<!-- ══ LOGS ══════════════════════════════════════════════════════ -->
+<div class="pnl" id="pnl-logs">
+  <div class="sh">🪵 Journal</div>
+  <div class="lb" id="logb"></div>
+</div>
+
+</div><!-- cnt -->
+</div><!-- body -->
+
+<script>
+// ── SYSTEM PROMPT ─────────────────────────────────────────────────────
+const SYS = `Tu es expert en théorie statistique du codage, processus ponctuels et compression vidéo. Projet : Codage LMD Versatile / PPV (Point Process Video), J. Nembé.
+
+CORRECTION FONDAMENTALE — DIMENSION B DU CARTOUCHE :
+Les formules L1–L4 classiques (L1=r·log m, L2=logN+N·log(rm), L3=r+N·log m, L4=logN+logC(r,N)+N·log m) sont uniquement valables pour le mode Bb (couleur uniforme). Le terme N·log₂m est le coût couleur uniforme. La formule générale est :
+  L_i(B) = L_temporel_i + C_color(B)
+
+4 MODES DE CODAGE COULEUR (dimension B du cartouche) :
+Ba — SÉQUENTIEL : C_color(Ba) = log₂m + N_trans·log₂m bits. La couleur est indiquée UNE SEULE FOIS en tête de bloc. Seules les transitions explicites (τ_k, nouvelle_couleur) sont encodées. Optimal si la couleur varie lentement (N_trans ≪ N).
+Bb — UNIFORME : C_color(Bb) = N·log₂m bits. ← TERME ACTUEL DES FORMULES L1-L4. Optimal si P̂ uniforme ou m petit.
+Bc — HUFFMAN : C_color(Bc) = N·H(P̂) + D_huf bits. H(P̂) = -Σp_c·log₂p_c ≤ log₂m. D_huf ≈ m·(log₂m+1) bits overhead dictionnaire. Avantageux si N > N* = D_huf/(log₂m - H(P̂)).
+Bd — UNIVERSEL ELIAS : C_color(Bd) = Σ_k L_δ(m_k+1) ≈ N·(log₂m + 2·log₂log₂m) bits. Si m non connu au décodeur a priori.
+
+CARTOUCHE ABCDEFGH (17 bits header) :
+A(3b)=type PP, B(2b)=mode couleur, C(3b)=représentation, D(2b)=compression, E(2b)=famille α̂, F(2b)=niv. chromatique, G(2b)=résol. spatiale, H(1b)=mode temps.
+
+REPRÉSENTATIONS : R4b=(N,Index), Index=rang dans C(r,N) vecteurs → borne inférieure partie temporelle.
+MONOCHROMATIQUE (A=Ab) : C_color=0 quel que soit B. L4_mono=log₂N+log₂C(r,N).
+HIÉRARCHIQUE+Bc : C_color_hier(Bc,L) = N·ΣH(P̂_i) + ΣD_huf_i ≤ N·8L bits.
+MDL 3 étapes : sélection famille F → α̂(t) → codage arithmétique via Λ̂(t)=∫α̂ds.
+
+Réponds avec code Python commenté, valeurs numériques et conclusions théoriques.`;
+
+const NAMES = [
+  "Extraction Bitwise","Classification","Codage Couleur (Dim. B)",
+  "Structures+Features","Précodage R1-R4b","Métriques LMD",
+  "Codeur Dim.D","Hiérar+Arbre+Zoom","Tests E2E"
+];
+
+let state = Array(9).fill("idle");
+let logs  = [];
+
+function log_(msg, cls="ld") {
+  const ts = new Date().toLocaleTimeString("fr-FR");
+  logs.push(`<span class="${cls}">[${ts}] ${msg}</span>`);
+  const b = document.getElementById("logb");
+  b.innerHTML = logs.join("\n"); b.scrollTop = b.scrollHeight;
+}
+
+function setS(i, s) {
+  state[i] = s;
+  const badge = document.getElementById(`badge-${i}`);
+  const dot   = document.getElementById(`dot-${i}`);
+  const btn   = document.getElementById(`btn-${i}`);
+  const color = {idle:"var(--mu)",running:"var(--or)",done:"var(--gr)",error:"var(--rd)"}[s];
+  const label = {idle:"Inactif",running:"⏳ En cours…",done:"✓ Terminé",error:"✗ Erreur"}[s];
+  badge.className = "badge " + {idle:"bi",running:"br",done:"bd",error:"be"}[s];
+  badge.textContent = label;
+  dot.style.background = color;
+  dot.style.boxShadow  = s !== "idle" ? `0 0 5px ${color}` : "none";
+  if(btn) btn.disabled = s === "running";
+  const done = state.filter(x => x === "done").length;
+  const pct  = Math.round(done / 9 * 100);
+  document.getElementById("pbf").style.width  = pct + "%";
+  document.getElementById("gbar").style.width = pct + "%";
+  document.getElementById("pct-lbl").textContent = pct + " %";
+  document.getElementById("cnt-done").textContent = `${done} / 9`;
+}
+
+async function run(i) {
+  const B  = document.getElementById("sB").value;
+  const C  = document.getElementById("sC").value;
+  const D  = document.getElementById("sD").value;
+  const F  = document.getElementById("sF").value;
+  const G  = document.getElementById("sG").value;
+  const ctx = `[Cartouche: B=${B} C=${C} D=${D} F=${F} G=${G}]`;
+  const prompt = document.getElementById(`pr-${i}`).value;
+  setS(i, "running");
+  log_(`▶ ${NAMES[i]} ${ctx}`, "li");
+  const box = document.getElementById(`resp-${i}`);
+  box.textContent = ""; box.classList.add("show");
+  document.getElementById("chip-run").style.display = "";
+  try {
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 1000,
+        system: SYS,
+        messages: [{ role: "user", content: `${ctx}\n\n${prompt}` }]
+      })
+    });
+    const d = await res.json();
+    if (d?.content?.[0]?.text) {
+      box.textContent = d.content[0].text;
+      setS(i, "done");
+      log_(`✓ ${NAMES[i]} — terminé.`, "ls");
+    } else {
+      throw new Error(d?.error?.message || JSON.stringify(d));
+    }
+  } catch(e) {
+    setS(i, "error");
+    box.textContent = "Erreur : " + e.message;
+    log_(`✗ ${NAMES[i]} — ${e.message}`, "le");
+  }
+  if (!state.some(s => s === "running"))
+    document.getElementById("chip-run").style.display = "none";
+}
+
+async function runAll() {
+  document.getElementById("btn-all").disabled = true;
+  document.getElementById("chip-run").style.display = "";
+  log_("═══ Pipeline complet — 9 agents ═══", "lw");
+  for (let i = 0; i < 9; i++) {
+    await run(i);
+    await new Promise(r => setTimeout(r, 150));
+  }
+  document.getElementById("btn-all").disabled = false;
+  document.getElementById("chip-run").style.display = "none";
+  log_("═══ Pipeline terminé ═══", "ls");
+}
+
+function sw(id, el) {
+  document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+  document.querySelectorAll(".pnl").forEach(p => p.classList.remove("active"));
+  if(el) el.classList.add("active");
+  document.getElementById("pnl-" + id).classList.add("active");
+}
+
+function sel(i) {
+  document.querySelectorAll(".ri").forEach((b,j) => b.classList.toggle("active", j === i));
+  document.querySelectorAll(".tab")[0].click();
+  setTimeout(() => {
+    const c = document.getElementById("card-" + i);
+    if(c) c.scrollIntoView({ behavior:"smooth", block:"start" });
+  }, 60);
+}
+
+function tog(i) {
+  const b = document.getElementById("card-" + i).querySelector(".acb");
+  b.style.display = b.style.display === "none" ? "" : "none";
+}
+
+// ── Combinatorial log₂C(n,k) ─────────────────────────────────────────
+function logC(n, k) {
+  if (k <= 0 || k >= n) return 0;
+  k = Math.min(k, n-k);
+  let v = 0;
+  for (let i = 0; i < k; i++) v += Math.log2(n-i) - Math.log2(i+1);
+  return v;
+}
+
+// ── Simulateur ────────────────────────────────────────────────────────
+function sim() {
+  const N  = +document.getElementById("sN").value;
+  const r  = +document.getElementById("sR").value;
+  const m  = +document.getElementById("sM").value;
+  const H  = +document.getElementById("sH").value;
+  const Nt = +document.getElementById("sNt").value;
+  const Dh = +document.getElementById("sDh").value;
+
+  ["vN","vR","vM","vH","vNt","vDh"].forEach((id,i) =>
+    document.getElementById(id).textContent = [N,r,m,H.toFixed(1),Nt,Dh][i]);
+
+  // Partie temporelle R4b
+  const Lt = Math.log2(N+1) + logC(r, N);
+
+  // Termes couleur
+  const Cbb = N * Math.log2(m);
+  const Cba = Math.log2(m) + Nt * Math.log2(m);
+  const Cbc = N * H + Dh;
+  const ll  = Math.max(0.01, Math.log2(Math.max(2, Math.log2(m))));
+  const Cbd = N * (Math.log2(m) + 2 * ll);
+
+  const Lbb = Lt + Cbb;
+  const Lba = Lt + Cba;
+  const Lbc = Lt + Cbc;
+  const Lbd = Lt + Cbd;
+  const Lmono = Lt;
+
+  const Nstar = (Math.log2(m) - H) > 0
+    ? (Dh / (Math.log2(m) - H)).toFixed(0) : "∞";
+  const gain  = Math.max(0, Lbb - Lbc);
+
+  const mx = Math.max(Lbb, Lba, Lbc, Lbd, Lmono, 1);
+  const vals = [Lbb, Lba, Lbc, Lbd, Lmono, gain];
+  const ids  = ["v0","v1","v2","v3","v4","v5"];
+  const bids = ["b0","b1","b2","b3","b4","b5"];
+  vals.forEach((v, i) => {
+    document.getElementById(ids[i]).textContent =
+      isFinite(v) && v > 0 ? v.toFixed(0) + " b" : "—";
+    document.getElementById(bids[i]).style.width =
+      Math.min(100, v / mx * 100) + "%";
+  });
+
+  // Mode B optimal
+  const modes = { Ba:Lba, Bb:Lbb, Bc:Lbc, Bd:Lbd, Mono:Lmono };
+  const best  = Object.entries(modes).reduce((a,b) => b[1] < a[1] ? b : a);
+  const bcolors = { Ba:"var(--bl)", Bb:"var(--mu)", Bc:"var(--gr)",
+                    Bd:"var(--or)", Mono:"var(--tl)" };
+  document.getElementById("v6").textContent =
+    best[0] + (best[0]==="Mono" ? " (A=Ab)" : "") + `  [N*=${Nstar}]`;
+  document.getElementById("v6").style.color = bcolors[best[0]];
+  document.getElementById("b6").style.width = "70%";
+
+  // Cartouche recommandé
+  const dens  = N / r;
+  const repr  = dens < 0.10 ? "R1" : dens < 0.50 ? "R4b" : dens < 0.80 ? "R4a" : "R2";
+  const Bcode = { Ba:"0", Bb:"1", Bc:"2", Bd:"3", Mono:"1(Ab)" };
+  const Ccode = { R1:"0", R2:"1", R3:"2", R4a:"3", R4b:"4" };
+  const F = document.getElementById("sF").value;
+  const G = document.getElementById("sG").value;
+  const Acode = best[0]==="Mono" ? "b" : "a";
+  document.getElementById("v7").textContent =
+    `A${Acode} B${Bcode[best[0]]} C${Ccode[repr]||"4"} Dc Eb F${F} G${G} H0`;
+  document.getElementById("b7").style.width = "80%";
+}
+
+// Init
+log_("Système initialisé — Cartouche ABCDEFGH · 17 bits.", "lw");
+log_("Correction intégrée : L1–L4 = mode Bb uniquement. Dim. B = Ba/Bb/Bc/Bd.", "lw");
+log_("Agent 2 (🎨 Codage Couleur) = nouvelle dimension fondamentale.", "li");
+sim();
+</script>
+</body>
+</html>

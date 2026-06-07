@@ -1,0 +1,32 @@
+# Grille d'expériences pour simulations PPV v2.0
+
+block_sizes: [8, 16]                    # Taille côté bloc (n = size² pixels)
+r_frames: [32, 64]                      # Nombre de frames temporelles
+m_colors: [8, 16]                       # Palette de couleurs
+prec_bits: 8                            # Précision des coefficients MDL
+
+intensity_types:
+  - homogeneous
+  - linear
+  - sinusoidal
+  - exponential
+
+intensity_params:
+  homogeneous:
+    - {lambda0: 0.01}
+    - {lambda0: 0.1}
+  linear:
+    - {a: 0.001, b: 0.01}
+    - {a: -0.001, b: 0.1}
+  sinusoidal:
+    - {lambda0: 0.1, amplitude: 0.3, omega: 0.196, phi: 0}
+    - {lambda0: 0.1, amplitude: 0.7, omega: 0.393, phi: 1.57}
+  exponential:
+    - {lambda0: 0.1, beta: -0.05}
+    - {lambda0: 0.1, beta: 0.05}
+
+frameworks: [marked]                    # Cadre statistique à tester
+basis_families: [histogram, polynomial] # Familles de fonctions pour MDL
+dimensions: [2, 4, 8]                   # Dimensions à explorer
+
+seeds: [42, 123, 456, 789, 1011]        # Graines pour reproductibilité

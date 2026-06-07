@@ -1,0 +1,60 @@
+{
+  "started_at": "2026-03-13T17:54:30.838241",
+  "current_step": "",
+  "completed_steps": [
+    "extract_features",
+    "optimize",
+    "benchmark",
+    "validate",
+    "report"
+  ],
+  "step_results": {
+    "extract_features": {
+      "success": true,
+      "n_features": 500,
+      "features_path": "benchmark_output\\features.json",
+      "duration_sec": 4.157560110092163
+    },
+    "optimize": {
+      "success": true,
+      "best_config": {
+        "threshold_H_s": 0.5,
+        "threshold_rho_high": 0.6,
+        "threshold_rho_low": 0.05,
+        "threshold_chi2": 0.01,
+        "density_R1_max": 0.05,
+        "density_R4b_R2": 0.7,
+        "density_R4a_min": 0.4
+      },
+      "improvement": 0,
+      "output_path": "benchmark_output\\optimization.json",
+      "duration_sec": 974.7908327579498
+    },
+    "benchmark": {
+      "success": true,
+      "n_videos": 16,
+      "n_codecs": 3,
+      "total_runs": 112,
+      "successful_runs": 96,
+      "output_path": "benchmark_output\\benchmark_results",
+      "duration_sec": 953.9304230213165
+    },
+    "validate": {
+      "success": true,
+      "exact_accuracy": 0.23,
+      "accuracy_A": 1.0,
+      "accuracy_B": 1.0,
+      "accuracy_C": 0.23,
+      "output_path": "benchmark_output\\validation_results.json",
+      "duration_sec": 0.07932901382446289
+    },
+    "report": {
+      "success": true,
+      "outputs": {
+        "html": "benchmark_output\\report\\report.html",
+        "json": "benchmark_output\\report\\report_data.json"
+      },
+      "duration_sec": 2.7741191387176514
+    }
+  }
+}

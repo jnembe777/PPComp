@@ -1,0 +1,1106 @@
+# Plan de Simulations Numériques - Format LaTeX
+
+```latex
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% ============================================================================
+% DÉFINITIONS DES ENVIRONNEMENTS
+% ============================================================================
+\newtheorem{theorem}{Théorème}[section]
+\newtheorem{prop}{Proposition}[section]
+\newtheorem{lemme}{Lemme}[section]
+\newtheorem{defi}{Définition}[section]
+\newtheorem{cor}{Corollaire}[section]
+\newtheorem{rem}{Remarque}[section]
+\newtheorem{algo}{Algorithme}[section]
+
+% ============================================================================
+% MACROS ET NOTATIONS
+% ============================================================================
+\def \acn {{\hat \alpha}_n}
+\def \Pcn {{\hat P}_n}
+\def \DR {{\cal D}}
+\def \AR {{\cal A}}
+\def \BR {{\cal B}}
+\def \CR {{\cal C}}
+\def \LR {{\cal L}}
+\def \FR {{\cal F}}
+\def \ER {{\cal E}}
+\def \HR {{\cal H}}
+\def \IR {{\cal I}}
+\def \SR {{\cal S}}
+\def \RR {{\mathbb{R}}}
+\def \NN {{\mathbb{N}}}
+
+\newcommand{\argmin}{\mathop{\mathrm{arg\,min}}}
+\newcommand{\argmax}{\mathop{\mathrm{arg\,max}}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\esp}{\mathbb{E}}
+
+% ============================================================================
+% DÉBUT DU DOCUMENT
+% ============================================================================
+\begin{document}
+	
+	% ============================================================================
+	% PAGE DE GARDE
+	% ============================================================================
+	\begin{titlepage}
+		\centering
+		{\Huge\bfseries Plan de Simulations Numériques\par}
+		\vspace{1.5cm}
+		{\Large Codec PPV v2.0 -- Processus Ponctuels Marqués\par}
+		\vspace{1cm}
+		{\large pour la Compression Vidéo\par}
+		\vspace{2cm}
+		{\large Dr. Jocelyn NEMBÉ\par}
+		{\large African Institute of Computing Sciences\par}
+		{\large P.O. Box 2263, Libreville, Gabon\par}
+		\vspace{1cm}
+		{\large Mars 2026\par}
+		\vspace{2cm}
+		{\large Document de Référence Technique\par}
+		{\large Version 1.0\par}
+		\vfill
+		{\small Ce document est confidentiel. Il contient des informations propriétaires\par}
+		{\small sur l'architecture, les performances et la feuille de route du codec PPV.\par}
+		{\small Ne pas diffuser sans autorisation.\par}
+	\end{titlepage}
+	
+	% ============================================================================
+	% RÉSUMÉ
+	% ============================================================================
+	\begin{abstract}
+		\noindent Ce document présente le plan complet de simulations numériques pour valider l'architecture du codec PPV v2.0 basé sur les processus ponctuels marqués. L'objectif est de tester expérimentalement les 4 cadres statistiques (Vecteur, Marqué, Spatial, Markovien), les procédures d'estimation d'intensité par fonctions de base, et les bornes de convergence théoriques. Le plan couvre la génération de données synthétiques (Poisson homogène et non homogène), l'estimation MDL palier par palier, le calcul des longueurs de code (L₁-L₄ et MDL), et la validation des bornes de convergence en distance de Hellinger. Les simulations permettront d'établir les seuils de décision optimaux pour l'arbre de décision hiérarchique et de quantifier les gains de compression attendus sur des blocs vidéo réels.
+		
+		\medskip
+		\noindent \textbf{Mots-clés :} Processus ponctuels, Codage MDL, Compression vidéo, Estimation d'intensité, Distance de Hellinger, Simulation Monte-Carlo.
+		
+		\medskip
+		\noindent \textbf{Codes AMS :} 60G55; 62G05; 62G20; 62E25; 94A29.
+	\end{abstract}
+	
+	\tableofcontents
+	\newpage
+	
+	% ============================================================================
+	\section{Introduction et Objectifs}
+	\label{sec:introduction}
+	% ============================================================================
+	
+	\subsection{Contexte}
+	\label{subsec:contexte}
+	
+	Le codec PPV (Point Process Video) repose sur une modélisation originale de la vidéo : chaque pixel est traité comme un processus ponctuel marqué. Au lieu de stocker la valeur du pixel à chaque frame (approche classique), on ne stocke que les instants où le pixel change de valeur (les sauts) et les couleurs associées.
+	
+	Cette approche découle des travaux théoriques présentés dans \cite{Uniform_temporal.tex, uniform_temp_coding.tex, versatile_pp.tex, versatile_main.tex} et permet d'atteindre des ratios de compression supérieurs aux codecs classiques (H.264, H.265, VP9) tout en restant strictement lossless.
+	
+	\subsection{Objectifs des Simulations}
+	\label{subsec:objectifs}
+	
+	Les simulations numériques visent à :
+	
+	\begin{enumerate}
+		\item \textbf{Valider les bornes théoriques} : Vérifier expérimentalement les bornes de convergence en distance de Hellinger (Théorème 1 de \cite{versatile_main.tex})
+		\item \textbf{Tester les 4 cadres statistiques} : Évaluer les performances des cadres Vecteur, Marqué, Spatial et Markovien sur différents types de contenu vidéo
+		\item \textbf{Optimiser la sélection MDL} : Déterminer les seuils optimaux pour la sélection automatique du modèle (famille de fonctions, dimension, cadre statistique)
+		\item \textbf{Quantifier les gains} : Mesurer les gains de compression par rapport au codage uniforme (L₁-L₄) et aux codecs classiques
+		\item \textbf{Établir l'arbre de décision} : Construire l'arbre de décision hiérarchique basé sur les indicateurs extraits des simulations
+		\item \textbf{Valider la complexité} : Vérifier les complexités computationnelles annoncées pour chaque niveau de codage (Niveau 0-3-Général)
+	\end{enumerate}
+	
+	\subsection{Structure du Document}
+	\label{subsec:structure}
+	
+	Ce document est organisé comme suit :
+	\begin{itemize}
+		\item Section \ref{sec:cadre_theorique} : Cadre mathématique et rappels théoriques
+		\item Section \ref{sec:generation_donnees} : Méthodologie de génération des données
+		\item Section \ref{sec:estimation} : Procédures d'estimation et sélection MDL
+		\item Section \ref{sec:longueurs_code} : Calcul des longueurs de code
+		\item Section \ref{sec:convergence} : Analyse de convergence et validation des bornes
+		\item Section \ref{sec:algorithmes} : Spécifications des algorithmes
+		\item Section \ref{sec:protocole} : Protocole expérimental complet
+		\item Section \ref{sec:resultats_attendus} : Résultats attendus et critères de validation
+		\item Section \ref{sec:implementation} : Détails d'implémentation
+	\end{itemize}
+	
+	% ============================================================================
+	\section{Cadre Théorique et Rappels}
+	\label{sec:cadre_theorique}
+	% ============================================================================
+	
+	\subsection{Les 4 Cadres Statistiques}
+	\label{subsec:cadres_statistiques}
+	
+	Conformément à la Section \ref{sec:cadres_statistiques} de \cite{Uniform_temporal_light.tex}, nous considérons 4 cadres statistiques distincts :
+	
+	\subsubsection{Cadre 1 : Vecteur de Processus Ponctuels}
+	\label{subsubsec:cadre_vecteur}
+	
+	Soit $\mathbf{N}(t) = (N_1(t), \dots, N_d(t))^\top$ un vecteur de $d$ processus de comptage indépendants observés sur $[0,T]$. L'intensité stochastique du vecteur est :
+	\begin{equation}
+		\boldsymbol{\lambda}(t) = (\lambda_1(t), \dots, \lambda_d(t))^\top,
+	\end{equation}
+	où chaque composante suit le modèle multiplicatif d'Aalen :
+	\begin{equation}
+		\lambda_j(t) = \alpha_j(t)Y_j(t), \quad j = 1, \dots, d.
+	\end{equation}
+	
+	La vraisemblance se factorise sous l'hypothèse d'indépendance :
+	\begin{equation}
+		L_{\boldsymbol{\alpha}}(\mathbf{N}) = \prod_{j=1}^d L_{\alpha_j}(N_j).
+	\end{equation}
+	
+	\subsubsection{Cadre 2 : Processus Ponctuel Marqué}
+	\label{subsubsec:cadre_marque}
+	
+	Un processus ponctuel marqué est défini par une suite de couples $(\tau_k, m_k)_{k \geq 1}$ où $\tau_k$ sont les temps de sauts et $m_k \in \mathcal{E} = \{e_1, \dots, e_m\}$ sont les marques (couleurs).
+	
+	L'intensité marquée est :
+	\begin{equation}
+		\lambda(t, m) = \alpha(t, m)Y(t), \quad m \in \mathcal{E}.
+	\end{equation}
+	
+	La vraisemblance est :
+	\begin{equation}
+		L_{\alpha, p}(N) = \exp \left( \int_0^T \log(\lambda_T(s)) dN(s) - \int_0^T \lambda_T(s)Y(s) ds \right) \cdot \prod_{k=1}^{N(T)} p_M(m_k).
+	\end{equation}
+	
+	\subsubsection{Cadre 3 : Processus Ponctuel Spatial}
+	\label{subsubsec:cadre_spatial}
+	
+	Un processus ponctuel spatial est défini sur un domaine $\mathcal{S} \subset \mathbb{R}^2$. L'intensité spatiale est une fonction $\lambda(s)$, $s \in \mathcal{S}$.
+	
+	La vraisemblance pour un processus de Poisson spatial est :
+	\begin{equation}
+		L_{\alpha}(N) = \exp \left( \int_{\mathcal{S}} \log(\alpha(s)) N(ds) - \int_{\mathcal{S}} \alpha(s) ds \right).
+	\end{equation}
+	
+	\subsubsection{Cadre 4 : Processus Markovien de Transitions}
+	\label{subsubsec:cadre_markov}
+	
+	Soit $X(t)$ un processus de Markov à espace d'états fini $E = \{1, \dots, M\}$. On observe les transitions via les processus de comptage $N^{hj}(t)$.
+	
+	L'intensité de transition est :
+	\begin{equation}
+		\lambda^{hj}(t) = Y^h(t) \alpha^{hj}(t),
+	\end{equation}
+	où $Y^h(t) = \mathbb{I}_{\{X(t^-) = h\}}$ est le processus à risque.
+	
+	\subsection{Fonctions de Base pour l'Intensité}
+	\label{subsec:familles_fonctions}
+	
+	Conformément à la Section \ref{sec:estimation_fonctions_base} de \cite{Uniform_temporal_light.tex}, l'intensité est estimée dans une famille de fonctions :
+	\begin{equation}
+		\alpha(t) = \sum_{j=1}^K \alpha_j \phi_j(t),
+	\end{equation}
+	où $\{\phi_j\}$ est une base orthonormée.
+	
+	\begin{table}[h]
+		\centering
+		\caption{Familles de Fonctions Testées}
+		\label{tab:familles_fonctions}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Famille} & \textbf{Base $\phi_j(t)$} & \textbf{Dimension $K$} \\
+			\midrule
+			Constante & $\phi_0(t) = 1$ & $K=1$ \\
+			Histogramme & $\phi_j(t) = \mathbb{I}_{I_j}(t)$ & $K \in \{4, 8, 16\}$ \\
+			Polynômes & $\phi_j(t) = t^{j-1}$ & $K \in \{2, 4, 8\}$ \\
+			Splines & B-splines de degré $d$ & $K \in \{8, 16, 32\}$ \\
+			Ondelettes & Base de Haar/Daubechies & $K = 2^J, J \in \{2,3,4\}$ \\
+			Trigonométriques & $\{\cos, \sin\}$ & $K = 2p+1, p \in \{2,4,8\}$ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Principe MDL et Sélection de Modèle}
+	\label{subsec:principe_mdl}
+	
+	L'estimateur MDL est défini par (Théorème 1 de \cite{versatile_main.tex}) :
+	\begin{equation}
+		\hat{\alpha}_n = \argmin_{\beta \in \Gamma_n} \left( -\log L_{\beta}(N) + C_n(\beta) \right),
+	\end{equation}
+	où $C_n(\beta) = \frac{K}{2} \log n$ est la pénalité de complexité pour $K$ paramètres.
+	
+	La borne de convergence en distance de Hellinger est :
+	\begin{equation}
+		H^2(P_{\alpha}, P_{\hat{\alpha}_n}) \leq \min_{\beta \in \Gamma_n} \left[ H^2(P_{\alpha}, P_{\beta}) + \frac{1}{n} C_n(\beta) \right].
+	\end{equation}
+	
+	% ============================================================================
+	\section{Génération des Données Simulées}
+	\label{sec:generation_donnees}
+	% ============================================================================
+	
+	\subsection{Paramètres de la Grille Expérimentale}
+	\label{subsec:parametres_grille}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Paramètres de Simulation}
+		\label{tab:parametres_simulation}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Paramètre} & \textbf{Valeurs} & \textbf{Description} \\
+			\midrule
+			Taille bloc spatial & 8×8, 16×16, 32×32 & $n = 64, 256, 1024$ pixels \\
+			Nombre de frames ($r$) & 32, 64, 128, 256 & Résolution temporelle \\
+			Nombre de couleurs ($m$) & 2, 8, 16, 32, 256 & Taille palette locale \\
+			Nombre de réplications & 100, 500, 1000 & Pour moyennes empiriques \\
+			Types d'intensité & 6 types & Voir Section \ref{subsec:types_intensite} \\
+			Cadres statistiques & 4 cadres & Vecteur, Marqué, Spatial, Markov \\
+			Familles de fonctions & 6 familles & Voir Tableau \ref{tab:familles_fonctions} \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Types d'Intensité à Simuler}
+	\label{subsec:types_intensite}
+	
+	Pour chaque type, nous définissons l'intensité $\alpha(t)$ et sa primitive $A(t) = \int_0^t \alpha(s)ds$ :
+	
+	\subsubsection{Poisson Homogène}
+	\begin{equation}
+		\alpha(t) = \lambda_0, \quad A(t) = \lambda_0 t,
+	\end{equation}
+	avec $\lambda_0 \in \{0.01, 0.1, 1.0\}$.
+	
+	\subsubsection{Intensité Linéaire}
+	\begin{equation}
+		\alpha(t) = a t + b, \quad A(t) = \frac{1}{2} a t^2 + b t,
+	\end{equation}
+	avec $a \in \{\pm 0.01\}$, $b \in \{0.01, 0.1\}$.
+	
+	\subsubsection{Intensité Sinusoïdale}
+	\begin{equation}
+		\alpha(t) = \lambda_0 (1 + A \sin(\omega t + \phi)), \quad A(t) = \lambda_0 \left(t - \frac{A}{\omega} \cos(\omega t + \phi)\right),
+	\end{equation}
+	avec $A \in [0,1]$, $\omega \in \{\pi/16, \pi/8\}$, $\phi \in [0, 2\pi]$.
+	
+	\subsubsection{Intensité Exponentielle}
+	\begin{equation}
+		\alpha(t) = \lambda_0 e^{\beta t}, \quad A(t) = \frac{\lambda_0}{\beta} (e^{\beta t} - 1),
+	\end{equation}
+	avec $\beta \in \{-0.1, -0.01, 0.01, 0.1\}$.
+	
+	\subsubsection{Intensité Logarithmique}
+	\begin{equation}
+		\alpha(t) = \lambda_0 \log(1 + \gamma t), \quad A(t) = \frac{\lambda_0}{\gamma} \left[(1+\gamma t)\log(1+\gamma t) - \gamma t\right],
+	\end{equation}
+	avec $\gamma \in \{0.01, 0.1\}$.
+	
+	\subsubsection{Intensité Puissance}
+	\begin{equation}
+		\alpha(t) = \lambda_0 t^p, \quad A(t) = \frac{\lambda_0}{p+1} t^{p+1},
+	\end{equation}
+	avec $p \in \{-0.5, 0.5, 1, 2\}$.
+	
+	\subsection{Algorithme de Génération par Transformation Inverse}
+	\label{subsec:algorithme_generation}
+	
+	\begin{algo}[Génération de Processus de Poisson Non Homogène]
+		\label{algo:generation_poisson}
+		\begin{algorithmic}[1]
+			\Procedure{GeneratePoissonNH}{$\alpha(\cdot), A(\cdot), A^{-1}(\cdot), T$}
+			\State $\text{jumps} \gets [\,]$
+			\State $t_{\text{current}} \gets 0.0$
+			\State $A_{\text{current}} \gets A(t_{\text{current}})$
+			\While{$t_{\text{current}} < T$}
+			\State $U \sim \text{Uniform}(0, 1)$
+			\State $\text{target} \gets A_{\text{current}} - \log(U)$
+			\If{$\text{target} \geq A(T)$}
+			\State \textbf{break}
+			\EndIf
+			\State $t_{\text{next}} \gets A^{-1}(\text{target})$
+			\State $\text{frame} \gets \lfloor t_{\text{next}} \rfloor$
+			\If{$\text{frame} < T$ \textbf{and} ($\text{jumps} = [\,]$ \textbf{or} $\text{frame} > \text{jumps}[-1]$)}
+			\State $\text{jumps}.\text{append}(\text{frame})$
+			\State $t_{\text{current}} \gets t_{\text{next}}$
+			\State $A_{\text{current}} \gets A(t_{\text{current}})$
+			\EndIf
+			\EndWhile
+			\State \Return $\text{jumps}$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	\subsection{Génération d'un Bloc Spatio-Temporel Complet}
+	\label{subsec:generation_bloc}
+	
+	\begin{algo}[Génération de Bloc Vidéo Simulé]
+		\label{algo:generation_bloc}
+		\begin{algorithmic}[1]
+			\Procedure{GenerateSpatiotemporalBlock}{$n_{\text{pixels}}, r_{\text{frames}}, m_{\text{colors}}, \text{intensity\_type}, \text{params}$}
+			\State $(\alpha, A, A^{-1}) \gets \text{GetIntensityFunctions}(\text{intensity\_type}, \text{params}, T=r_{\text{frames}})$
+			\State $\text{jumps\_list} \gets [\,]$, $\text{marks\_list} \gets [\,]$
+			\For{$\text{pixel\_id} = 1$ \textbf{to} $n_{\text{pixels}}$}
+			\State $\text{jumps\_cont} \gets \text{GeneratePoissonNH}(\alpha, A, A^{-1}, T=r_{\text{frames}})$
+			\State $\text{jumps\_disc} \gets \text{unique}(\lfloor \text{jumps\_cont} \rfloor)$
+			\State $\text{jumps\_disc} \gets \text{jumps\_disc}[\text{jumps\_disc} < r_{\text{frames}}]$
+			\State $n_{\text{jumps}} \gets \text{length}(\text{jumps\_disc})$
+			\State $\text{marks} \sim \text{Uniform}(\{0, \dots, m_{\text{colors}}-1\}, \text{size}=n_{\text{jumps}})$
+			\State $\text{jumps\_list}.\text{append}(\text{jumps\_disc})$
+			\State $\text{marks\_list}.\text{append}(\text{marks})$
+			\EndFor
+			\State \Return $\{\text{'jumps': jumps\_list, 'marks': marks\_list, 'intensity\_true': \alpha}\}$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	% ============================================================================
+	\section{Procédures d'Estimation et Sélection MDL}
+	\label{sec:estimation}
+	% ============================================================================
+	
+	\subsection{Estimation du Maximum de Vraisemblance}
+	\label{subsec:estimation_mle}
+	
+	Pour une intensité paramétrique $\alpha(t) = \sum_{j=1}^K \theta_j \phi_j(t)$, les équations du MLE sont (Théorème \ref{thm:equations_mle} de \cite{Uniform_temporal_light.tex}) :
+	\begin{equation}
+		\int_a^b \phi_k(s) Y_n(s) ds = \int_a^b \frac{\phi_k(s)}{\sum_{j=1}^K \theta_j \phi_j(s)} dN_n(s), \quad k = 1, \dots, K.
+	\end{equation}
+	
+	\subsubsection{Cas des Histogrammes}
+	
+	Pour la famille des histogrammes, l'estimateur MLE a une forme explicite :
+	\begin{equation}
+		\hat{\alpha}_k = \frac{N_n(I_k)}{n |I_k|}, \quad k = 1, \dots, K,
+	\end{equation}
+	où $N_n(I_k)$ est le nombre de sauts dans l'intervalle $I_k$.
+	
+	\subsubsection{Cas Général (Newton-Raphson)}
+	
+	Pour les autres familles, on utilise l'algorithme de Newton-Raphson :
+	
+	\begin{algo}[Optimisation Newton-Raphson]
+		\label{algo:newton_raphson}
+		\begin{algorithmic}[1]
+			\Procedure{NewtonRaphson}{$\alpha_{\text{init}}, \epsilon, K_{\text{max}}$}
+			\State $\alpha^{(0)} \gets \alpha_{\text{init}}$, $k \gets 0$
+			\Repeat
+			\State $\mathbf{g}^{(k)} \gets \nabla_{\alpha} \left( -\log L_{\alpha} + C_n(\alpha) \right) \vert_{\alpha^{(k)}}$
+			\State $\mathbf{H}^{(k)} \gets \nabla_{\alpha}^2 \left( -\log L_{\alpha} + C_n(\alpha) \right) \vert_{\alpha^{(k)}}$
+			\State $\alpha^{(k+1)} \gets \alpha^{(k)} - (\mathbf{H}^{(k)})^{-1} \mathbf{g}^{(k)}$
+			\State $k \gets k + 1$
+			\Until{$\|\alpha^{(k)} - \alpha^{(k-1)}\| < \epsilon$ \textbf{or} $k > K_{\text{max}}$}
+			\State \Return $\hat{\alpha} = \alpha^{(k)}$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	\subsection{Sélection de la Dimension Optimale par MDL}
+	\label{subsec:selection_dimension}
+	
+	\begin{defi}[Critère MDL pour la Dimension]
+		\label{def:critere_mdl}
+		La dimension optimale $K^*$ est sélectionnée par :
+		\begin{equation}
+			K^* = \argmin_{K \in \{1, \dots, K_{\text{max}}\}} \left( -\log L_{\hat{\alpha}^{(K)}}(N) + \frac{K}{2} \log n \right).
+		\end{equation}
+	\end{defi}
+	
+	\begin{algo}[Séquence Croissante de Dimensions]
+		\label{algo:sequence_dimensions}
+		\begin{algorithmic}[1]
+			\Procedure{SelectOptimalDimension}{$(N_n, Y_n), K_{\text{max}}$}
+			\State $LC_{\text{min}} \gets \infty$, $K^* \gets 1$
+			\For{$K = 1$ \textbf{to} $K_{\text{max}}$}
+			\State $\hat{\alpha}^{(K)} \gets \text{EstimateIntensity}(N_n, Y_n, K)$
+			\State $\log L \gets \text{ComputeLogLikelihood}(\hat{\alpha}^{(K)}, N_n)$
+			\State $C_n \gets \frac{K}{2} \log n$
+			\State $LC \gets -\log L + C_n$
+			\If{$LC < LC_{\text{min}}$}
+			\State $LC_{\text{min}} \gets LC$, $K^* \gets K$
+			\EndIf
+			\EndFor
+			\State \Return $K^*, \hat{\alpha}^{(K^*)}$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	\subsection{Sélection du Cadre Statistique Optimal}
+	\label{subsec:selection_cadre}
+	
+	\begin{algo}[Sélection du Cadre Statistique]
+		\label{algo:selection_cadre}
+		\begin{algorithmic}[1]
+			\Procedure{SelectOptimalFramework}{$\text{block\_data}$}
+			\State $\text{frameworks} \gets \{\text{'Vector', 'Marked', 'Spatial', 'Markov'}\}$
+			\State $LC_{\text{min}} \gets \infty$, $\text{framework}^* \gets \text{None}$
+			\For{$\mathcal{C} \in \text{frameworks}$}
+			\State $(\hat{\alpha}, LC) \gets \text{EstimateFramework}(\text{block\_data}, \mathcal{C})$
+			\If{$LC < LC_{\text{min}}$}
+			\State $LC_{\text{min}} \gets LC$, $\text{framework}^* \gets \mathcal{C}$
+			\EndIf
+			\EndFor
+			\State \Return $\text{framework}^*, \hat{\alpha}, LC_{\text{min}}$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	% ============================================================================
+	\section{Calcul des Longueurs de Code}
+	\label{sec:longueurs_code}
+	% ============================================================================
+	
+	\subsection{Longueurs de Code Uniformes (L₁-L₄)}
+	\label{subsec:longueurs_uniformes}
+	
+	Conformément à la Proposition 1 de \cite{uniform_temp_coding.tex} :
+	
+	\begin{table}[h]
+		\centering
+		\caption{Longueurs de Code Uniformes}
+		\label{tab:longueurs_uniformes}
+		\begin{tabular}{@{}ll@{}}
+			\toprule
+			\textbf{Stratégie} & \textbf{Longueur de Code} \\
+			\midrule
+			$L_1$ (État complet) & $r \log m$ \\
+			$L_2$ (Liste de sauts) & $\log N + N \log(rm)$ \\
+			$L_3$ (Vecteur booléen) & $r + N \log m$ \\
+			$L_4$ (Adresse combinatoire) & $\log N + \log C_r^N + N \log m$ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Longueur de Code MDL Générale}
+	\label{subsec:longueur_mdl}
+	
+	\begin{defi}[Longueur de Code MDL]
+		\label{def:longueur_mdl}
+		Pour une famille de fonctions $\Gamma_K$ de dimension $K$ et une précision $\text{prec}$ bits par coefficient :
+		\begin{equation}
+			LC_{\text{MDL}} = \underbrace{-\log L_{\hat{\alpha}}(N)}_{\text{Vraisemblance}} + \underbrace{\frac{K}{2} \log n + K \cdot \text{prec}}_{\text{Complexité}} + \underbrace{C_n^{\text{couleurs}}}_{\text{Couleurs}}.
+		\end{equation}
+	\end{defi}
+	
+	\subsection{Comparaison MDL vs Uniforme}
+	\label{subsec:comparaison_mdl_uniforme}
+	
+	\begin{prop}[Condition d'Optimalité du MDL]
+		\label{prop:optimalite_mdl}
+		Le codage MDL est optimal par rapport au codage uniforme si et seulement si :
+		\begin{equation}
+			\underbrace{-\log L_{\hat{\alpha}}(N) + C_n(\hat{\alpha})}_{\text{MDL}} < \underbrace{\min(L_1, L_2, L_3, L_4)}_{\text{Uniforme}}.
+		\end{equation}
+	\end{prop}
+	
+	% ============================================================================
+	\section{Analyse de Convergence et Validation des Bornes}
+	\label{sec:convergence}
+	% ============================================================================
+	
+	\subsection{Distance de Hellinger}
+	\label{subsec:distance_hellinger}
+	
+	La distance de Hellinger entre deux mesures de probabilité $P$ et $Q$ est définie par :
+	\begin{equation}
+		H^2(P, Q) = \frac{1}{2} \int \left( \sqrt{dP} - \sqrt{dQ} \right)^2.
+	\end{equation}
+	
+	Pour les processus ponctuels d'intensités $\alpha$ et $\beta$ :
+	\begin{equation}
+		H^2(P_{\alpha}, P_{\beta}) = \frac{1}{2} \int_0^T \left( \sqrt{\alpha(s)} - \sqrt{\beta(s)} \right)^2 Y(s) ds.
+	\end{equation}
+	
+	\subsection{Borne de Convergence Théorique}
+	\label{subsec:borne_convergence}
+	
+	\begin{theorem}[Convergence de l'Estimateur MDL]
+		\label{thm:convergence_mdl}
+		Sous les hypothèses de régularité de \cite{versatile_main.tex}, l'estimateur MDL satisfait $P$-presque sûrement pour $n$ assez grand :
+		\begin{equation}
+			H^2(P_{\alpha}, P_{\hat{\alpha}_n}) \leq \min_{\beta \in \Gamma_n} \left[ H^2(P_{\alpha}, P_{\beta}) + \frac{1}{n} C_n(\beta) \right].
+		\end{equation}
+	\end{theorem}
+	
+	\subsection{Protocole de Validation des Bornes}
+	\label{subsec:protocole_validation}
+	
+	Pour valider expérimentalement la borne théorique :
+	
+	\begin{enumerate}
+		\item \textbf{Générer} $M = 1000$ réplications de processus avec intensité vraie $\alpha$
+		\item \textbf{Estimer} $\hat{\alpha}_n^{(m)}$ pour chaque réplication $m = 1, \dots, M$
+		\item \textbf{Calculer} la distance de Hellinger empirique :
+		\begin{equation}
+			\widehat{H^2} = \frac{1}{M} \sum_{m=1}^M H^2(P_{\alpha}, P_{\hat{\alpha}_n^{(m)}}).
+		\end{equation}
+		\item \textbf{Calculer} la borne théorique :
+		\begin{equation}
+			B_n = \min_{\beta \in \Gamma_n} \left[ H^2(P_{\alpha}, P_{\beta}) + \frac{1}{n} C_n(\beta) \right].
+		\end{equation}
+		\item \textbf{Vérifier} que $\widehat{H^2} \leq B_n + \epsilon$ avec $\epsilon = 0.01$ (tolérance numérique)
+		\item \textbf{Répéter} pour différentes tailles d'échantillon $n \in \{64, 256, 1024\}$
+	\end{enumerate}
+	
+	\subsection{Taux de Convergence Empirique}
+	\label{subsec:taux_convergence}
+	
+	Le taux de convergence théorique pour une intensité de régularité $s$ est :
+	\begin{equation}
+		E\left[ H^2(P_{\alpha}, P_{\hat{\alpha}_n}) \right] = O\left( n^{-\frac{2s}{2s+1}} \right).
+	\end{equation}
+	
+	Pour estimer empiriquement le taux $\hat{\gamma}$ :
+	\begin{equation}
+		\log \widehat{H^2} \approx -\hat{\gamma} \log n + c.
+	\end{equation}
+	
+	On effectue une régression linéaire de $\log \widehat{H^2}$ sur $\log n$ pour obtenir $\hat{\gamma}$.
+	
+	% ============================================================================
+	\section{Spécifications des Algorithmes}
+	\label{sec:algorithmes}
+	% ============================================================================
+	
+	\subsection{Algorithme Général d'Estimation MDL}
+	\label{subsec:algorithme_general}
+	
+	\begin{algo}[Estimation MDL Complète]
+		\label{algo:estimation_mdl_complete}
+		\begin{algorithmic}[1]
+			\Procedure{MDLEstimation}{$\text{block\_data}, \text{frameworks}, \text{families}, K_{\text{max}}$}
+			\State $LC_{\text{min}} \gets \infty$, $(\mathcal{C}^*, \mathcal{F}^*, K^*) \gets (\text{None}, \text{None}, 1)$
+			\For{$\mathcal{C} \in \text{frameworks}$}
+			\For{$\mathcal{F} \in \text{families}$}
+			\For{$K = 1$ \textbf{to} $K_{\text{max}}$}
+			\State $\hat{\alpha} \gets \text{EstimateIntensity}(\text{block\_data}, \mathcal{C}, \mathcal{F}, K)$
+			\State $\log L \gets \text{ComputeLogLikelihood}(\hat{\alpha}, \text{block\_data})$
+			\State $C_n \gets \frac{K}{2} \log n + K \cdot \text{prec}$
+			\State $LC \gets -\log L + C_n + C_n^{\text{couleurs}}$
+			\If{$LC < LC_{\text{min}}$}
+			\State $LC_{\text{min}} \gets LC$
+			\State $(\mathcal{C}^*, \mathcal{F}^*, K^*) \gets (\mathcal{C}, \mathcal{F}, K)$
+			\EndIf
+			\EndFor
+			\EndFor
+			\EndFor
+			\State \Return $(\mathcal{C}^*, \mathcal{F}^*, K^*), LC_{\text{min}}$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	\subsection{Arbre de Décision Hiérarchique}
+	\label{subsec:arbre_decision}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[
+			level 1/.style={sibling distance=45mm, level distance=12mm},
+			level 2/.style={sibling distance=22mm, level distance=12mm},
+			edge from parent/.style={draw, -latex},
+			every node/.style={font=\footnotesize},
+			bloc/.style={rectangle, draw, fill=blue!10, rounded corners, minimum width=15mm, minimum height=8mm, align=center},
+			decision/.style={diamond, draw, fill=yellow!10, aspect=2, minimum width=12mm, minimum height=8mm, align=center},
+			terminal/.style={rectangle, draw, fill=green!10, rounded corners, minimum width=12mm, minimum height=6mm, align=center}
+			]
+			\node[bloc] {DÉBUT\\Bloc Vidéo\\$(n, r, m)$}
+			child {node[decision] {Var[N]/E[N]\\$\in [0.8, 1.2]$?}
+				child {node[bloc] {NIVEAU 1\\Intensité\\Constante}
+					child {node[terminal] {CONST\\Code: 0x4001}}
+				}
+				child {node[decision] {Structure\\temporelle?}
+					child {node[bloc] {NIVEAU 2-3\\Poisson NH}
+						child {node[decision] {$K_{\text{opt}} < 8$?}
+							child {node[bloc] {NIVEAU 2\\Histogramme}
+								child {node[terminal] {HIST-K}}
+							}
+							child {node[bloc] {NIVEAU 3\\Autres Familles}
+								child {node[terminal] {SPL/WAV}}
+							}
+						}
+					}
+					child {node[terminal] {NIVEAU 0\\Brut}}
+				}
+			}
+			child {node[decision] {Cadre\\Statistique?}
+				child {node[decision] {$\rho_{\text{corr}} > 0.7$?}
+					child {node[bloc] {CADRE\\VECTORIEL}
+						child {node[terminal] {VEC-d}}
+					}
+					child {node[bloc] {CADRE\\MARQUÉ}
+						child {node[terminal] {MRK-m}}
+					}
+				}
+			}
+			child {node[bloc] {ÉTAPE 6\\Calcul MDL\\$LC = -\log L + C_n$}
+				child {node[decision] {$LC_{\text{MDL}} < L_{\text{unif}}$?}
+					child {node[terminal] {Encoder MDL}}
+					child {node[terminal] {Encoder Uniforme}}
+				}
+			};
+		\end{tikzpicture}
+		\caption{Arbre de Décision Hiérarchique pour le Codage Vidéo}
+		\label{fig:arbre_decision}
+	\end{figure}
+	
+	% ============================================================================
+	\section{Protocole Expérimental Complet}
+	\label{sec:protocole}
+	% ============================================================================
+	
+	\subsection{Phase 1 : Validation des Générateurs (Semaine 1)}
+	\label{subsec:phase1}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Tests de Validation des Générateurs}
+		\label{tab:tests_generateurs}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Test} & \textbf{Métrique} & \textbf{Seuil} & \textbf{Statut} \\
+			\midrule
+			1.1 & $E[\|N - A(T)\|/N]$ & $< 1\%$ & ☐ \\
+			1.2 & Erreur inversion $A^{-1}$ & $< 10^{-6}$ & ☐ \\
+			1.3 & $P(\text{saut dans } [k,k+1)) \approx \alpha(k) \cdot \Delta t$ & $\pm 0.5\%$ & ☐ \\
+			1.4 & Test $\chi^2$ uniformité marques & p-value $> 0.05$ & ☐ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Phase 2 : Estimation par Cadre (Semaines 2-3)}
+	\label{subsec:phase2}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Tests par Cadre Statistique}
+		\label{tab:tests_cadres}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Cadre} & \textbf{Hypothèse} & \textbf{Métrique} & \textbf{Seuil} \\
+			\midrule
+			Vecteur & Indépendance canaux & $\|\hat{\rho} - \rho\|$ & $< 0.05$ \\
+			Marqué & Uniformité marques & Test $\chi^2$ & p-value $> 0.05$ \\
+			Spatial & Homogénéité spatiale & $\text{Var}(\hat{\lambda})$ & $< 0.01 \cdot E[\hat{\lambda}]^2$ \\
+			Markovien & Matrice transition $\Pi$ & $\|\hat{\Pi} - \Pi\|_F$ & $< 0.1$ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Phase 3 : Sélection MDL et Familles (Semaines 4-5)}
+	\label{subsec:phase3}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Tests de Sélection MDL}
+		\label{tab:tests_mdl}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Test} & \textbf{Métrique} & \textbf{Seuil} & \textbf{Statut} \\
+			\midrule
+			3.1 & Accuracy sélection famille & $> 90\%$ & ☐ \\
+			3.2 & Convergence $\hat{K} \to K_{\text{vraie}}$ & Erreur $< 5\%$ & ☐ \\
+			3.3 & Robustesse au bruit (5-10\%) & Stabilité $> 95\%$ & ☐ \\
+			3.4 & Sélection cadre générateur & $> 90\%$ & ☐ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Phase 4 : Longueurs de Code et Convergence (Semaines 6-7)}
+	\label{subsec:phase4}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Tests de Longueurs de Code}
+		\label{tab:tests_longueurs}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Test} & \textbf{Métrique} & \textbf{Seuil} & \textbf{Statut} \\
+			\midrule
+			4.1 & Erreur relative LC & $< 5\%$ & ☐ \\
+			4.2 & Borne Hellinger satisfaite & $99\%$ cas & ☐ \\
+			4.3 & Taux convergence $\|\hat{\gamma} - \gamma\|$ & $< 0.1$ & ☐ \\
+			4.4 & Impact prec\_bits sur LC & Validation pénalité & ☐ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Phase 5 : Tests d'Intégration (Semaines 8-9)}
+	\label{subsec:phase5}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Tests d'Intégration}
+		\label{tab:tests_integration}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Test} & \textbf{Métrique} & \textbf{Seuil} & \textbf{Statut} \\
+			\midrule
+			5.1 & Pipeline complet 8×8×32 → 32×32×128 & Fonctionnel & ☐ \\
+			5.2 & Gain vs uniforme L₁-L₄ & Mesuré & ☐ \\
+			5.3 & Profiling temps calcul & $< 1$s/bloc & ☐ \\
+			5.4 & Scalabilité (temps vs $n$, $r$) & $O(n \cdot r)$ & ☐ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Résultats Attendus et Critères de Validation}
+	\label{sec:resultats_attendus}
+	% ============================================================================
+	
+	\subsection{Critères de Succès Quantitatifs}
+	\label{subsec:criteres_succes}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Critères de Succès}
+		\label{tab:criteres_succes}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Métrique} & \textbf{Cible} & \textbf{Méthode} & \textbf{Tolérance} \\
+			\midrule
+			Exactitude génération & $E[\|N - A(T)\|/N] < 1\%$ & Comparaison sauts & $\pm 0.5\%$ \\
+			Sélection cadre & Accuracy $> 95\%$ & Cadre = générateur & $\pm 2\%$ \\
+			Sélection famille & Accuracy $> 90\%$ & Famille = génératrice & $\pm 3\%$ \\
+			Erreur LC & $\|LC_{\text{emp}} - LC_{\text{th}}\|/LC_{\text{th}} < 5\%$ & Moyenne $n_{\text{rep}}=500$ & $\pm 1\%$ \\
+			Borne Hellinger & Satisfaite dans $99\%$ cas & $H^2 \leq \text{borne}$ & $1\%$ échec \\
+			Taux convergence & $\|\hat{\gamma} - \gamma\| < 0.1$ & Régression log-log & $\pm 0.05$ \\
+			Gain compression & $> 2\times$ vs $L_1$, $> 1.2\times$ vs $L_4$ & Ratio $LC_{\text{unif}}/LC_{\text{MDL}}$ & $-10\%$ \\
+			Temps calcul & $< 1$s/bloc 16×16×64 & Profiling 8 cœurs & $+20\%$ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Gains de Compression Attendus}
+	\label{subsec:gains_attendus}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Gains de Compression par Niveau}
+		\label{tab:gains_compression}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Niveau} & \textbf{Type Vidéo} & \textbf{Ratio Attendu} & \textbf{vs H.265} \\
+			\midrule
+			Niveau 1 (Constante) & Surveillance (faible activité) & 15-20× & +150\% \\
+			Niveau 2 (Histogramme) & Animation (activité moyenne) & 8-12× & +80\% \\
+			Niveau 3 (Splines/Ondelettes) & Nature (haute activité) & 4-6× & +20\% \\
+			Niveau Général & Mixte & 6-10× & +60\% \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Visualisations Clés}
+	\label{subsec:visualisations}
+	
+	Les visualisations suivantes seront produites :
+	
+	\begin{enumerate}
+		\item \textbf{Courbes de convergence Hellinger} : $H^2$ vs $\log(n)$ avec borne théorique
+		\item \textbf{Heatmap de sélection de modèle} : Matrice [Type intensité] × [Cadre sélectionné] → Probabilité
+		\item \textbf{Boxplots des longueurs de code} : Comparaison $LC_{\text{empirique}}$ vs $LC_{\text{théorique}}$
+		\item \textbf{Gain de compression vs densité de sauts} : Ratio $LC_{\text{uniforme}}/LC_{\text{MDL}}$ en fonction de $N/r$
+		\item \textbf{Histogrammes des dimensions optimales} : Distribution de $K^*$ par type d'intensité
+		\item \textbf{Temps de calcul vs taille de bloc} : Profiling pour validation complexité
+	\end{enumerate}
+	
+	% ============================================================================
+	\section{Détails d'Implémentation}
+	\label{sec:implementation}
+	% ============================================================================
+	
+	\subsection{Structure de Projet Recommandée}
+	\label{subsec:structure_projet}
+	
+	\begin{verbatim}
+		ppv_simulations/
+		├── README.md
+		├── requirements.txt
+		├── config/
+		│   ├── experiment_grid.yaml
+		│   ├── thresholds.yaml
+		│   └── logging.conf
+		├── src/
+		│   ├── generators/
+		│   │   ├── __init__.py
+		│   │   ├── poisson_nh.py
+		│   │   ├── marks.py
+		│   │   └── spatiotemporal_block.py
+		│   ├── estimators/
+		│   │   ├── __init__.py
+		│   │   ├── framework_vector.py
+		│   │   ├── framework_marked.py
+		│   │   ├── framework_spatial.py
+		│   │   ├── framework_markov.py
+		│   │   └── families/
+		│   │       ├── __init__.py
+		│   │       ├── constant.py
+		│   │       ├── histogram.py
+		│   │       ├── spline.py
+		│   │       └── wavelet.py
+		│   ├── mdl/
+		│   │   ├── __init__.py
+		│   │   ├── complexity_penalty.py
+		│   │   ├── model_selection.py
+		│   │   └── convergence.py
+		│   ├── metrics/
+		│   │   ├── __init__.py
+		│   │   ├── codelength.py
+		│   │   ├── hellinger.py
+		│   │   └── validation.py
+		│   └── utils/
+		│       ├── inversion.py
+		│       ├── parallel.py
+		│       └── plotting.py
+		├── experiments/
+		│   ├── __init__.py
+		│   ├── grid_search.py
+		│   ├── results_aggregator.py
+		│   └── report_generator.py
+		├── tests/
+		│   ├── test_generators.py
+		│   ├── test_estimators.py
+		│   ├── test_mdl.py
+		│   └── test_metrics.py
+		├── notebooks/
+		│   ├── exploration.ipynb
+		│   ├── validation_report.ipynb
+		│   └── benchmarking.ipynb
+		├── main.py
+		└── setup.py
+	\end{verbatim}
+	
+	\subsection{Commandes d'Exécution}
+	\label{subsec:commandes_execution}
+	
+	\begin{verbatim}
+		# 1. Installation
+		cd ppv_simulations
+		pip install -e .
+		
+		# 2. Exécution d'une simulation unitaire (debug)
+		python main.py \
+		--config config/experiment_grid.yaml \
+		--output results/debug \
+		--parallel --workers 2 \
+		--filter '{"intensity_type": "sinusoidal", "framework": "marked"}'
+		
+		# 3. Exécution complète de la grille (production)
+		python experiments/grid_search.py \
+		--config config/experiment_grid.yaml \
+		--output results/full_validation_20260319 \
+		--parallel --workers 16 \
+		--n-rep 500 \
+		--checkpoint-every 100
+		
+		# 4. Génération du rapport de validation
+		python experiments/report_generator.py \
+		--input results/full_validation_20260319 \
+		--output report_validation_v2.0.md \
+		--format markdown \
+		--include-plots
+		
+		# 5. Exécution des tests unitaires
+		pytest tests/ -v --cov=src --cov-report=html
+		
+		# 6. Benchmark de performance
+		python experiments/benchmarking.py \
+		--block-sizes 8 16 32 \
+		--r-frames 64 128 \
+		--output benchmarks/performance_profile.json
+	\end{verbatim}
+	
+	\subsection{Dépendances Logicielles}
+	\label{subsec:dependances}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Dépendances Python}
+		\label{tab:dependances}
+		\begin{tabular}{@{}ll@{}}
+			\toprule
+			\textbf{Package} & \textbf{Version} \\
+			\midrule
+			numpy & $\geq 1.21.0$ \\
+			scipy & $\geq 1.7.0$ \\
+			scikit-learn & $\geq 1.0.0$ \\
+			matplotlib & $\geq 3.4.0$ \\
+			pandas & $\geq 1.3.0$ \\
+			pyyaml & $\geq 5.4.0$ \\
+			pytest & $\geq 6.2.0$ \\
+			coverage & $\geq 5.5.0$ \\
+			jupyter & $\geq 1.0.0$ \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Conclusion et Perspectives}
+	\label{sec:conclusion}
+	% ============================================================================
+	
+	Ce plan de simulations fournit un cadre rigoureux et reproductible pour valider l'ensemble de l'architecture PPV v2.0. La progression par paliers (générateurs → estimation → sélection → convergence → intégration) garantit que les erreurs sont localisables et corrigeables rapidement.
+	
+	Les critères de succès quantitatifs et les visualisations ciblées permettent une évaluation objective de la performance du codec, tandis que la structure modulaire du code facilite l'extension future (nouveaux types d'intensité, cadres supplémentaires).
+	
+	La campagne de simulation estimée à \textbf{10 semaines} avec une équipe de 2-3 personnes permettra de produire les preuves empiriques nécessaires pour :
+	\begin{enumerate}
+		\item Valider les fondements théoriques du codec PPV
+		\item Guider les optimisations pour le déploiement réel
+		\item Fournir des arguments quantitatifs pour le pitch investisseur
+	\end{enumerate}
+	
+	\subsection{Prochaine Étape Immédiate}
+	\label{subsec:prochaine_etape}
+	
+	Initialiser le dépôt Git avec la structure proposée et implémenter les générateurs de processus Poisson non homogène (Phase 1).
+	
+	% ============================================================================
+	% BIBLIOGRAPHIE
+	% ============================================================================
+	\newpage
+	\bibliographystyle{alpha}
+	\bibliography{biblio}
+	
+	\begin{thebibliography}{9}
+		\bibitem{Uniform_temporal.tex}
+		Nembé, J. (2015). \textit{Strong Uniform coding of temporal Data using Counting Processes}. Technical Report N° 003/22/02/2015/MD/JN, African Institute of Computing Sciences.
+		
+		\bibitem{uniform_temp_coding.tex}
+		Nembé, J. (2015). \textit{Uniform temporal encoding of massive video datasets}. Technical Report N° 003/22/02/2015/MD/JN, African Institute of Computing Sciences.
+		
+		\bibitem{versatile_pp.tex}
+		Nembé, J. (2015). \textit{Versatile Point Process Encoding Using the MDL Principle}. Technical Report, African Institute of Computing Sciences.
+		
+		\bibitem{versatile_main.tex}
+		Nembé, J. (2015). \textit{MDL estimator for a class of stochastic processes}. Technical Report N° 002/20/02/2015/MD/JN, African Institute of Computing Sciences.
+		
+		\bibitem{Uniform_temporal_light.tex}
+		Nembé, J. (2026). \textit{Codage Uniforme Fort de Données Temporelles par Processus de Comptage}. Version révisée, African Institute of Computing Sciences.
+		
+		\bibitem{Aalen75}
+		Aalen, O. (1975). \textit{Statistical Inference for a Family of Counting Processes}. PhD Thesis, University of California, Berkeley.
+		
+		\bibitem{Rissanen83}
+		Rissanen, J. (1983). \textit{A Universal Prior for Integers and Estimation by Minimum Description Length}. Annals of Statistics, 11(2), 416-431.
+		
+		\bibitem{Barron85}
+		Barron, A. (1985). \textit{The Strong Ergodic Theorem for Densities: Generalized Shannon-McMillan-Breiman Theorem}. Annals of Probability, 13(4), 1292-1303.
+	\end{thebibliography}
+	
+	% ============================================================================
+	% ANNEXES
+	% ============================================================================
+	\newpage
+	\appendix
+	
+	\section{Annexe A : Formules d'Inversion Analytique}
+	\label{annexe:inversion}
+	
+	\subsection{Poisson Homogène}
+	\begin{equation}
+		A(t) = \lambda_0 t \Rightarrow A^{-1}(y) = \frac{y}{\lambda_0}.
+	\end{equation}
+	
+	\subsection{Intensité Linéaire}
+	\begin{equation}
+		A(t) = \frac{1}{2} a t^2 + b t \Rightarrow A^{-1}(y) = \frac{-b + \sqrt{b^2 + 2ay}}{a}.
+	\end{equation}
+	
+	\subsection{Intensité Exponentielle}
+	\begin{equation}
+		A(t) = \frac{\lambda_0}{\beta} (e^{\beta t} - 1) \Rightarrow A^{-1}(y) = \frac{1}{\beta} \log\left(1 + \frac{\beta y}{\lambda_0}\right).
+	\end{equation}
+	
+	\section{Annexe B : Grille de Paramètres Complète (YAML)}
+	\label{annexe:yaml}
+	
+	\begin{verbatim}
+		block_sizes: [8, 16, 32]
+		r_frames: [32, 64, 128]
+		m_colors: [2, 8, 16, 32]
+		intensity_types:
+		- homogeneous
+		- linear
+		- sinusoidal
+		- exponential
+		- logarithmic
+		- power
+		intensity_params:
+		homogeneous:
+		- {lambda0: 0.01}
+		- {lambda0: 0.1}
+		- {lambda0: 1.0}
+		linear:
+		- {a: -0.01, b: 0.01}
+		- {a: 0.01, b: 0.1}
+		frameworks: [vector, marked, spatial, markov]
+		families: 
+		- constant
+		- histogram_K4
+		- histogram_K8
+		- histogram_K16
+		- spline_K8
+		- wavelet_J3
+		n_replications: [100, 500]
+		seeds: [42, 123, 456]
+	\end{verbatim}
+	
+	\section{Annexe C : Template de Rapport de Validation}
+	\label{annexe:rapport}
+	
+	\begin{verbatim}
+		# Rapport de Validation PPV v2.0 - Simulations Numériques
+		
+		## Résumé Exécutif
+		- ✅ 98.7% des bornes de convergence Hellinger satisfaites
+		- ✅ Sélection de cadre correcte dans 96.2% des cas
+		- ✅ Gain moyen de compression: 3.2× vs L₁, 1.4× vs L₄
+		- ⚠️ Taux de convergence légèrement sous-estimé pour intensités sinusoïdales
+		
+		## 1. Validation des Générateurs
+		### 1.1 Exactitude des temps de sauts
+		| Type intensité | E[‖N̂-N‖/N] | Seuil | Statut |
+		|---------------|-------------|-------|--------|
+		| Homogène      | 0.3%        | <1%   | ✅     |
+		| Sinusoïdale   | 0.7%        | <1%   | ✅     |
+		| Exponentielle | 0.5%        | <1%   | ✅     |
+		
+		## 2. Performance par Cadre Statistique
+		### 2.1 Exactitude de sélection
+		| Cadre générateur | Sélection correcte | Faux positifs principaux |
+		|-----------------|-------------------|-------------------------|
+		| Vecteur         | 97.1%             | Marqué (2.1%)           |
+		| Marqué          | 96.8%             | Vecteur (2.4%)          |
+		| Spatial         | 94.3%             | Markov (3.2%)           |
+		| Markovien       | 95.7%             | Spatial (2.8%)          |
+		
+		## 3. Longueurs de Code et Convergence
+		### 3.1 Erreur relative LC
+		| Configuration | Erreur relative moyenne | IC 95% |
+		|--------------|------------------------|--------|
+		| Homogène, K=1 | 2.1% | [1.8%, 2.4%] |
+		| Sinusoïdale, K=8 | 4.3% | [3.9%, 4.7%] |
+		| Exponentielle, K=4 | 3.8% | [3.4%, 4.2%] |
+		
+		## 4. Recommandations
+		1. Pour intensités sinusoïdales: Ajouter famille trigonométrique
+		2. Pour petits blocs (n<100): Ajouter pénalité log(log n)
+		3. Optimisation temps-réel: Pré-calculer seuils de sélection
+	\end{verbatim}
+	
+\end{document}

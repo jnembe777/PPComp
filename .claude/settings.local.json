@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python:*)",
+      "Bash(pushd:*)",
+      "Bash(popd:*)",
+      "Bash(curl:*)",
+      "Bash(pip install:*)",
+      "Bash(dir:*)",
+      "Bash(ls:*)",
+      "Bash(winget install:*)",
+      "Bash(where.exe:*)",
+      "Bash(findstr:*)",
+      "Bash(cmd /c \"where ffmpeg 2>nul || dir /s /b C:\\\\Users\\\\hp\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\Links\\\\ffmpeg.exe 2>nul\")",
+      "Bash(cmd /c \"dir /s /b C:\\\\Users\\\\hp\\\\AppData\\\\Local\\\\Microsoft\\\\WinGet\\\\*ffmpeg* 2>nul\")",
+      "Bash(cmd /c \"echo %PATH%\")",
+      "Bash(tr:*)",
+      "Bash(cmd /c \"if exist C:\\\\ffmpeg\\\\bin\\\\ffmpeg.exe \\(echo C:\\\\ffmpeg\\\\bin\\\\ffmpeg.exe\\) else if exist C:\\\\ProgramData\\\\chocolatey\\\\bin\\\\ffmpeg.exe \\(echo C:\\\\ProgramData\\\\chocolatey\\\\bin\\\\ffmpeg.exe\\) else \\(dir /s /b C:\\\\Users\\\\hp\\\\*ffmpeg.exe 2>nul | findstr /i bin\\)\")",
+      "Bash(echo:*)",
+      "Bash(yt-dlp:*)",
+      "Bash(git init:*)",
+      "Bash(git add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nOptimisation classification cartouche LMD-PPV: 99.79% precision\n\nCorrections majeures pour atteindre une precision quasi-parfaite:\n\nFeatures H_s et rho_corr \\(bitwise.py, agent_0_extraction.py\\):\n- compute_spatial_homogeneity_from_frame\\(\\): fraction paires voisins identiques\n- compute_spatial_autocorrelation\\(\\): correlation spatiale reelle entre pixels\n- Corrige le bug ou H_s et rho_corr etaient toujours 0\n\nDimension A - Type de processus \\(agent_1_classification.py\\):\n- N=0 -> MARKED \\(blocs vides\\)\n- m<=4 et m_eff>=m-1 -> MONOCHROMATIC \\(peu de couleurs actives, C_color=0\\)\n- Precision: 100%\n\nDimension C - Representation \\(features.py, objective.py, run_optimization.py\\):\n- Regles basees sur N au lieu de density:\n  - N=0 -> TIMESTAMPS \\(R1\\)\n  - N<50 -> COUNT \\(R2\\)  \n  - N>=50 -> COMBINATORIAL \\(R4b\\)\n- Precision: 100%\n\nResultats finaux sur 950 blocs:\n- Dimension A: 100.00%\n- Dimension B: 99.79%\n- Dimension C: 100.00%\n- Exacte \\(A+B+C\\): 99.79%\n- Overhead: 0%\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(xxd:*)",
+      "Bash(find:*)",
+      "Bash(python3:*)",
+      "Bash(/c/Python313/python:*)",
+      "Bash(git remote add:*)",
+      "Bash(git commit -m \"$\\(cat <<''EOF''\nInitial commit: Add PP codec project files and sample videos\n\nThis commit includes:\n- Documentation and specifications \\(PDFs, Markdown, LaTeX\\)\n- Codec implementations and agents\n- Sample video files for testing\n- Brochures and presentation materials\n- Development tools and configurations\n\nCo-Authored-By: Claude Sonnet 4.5 <noreply@anthropic.com>\nEOF\n\\)\")"
+    ]
+  }
+}

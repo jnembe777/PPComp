@@ -1,0 +1,515 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{xcolor}
+\usepackage{tcolorbox}
+\usepackage{booktabs}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{enumitem}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+\definecolor{ppvblue}{RGB}{0,51,102}
+\definecolor{ppvgreen}{RGB}{0,102,51}
+\definecolor{ppvorange}{RGB}{255,102,0}
+
+\newtcolorbox{featurebox}[1]{
+	colback=ppvblue!5,
+	colframe=ppvblue,
+	title=#1,
+	fonttitle=\bfseries,
+	sharp corners,
+	boxrule=1pt
+}
+
+\newtcolorbox{benefitbox}{
+	colback=ppvgreen!5,
+	colframe=ppvgreen,
+	title=Bénéfice Utilisateur,
+	fonttitle=\bfseries,
+	sharp corners,
+	boxrule=1pt
+}
+
+\newtcolorbox{techbox}{
+	colback=ppvorange!5,
+	colframe=ppvorange,
+	title=Fondement Technique,
+	fonttitle=\bfseries,
+	sharp corners,
+	boxrule=1pt
+}
+
+\title{\textbf{\color{ppvblue}Codec PPV v2.0} \\ Fonctionnalités Commerciales et Cas d'Usage}
+\author{Dr. Jocelyn NEMBÉ \\ African Institute of Computing Sciences}
+\date{Mars 2026 \\ \textit{Document Confidentiel}}
+
+\begin{document}
+	
+	\maketitle
+	
+	\begin{abstract}
+		\noindent Ce document présente les 6 fonctionnalités structurelles du codec PPV v2.0 du point de vue utilisateur final. Chaque fonctionnalité est décrite avec ses bénéfices concrets, ses cas d'usage par secteur, et ses fondements techniques. Le PPV n'est pas un codec de plus — c'est un changement de paradigme qui transforme la vidéo passive en expérience interactive et intelligente.
+	\end{abstract}
+	
+	\tableofcontents
+	\newpage
+	
+	% ============================================================================
+	\section{Introduction : Le Changement de Paradigme PPV}
+	% ============================================================================
+	
+	\begin{featurebox}{Pourquoi PPV est Différent}
+		Les codecs classiques (H.264, H.265, AV1) compressent des \textbf{pixels}. Le PPV encode des \textbf{événements}. Cette différence architecturale fondamentale ouvre des capacités structurellement impossibles dans les codecs linéaires.
+	\end{featurebox}
+	
+	\subsection{Les 4 Limites des Codecs Classiques}
+	
+	\begin{enumerate}[label=\textbf{\arabic*.}, leftmargin=*]
+		\item \textbf{Accès aléatoire limité} : Seulement aux I-Frames (0.5-2 secondes de latence)
+		\item \textbf{Analyse IA obligatoire} : Nécessite le décodage complet avant toute analyse
+		\item \textbf{Adaptation couleur impossible} : Requiert un re-encodage complet pour changer le rendu
+		\item \textbf{Multi-échelle coûteux} : Flux multiples indépendants pour chaque résolution
+	\end{enumerate}
+	
+	\subsection{Les 6 Avantages Structurels PPV}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Comparaison PPV vs Codecs Classiques}
+		\label{tab:comparaison}
+		\begin{tabular}{@{}lcc@{}}
+			\toprule
+			\textbf{Capacité} & \textbf{H.265/AV1} & \textbf{PPV v2.0} \\ \midrule
+			Accès aléatoire & I-Frame (0.5-2s) & Pixel/événement (O(1)) \\
+			Analyse IA & Décodage complet & Requêtes sur métadonnées \\
+			Adaptation couleur & Re-encodage & LUT instantanée \\
+			Multi-échelle & Flux multiples & Zoom dans le même flux \\
+			Vidéo 3D & Non supporté & Blocs cubiques 6 faces \\
+			Bande passante & $\propto$ résolution & $\propto$ activité \\
+			Lossless garanti & Non (CRF 0 $\approx$ 56 dB) & Oui (PSNR infini) \\
+			Multispectral (>3 bandes) & Non & Palette locale N bandes \\
+			Streaming progressif & Non & Pyramide N0$\to$N5 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Propriété 1 : Très Haute Résolution Chromatique (Chroma VHR)}
+	% ============================================================================
+	
+	\begin{featurebox}{Chroma VHR — La Couleur Parfaite, Sans Compromis}
+		Profondeur couleur libre (8/16/24/32 bits) sans changer le coût de compression. Le pixel référence sa couleur par index dans la palette locale, et le coût de cet index est $\lceil \log_2(m) \rceil$ bits — indépendant de la profondeur couleur sous-jacente.
+	\end{featurebox}
+	
+	\subsection{Principe Mathématique}
+	
+	Pour un bloc $16 \times 16$ sur $r$ frames avec $m$ couleurs distinctes :
+	\begin{equation}
+		\text{Coût total} = \underbrace{\lceil \log_2 C(r,n) \rceil}_{\text{Temps}} + \underbrace{n \times \lceil \log_2 m \rceil}_{\text{Couleurs}} + \underbrace{m \times \text{color\_bits}}_{\text{Palette}}
+	\end{equation}
+	
+	La profondeur couleur n'affecte \textbf{que la palette}, stockée une seule fois par bloc.
+	
+	\subsection{Bénéfices Concrets}
+	
+	\begin{benefitbox}
+		\begin{itemize}[leftmargin=*]
+			\item \textbf{Imagerie médicale} : Scanners 16-bit, IRM 12-bit sans perte de qualité
+			\item \textbf{Cinéma HDR} : 10/12-bit Dolby Vision natif avec compression optimale
+			\item \textbf{Cartographie multispectrale} : 13 bandes spectrales à 16 bits par composante
+			\item \textbf{Surcoût marginal} : Passer de 8-bit à 24-bit ajoute $\approx 3\%$ au coût total
+		\end{itemize}
+	\end{benefitbox}
+	
+	\subsection{Cas d'Usage par Secteur}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Applications Chroma VHR}
+		\label{tab:chroma_vhr}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Secteur} & \textbf{Profondeur} & \textbf{Bénéfice} \\ \midrule
+			Médical & 12-16 bits & Détection micro-lésions invisibles en 8-bit \\
+			Cinéma & 10-12 bits & Grading couleur sans re-encodage \\
+			Satellite & 12-16 bits & 13 bandes spectrales, coût $= \log_2(m)$ \\
+			Spatial & 16-32 bits & Données scientifiques lossless \\
+			Surveillance & 8-10 bits & Identification de détails critiques \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{techbox}
+		\textbf{Effort d'implémentation :} 1 jour \\
+		\textbf{Modification :} Étendre \texttt{color\_bits} dans le header à 16/24/32 \\
+		\textbf{Impact :} Vecteur booléen et index combinatoire strictement inchangés
+	\end{techbox}
+	
+	% ============================================================================
+	\section{Propriété 2 : Multi-Résolution (LOD Variable)}
+	% ============================================================================
+	
+	\begin{featurebox}{Multi-Résolution — Le Détail Variable Sans Zoom}
+		Définir le processus ponctuel au niveau d'une unité spatiale de taille variable. Un seul processus décrit un bloc $16 \times 16$ entier (LOD 0) ou 256 processus individuels (LOD 2).
+	\end{featurebox}
+	
+	\subsection{Les 3 Niveaux de Détail}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Niveaux de Détail (LOD)}
+		\label{tab:lod}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{LOD} & \textbf{Unité} & \textbf{Coût} & \textbf{Usage} \\ \midrule
+			LOD 0 & Bloc $16 \times 16$ & $\approx 0.001$ bpp & Fond statique, preview \\
+			LOD 1 & Bloc $8 \times 8$ & $\approx 1$ bpp & Activité modérée \\
+			LOD 2 & Pixel individuel & $\approx 4$ bpp & Détail maximal \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Bénéfices Concrets}
+	
+	\begin{benefitbox}
+		\begin{itemize}[leftmargin=*]
+			\item \textbf{Économie de bande passante} : 60-80\% pour un rendu subjectif identique
+			\item \textbf{Streaming adaptatif} : Le décodeur investit uniquement sur les zones actives
+			\item \textbf{Synergie sémantique} : Le tag LOD 0 (ex: \texttt{fond\_statique}) guide le choix de ne pas demander le LOD 2
+			\item \textbf{Entrelacement natif} : Chaque bloc contient d'abord son LOD 0, puis optionnellement LOD 1 et 2
+		\end{itemize}
+	\end{benefitbox}
+	
+	\subsection{Cas d'Usage par Secteur}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Applications Multi-Résolution}
+		\label{tab:multi_res}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Secteur} & \textbf{Scénario} & \textbf{Gain} \\ \midrule
+			Streaming & Zone regardée en LOD 2, reste en LOD 0 & -70\% bande passante \\
+			Surveillance & Fond statique LOD 0, mouvement LOD 2 & -80\% stockage \\
+			Télémédecine & Zone opératoire HD, périphérie basse rés & Latence critique réduite \\
+			VR/360° & Face visible LOD 2, autres faces LOD 1 & Immersion sans surcoût \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{techbox}
+		\textbf{Effort d'implémentation :} 1-2 semaines \\
+		\textbf{Modification :} Entrelacement des LODs dans le GOP, champ \texttt{lod\_available} (2 bits) \\
+		\textbf{Format :} Code Méthode étendu à 24 bits
+	\end{techbox}
+	
+	% ============================================================================
+	\section{Propriété 3 : Multi-Échelle (Zoom Natif)}
+	% ============================================================================
+	
+	\begin{featurebox}{Multi-Échelle — Zoomer Sans Re-Buffering}
+		Navigation dans le flux compressé avec accès O(1) à n'importe quel bloc. Les timestamps sont partagés entre toutes les échelles — le temps est invariant, seul l'espace change de granularité.
+	\end{featurebox}
+	
+	\subsection{Principe Technique}
+	
+	\begin{equation}
+		\text{Offset Table : } \text{uint32}[nb\_blocs] \rightarrow \text{position en bits}
+	\end{equation}
+	
+	Pour une image $128 \times 96$ en blocs $16 \times 16$ : $48 \times 4 = 192$ octets d'overhead (0.7\%).
+	
+	\subsection{Bénéfices Concrets}
+	
+	\begin{benefitbox}
+		\begin{itemize}[leftmargin=*]
+			\item \textbf{Accès aléatoire O(1)} : Décoder le bloc B(5,3) sans parser les 47 précédents
+			\item \textbf{Zoom sans couture} : Basculement instantané du flux Niveau 0 au Niveau 2
+			\item \textbf{Pas de re-buffering} : Les indices temporels sont compatibles (même base temps)
+			\item \textbf{Cohérence chromatique} : Les marques de couleur assurent la cohérence entre échelles
+		\end{itemize}
+	\end{benefitbox}
+	
+	\subsection{Cas d'Usage par Secteur}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Applications Multi-Échelle}
+		\label{tab:multi_echelle}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Secteur} & \textbf{Scénario} & \textbf{Performance} \\ \midrule
+			Archéologie & Navigation site reconstitué : vue aérienne $\to$ détail & O(1) accès \\
+			Maintenance & Inspection virtuelle machine : rotation, zoom, coupe & Diagnostic à distance \\
+			Éducation & Dissection virtuelle 3D : zoom organe, annotation & Pédagogie interactive \\
+			Criminalistique & Agrandissement plaque floue sans perte & Preuve exploitable \\
+			Documentaire & Zoom animal en mouvement sans interruption & Apprentissage actif \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{techbox}
+		\textbf{Effort d'implémentation :} 1 jour \\
+		\textbf{Modification :} Offset table dans le GOP header \\
+		\textbf{Overhead :} 0.7\% pour accès O(1)
+	\end{techbox}
+	
+	% ============================================================================
+	\section{Propriété 4 : Enrichissement Sémantique}
+	% ============================================================================
+	
+	\begin{featurebox}{Sémantique — La Vidéo Qui Comprend Ce Qu'Elle Montre}
+		Chaque saut porte une \texttt{semantic\_mark} (ex: \texttt{type: 'motion'}, \texttt{vector: (dx,dy)}, \texttt{confidence: 0.9}). Requêtes SQL-like directement sur le bitstream sans décoder les pixels.
+	\end{featurebox}
+	
+	\subsection{Deux Niveaux d'Enrichissement}
+	
+	\begin{enumerate}[label=\textbf{Niveau \arabic*.}, leftmargin=*]
+		\item \textbf{Niveau bloc} : Header sémantique de 2-4 octets (type de contenu, activité résumée, tag dominant)
+		\item \textbf{Niveau marque} : Chaque entrée de palette enrichie (\texttt{motion\_vec}, \texttt{semantic\_tag}, \texttt{confidence})
+	\end{enumerate}
+	
+	\subsection{Bénéfices Concrets}
+	
+	\begin{benefitbox}
+		\begin{itemize}[leftmargin=*]
+			\item \textbf{Requêtes en O(log durée)} : "Montre-moi les moments où l'objet rouge a bougé"
+			\item \textbf{Overhead négligeable} : $\approx 5\%$ du coût total du bloc
+			\item \textbf{Analyse sans décodage} : Exécuter des requêtes directement sur le flux compressé
+			\item \textbf{Stockage minimal} : Garder l'historique des événements (quelques Mo) sans la vidéo brute (To)
+		\end{itemize}
+	\end{benefitbox}
+	
+	\subsection{Cas d'Usage par Secteur}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Applications Sémantiques}
+		\label{tab:semantique}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Secteur} & \textbf{Requête Type} & \textbf{Performance} \\ \midrule
+			Surveillance & \texttt{SELECT time, location WHERE mark.type='intrusion'} & O(log T) \\
+			Médical & Tags automatiques : "tumeur", "inflammation" & Aide au diagnostic \\
+			Écologie & Détection : "déforestation", "urbanisation" & Alertes précoces \\
+			Retail & "Compter les passages devant le rayon X" & Analytics temps réel \\
+			Sport & "Tous les tirs au but entre 60' et 90'" & Montage assisté \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{techbox}
+		\textbf{Effort d'implémentation :} 1-2 semaines \\
+		\textbf{Modification :} Palette enrichie (3-4 octets/entrée), index sémantique global \\
+		\textbf{Overhead :} $\approx 5\%$ du coût total
+	\end{techbox}
+	
+	% ============================================================================
+	\section{Propriété 5 : Vidéo 3D par Blocs Cubiques}
+	% ============================================================================
+	
+	\begin{featurebox}{Vidéo 3D — Navigation Directionnelle Native}
+		Un bloc $4 \times 4$ n'est plus une surface mais un cube à 6 faces. Chaque face est un processus ponctuel marqué standard, avec la même base temporelle $r$. Les 6 faces partagent les mêmes timestamps.
+	\end{featurebox}
+	
+	\subsection{Principe Technique}
+	
+	\begin{equation}
+		\text{Coût cube} = 6 \times d^2 \text{ processus} \quad \text{mais} \quad \text{timestamps partagés}
+	\end{equation}
+	
+	Mode adaptatif : Front LOD 2, latéraux LOD 1, arrière LOD 0 $\approx 1.5-2 \times$ coût 2D.
+	
+	\subsection{Bénéfices Concrets}
+	
+	\begin{benefitbox}
+		\begin{itemize}[leftmargin=*]
+			\item \textbf{Navigation fluide} : Le décodeur ne décode que la face visible en LOD 2
+			\item \textbf{Pas de trou noir} : LOD 1 fournit une preview acceptable pendant la transition
+			\item \textbf{Cohérence temporelle gratuite} : Découle de la structure du processus ponctuel
+			\item \textbf{Confiance signalée} : Tag de confiance dans les marques (observé vs inféré)
+		\end{itemize}
+	\end{benefitbox}
+	
+	\subsection{Cas d'Usage par Secteur}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Applications Vidéo 3D}
+		\label{tab:video_3d}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Secteur} & \textbf{Scénario} & \textbf{Gain} \\ \midrule
+			VR/360° & Streaming adaptatif : zone regardée HD & -60-80\% bande passante \\
+			Télémédecine & Inspection virtuelle organe 3D & Diagnostic à distance \\
+			Immobilier & Visite virtuelle bien : rotation, zoom & Expérience immersive \\
+			Industrie & Maintenance machine 3D : coupe transversale & Arrêt production évité \\
+			Patrimoine & Monument reconstitué : vue aérienne $\to$ détail & Valorisation culturelle \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{techbox}
+		\textbf{Effort d'implémentation :} 1-2 mois \\
+		\textbf{Modification :} Structure cube 6 faces, navigation directionnelle \\
+		\textbf{Matériel :} Caméras omnidirectionnelles ou reconstruction neuronale
+	\end{techbox}
+	
+	% ============================================================================
+	\section{Propriété 6 : Structure Pyramidale Unificatrice}
+	% ============================================================================
+	
+	\begin{featurebox}{Pyramide — Le Théorème d'Unification}
+		Une pyramide PPV est un arbre hiérarchique où chaque nœud est un processus ponctuel marqué. La racine représente la scène entière (1 PP), les feuilles sont les pixels individuels. \textbf{Toutes les propriétés précédentes sont des cas particuliers de cette structure.}
+	\end{featurebox}
+	
+	\subsection{Les 6 Niveaux de la Pyramide}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Niveaux Pyramidaux PPV}
+		\label{tab:pyramide}
+		\begin{tabular}{@{}lllll@{}}
+			\toprule
+			\textbf{Niveau} & \textbf{Entité} & \textbf{Noeuds} & \textbf{Propriété} & \textbf{Coût} \\ \midrule
+			N0 & Scène globale & 1 & Détection scene & $\approx 20$ bits \\
+			N1 & Faces/Quadrants & 4-6 & Vidéo 3D, segmentation & $\approx 100$ bits \\
+			N2 & Macroblocs $32 \times 32$ & $\approx 12-48$ & LOD 0, zoom & $\approx 0.02$ bpp \\
+			N3 & Blocs $16 \times 16$ & $\approx 48-192$ & PPV v13, sémantique & $\approx 0.5$ bpp \\
+			N4 & Sous-blocs $4 \times 4$ & $\approx 768-3072$ & LOD 2, détail & $\approx 2$ bpp \\
+			N5 & Pixels individuels & $\approx 12\text{K}-786\text{K}$ & Trace temporelle & $\approx 4$ bpp \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Projection des 5 Propriétés sur la Pyramide}
+	
+	\begin{enumerate}[label=\textbf{P\arabic*.}, leftmargin=*]
+		\item \textbf{Chroma VHR} : Propriété locale de chaque nœud — sa palette porte la couleur à profondeur arbitraire
+		\item \textbf{Multi-résolution} : Choix de profondeur de descente dans l'arbre (LOD 0 = niveau 2, LOD 2 = niveau 5)
+		\item \textbf{Multi-échelle} : Sélection d'un sous-arbre spatial (zoom = décoder les descendants d'un nœud)
+		\item \textbf{Sémantique} : Attribut porté par chaque nœud (requêtes parcourent l'arbre top-down)
+		\item \textbf{Vidéo 3D} : Branchement au niveau 1 (6 faces = 6 sous-arbres indépendants)
+	\end{enumerate}
+	
+	\subsection{Bénéfices Concrets}
+	
+	\begin{benefitbox}
+		\begin{itemize}[leftmargin=*]
+			\item \textbf{Compression optimisée} : Zones statiques encodées au niveau N2 ($\approx 0.02$ bpp) au lieu de N5 ($\approx 4$ bpp)
+			\item \textbf{Ratio estimé} : Passage de 2.8x (v13) à 15-20x sur vidéo réelle, dépassant H.265
+			\item \textbf{Streaming progressif} : Niveau N2 (résumé) transmis en priorité, N4-N5 (détail) suivent
+			\item \textbf{Liaison interrompue} : On dispose déjà d'une image exploitable à basse résolution
+		\end{itemize}
+	\end{benefitbox}
+	
+	\subsection{Cas d'Usage par Secteur}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Applications Pyramide}
+		\label{tab:pyramide_usage}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Secteur} & \textbf{Scénario} & \textbf{Impact} \\ \midrule
+			Spatial & Liaison Deep Space Network (quelques kbps) & Preview immédiate N2 \\
+			Satellite & Copernicus 12 To/jour, stockage/transmission & Compression 15-20x \\
+			Surveillance & 70-80\% fond statique encodé N2 & -80\% stockage \\
+			Médical & Archive IRM/CT lossless + accès rapide & Conformité réglementaire \\
+			Exploration & Mars rovers, sondes interplanétaires & Données scientifiques intactes \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\begin{techbox}
+		\textbf{Effort d'implémentation :} Fondamental (6 mois) \\
+		\textbf{Modification :} Structure arborescente, résumé parent/enfants \\
+		\textbf{Impact :} Unifie les 5 propriétés en un seul paradigme mathématique
+	\end{techbox}
+	
+	% ============================================================================
+	\section{Synthèse : Matrice des Fonctionnalités par Secteur}
+	% ============================================================================
+	
+	\begin{table}[h]
+		\centering
+		\caption{Matrice Fonctionnalités $\times$ Secteurs}
+		\label{tab:matrice}
+		\begin{tabular}{@{}lccccc@{}}
+			\toprule
+			\textbf{Secteur} & \textbf{P1} & \textbf{P2} & \textbf{P3} & \textbf{P4} & \textbf{P5} \\ \midrule
+			Médical & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+			Surveillance & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
+			Satellite & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
+			Spatial & \checkmark & \checkmark & \checkmark & $\times$ & $\times$ \\
+			VR/360° & \checkmark & \checkmark & \checkmark & $\times$ & \checkmark \\
+			Cinéma & \checkmark & \checkmark & \checkmark & \checkmark & $\times$ \\
+			Éducation & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+			Industrie & \checkmark & \checkmark & \checkmark & \checkmark & \checkmark \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\textbf{Légende :} \checkmark = Priorité haute, $\times$ = Non applicable
+	
+	% ============================================================================
+	\section{Feuille de Route Produit}
+	% ============================================================================
+	
+	\begin{table}[h]
+		\centering
+		\caption{Feuille de Route Fonctionnalités}
+		\label{tab:roadmap}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Phase} & \textbf{Fonctionnalités} & \textbf{Durée} & \textbf{Objectif} \\ \midrule
+			Phase 0 (actuelle) & Codec v13 complet, C++ 60 MPx/s & Fait & Prototype fonctionnel \\
+			Phase 1 — Validation & Tests 100+ vidéos, article recherche & 3 mois & Publication académique \\
+			Phase 2 — v2.0 Core & Pyramide, sémantique, offset table & 6 mois & Différenciateur technique \\
+			Phase 3 — Produit & SDK, API, lecteur WASM, demo web & 6 mois & Premier produit B2B \\
+			Phase 4 — Marché & Partenariats surveillance/médical/spatial & 12 mois & Revenue, clients pilotes \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Conclusion : L'Avantage Décisif PPV}
+	% ============================================================================
+	
+	\begin{featurebox}{Pourquoi Choisir PPV ?}
+		\begin{enumerate}[leftmargin=*]
+			\item \textbf{Adaptatif} : La vidéo s'adapte à vous, pas l'inverse
+			\item \textbf{Interactif} : Cliquez, zoomez, interrogez — la vidéo répond
+			\item \textbf{Efficient} : Plus de qualité, moins de bande passante
+			\item \textbf{Garanti} : Lossless, bit-exact, reproductible
+			\item \textbf{Évolutif} : Une architecture qui grandit avec vos besoins
+		\end{enumerate}
+	\end{featurebox}
+	
+	\begin{center}
+		\textbf{\Large \color{ppvblue} PPV Codec — La vidéo ne se regarde plus. Elle s'explore.}
+	\end{center}
+	
+	\vspace{1cm}
+	
+	\begin{center}
+		\textbf{Contact :} Dr. Nembé — \texttt{nembe@ppvcodec.io} \\
+		\textbf{Demo en ligne :} \texttt{demo.ppvcodec.io} \\
+		\textbf{Documentation :} \texttt{docs.ppvcodec.io}
+	\end{center}
+	
+	\vfill
+	
+	\begin{center}
+		\textit{Document confidentiel — Ne pas diffuser sans autorisation} \\
+		\textit{Codec PPV v13 — Processus Ponctuels Marqués pour la Compression Vidéo} \\
+		\textit{\copyright~2026 African Institute of Computing Sciences — Tous droits réservés}
+	\end{center}
+	
+\end{document}

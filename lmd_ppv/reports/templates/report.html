@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <style>
+        :root {
+            --primary: #007bff;
+            --secondary: #6c757d;
+            --success: #28a745;
+            --danger: #dc3545;
+            --warning: #ffc107;
+            --info: #17a2b8;
+            --dark: #343a40;
+            --light: #f8f9fa;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: var(--light);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            color: white;
+            padding: 40px 0;
+            margin-bottom: 30px;
+        }
+
+        header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        header .meta {
+            opacity: 0.9;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .card-header {
+            background: var(--dark);
+            color: white;
+            padding: 15px 20px;
+            font-weight: 600;
+        }
+
+        .card-body {
+            padding: 20px;
+        }
+
+        h2 {
+            color: var(--dark);
+            border-bottom: 2px solid var(--primary);
+            padding-bottom: 10px;
+            margin: 30px 0 20px;
+        }
+
+        h3 {
+            color: var(--secondary);
+            margin: 20px 0 15px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        th {
+            background: var(--primary);
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:hover {
+            background: rgba(0,123,255,0.05);
+        }
+
+        tr:nth-child(even) {
+            background: rgba(0,0,0,0.02);
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+
+        .metric-card {
+            background: linear-gradient(135deg, var(--primary), var(--info));
+            color: white;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .metric-card.success {
+            background: linear-gradient(135deg, var(--success), #20c997);
+        }
+
+        .metric-card.warning {
+            background: linear-gradient(135deg, var(--warning), #fd7e14);
+        }
+
+        .metric-card.danger {
+            background: linear-gradient(135deg, var(--danger), #e83e8c);
+        }
+
+        .metric-value {
+            font-size: 2.5em;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .metric-label {
+            opacity: 0.9;
+            font-size: 0.9em;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            text-align: center;
+        }
+
+        .chart-container img {
+            max-width: 100%;
+            border-radius: 4px;
+        }
+
+        .toc {
+            background: white;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .toc h3 {
+            margin-top: 0;
+            color: var(--dark);
+        }
+
+        .toc ul {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .toc li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .toc li:last-child {
+            border-bottom: none;
+        }
+
+        .toc a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        .toc a:hover {
+            text-decoration: underline;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.8em;
+            font-weight: 600;
+        }
+
+        .badge-success { background: var(--success); color: white; }
+        .badge-warning { background: var(--warning); color: var(--dark); }
+        .badge-danger { background: var(--danger); color: white; }
+        .badge-info { background: var(--info); color: white; }
+
+        .progress-bar {
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        footer {
+            text-align: center;
+            padding: 30px;
+            color: var(--secondary);
+            margin-top: 40px;
+        }
+
+        @media print {
+            header {
+                background: var(--dark) !important;
+                -webkit-print-color-adjust: exact;
+            }
+
+            .card {
+                break-inside: avoid;
+            }
+
+            .metric-card {
+                background: var(--primary) !important;
+                -webkit-print-color-adjust: exact;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>{{ title }}</h1>
+            <div class="meta">
+                <strong>Auteur:</strong> {{ author }} |
+                <strong>Date:</strong> {{ date }} |
+                <strong>Version:</strong> LMD-PPV v6.0
+            </div>
+        </div>
+    </header>
+
+    <div class="container">
+        <!-- Table des matieres -->
+        <div class="toc">
+            <h3>Table des matieres</h3>
+            <ul>
+                {% for section in sections %}
+                <li><a href="#{{ section.id }}">{{ section.title }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+
+        <!-- Sections -->
+        {% for section in sections %}
+        <section id="{{ section.id }}">
+            <h2>{{ section.title }}</h2>
+
+            {% for content in section.content %}
+                {% if content.type == 'text' %}
+                <p>{{ content.value }}</p>
+
+                {% elif content.type == 'metrics' %}
+                <div class="metrics-grid">
+                    {% for key, value in content.value.items() %}
+                    <div class="metric-card">
+                        <div class="metric-value">{{ value }}</div>
+                        <div class="metric-label">{{ key }}</div>
+                    </div>
+                    {% endfor %}
+                </div>
+
+                {% elif content.type == 'table' %}
+                {% if content.title %}
+                <h3>{{ content.title }}</h3>
+                {% endif %}
+                <div class="card">
+                    <div class="card-body">
+                        <table>
+                            {% if content.headers %}
+                            <thead>
+                                <tr>
+                                    {% for h in content.headers %}
+                                    <th>{{ h }}</th>
+                                    {% endfor %}
+                                </tr>
+                            </thead>
+                            {% endif %}
+                            <tbody>
+                                {% if content.rows %}
+                                    {% for row in content.rows %}
+                                    <tr>
+                                        {% for cell in row %}
+                                        <td>{{ cell }}</td>
+                                        {% endfor %}
+                                    </tr>
+                                    {% endfor %}
+                                {% elif content.data %}
+                                    {% for key, value in content.data.items() %}
+                                    <tr>
+                                        <td><strong>{{ key }}</strong></td>
+                                        <td>{{ value }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                {% elif content.type == 'chart' %}
+                <div class="chart-container">
+                    <h3>{{ content.title }}</h3>
+                    {% if content.image_path %}
+                    <img src="{{ content.image_path }}" alt="{{ content.title }}">
+                    {% else %}
+                    <p><em>[Chart: {{ content.chart_type }}]</em></p>
+                    {% endif %}
+                </div>
+
+                {% elif content.type == 'subsection' %}
+                <h3>{{ content.title }}</h3>
+                <ul>
+                    {% for item in content.content %}
+                    <li>{{ item }}</li>
+                    {% endfor %}
+                </ul>
+
+                {% endif %}
+            {% endfor %}
+        </section>
+        {% endfor %}
+    </div>
+
+    <footer>
+        <p>
+            Genere par LMD-PPV Benchmark Suite v1.0<br>
+            Reference: J. Nembe, Codage LMD Versatile v6.0<br>
+            {{ date }}
+        </p>
+    </footer>
+</body>
+</html>

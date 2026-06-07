@@ -1,0 +1,3671 @@
+
+
+# Projet : Codage LMD Versatile pour Classes de Processus Ponctuels
+
+## 1. Objectif du Projet
+Développer un framework de compression de données basé sur le principe de la **Longueur Minimale de Description (MDL/LMD)** appliqué à diverses classes de processus ponctuels. Le système doit être capable de :
+1.  Choisir automatiquement la **représentation** la plus efficace des données (versatilité).
+2.  Estimer la **fonction d'intensité** optimale parmi plusieurs familles de fonctions.
+3.  Comparer la performance avec un **codage uniforme** (cas de référence sans estimation).
+
+## 2. Cadre Mathématique Général
+
+Soit $(\Omega, \mathcal{F}, P)$ un espace de probabilité. On observe un processus ponctuel marqué $N$ sur un intervalle $[0, T]$.
+Un réalisé du processus est noté $\omega = \{(\tau_k, m_k)\}_{k=1}^N$, où $\tau_k$ sont les temps de saut et $m_k \in \mathcal{E}$ les marques (états, couleurs, etc.).
+
+### 2.1. Modèle d'Intensité Multiplicative (Aalen)
+Comme décrit dans `Uniform_temporal.tex` et `versatile_main.tex`, l'intensité stochastique $\lambda(t)$ est modélisée par :
+$$ \lambda(t) = \alpha(t)Y(t) $$
+où :
+*   $\alpha(t)$ est la fonction d'intensité de base (inconnue, à estimer).
+*   $Y(t)$ est un processus prévisible observable (ex: individu à risque).
+
+La vraisemblance pour un paramètre $\theta$ (définissant $\alpha$) est donnée par (cf. `versatile_main.tex`) :
+$$ L_{\theta}(N) = \exp \left( \int_0^T \log(\alpha_{\theta}(s)) dN(s) - \int_0^T \alpha_{\theta}(s)Y(s) ds \right) $$
+
+## 3. Versatilité des Représentations
+Avant tout codage, le système doit choisir la représentation des données la plus compacte. Selon `versatile_pp.tex`, quatre représentations sont disponibles :
+
+1.  **Séries Temporelles (Time Stamps) :** Liste exacte des temps $\{\tau_1, \dots, \tau_N\}$.
+    *   *Usage :* Précision temporelle fine.
+2.  **Comptage (Histogrammes) :** Vecteur de comptes dans des bins de temps fixes $\{n_1, \dots, n_r\}$.
+    *   *Usage :* Analyse de taux, données discrétisées.
+3.  **Intervalles (Inter-event times) :** Liste des durées entre sauts $\{\Delta_1, \dots, \Delta_N\}$.
+    *   *Usage :* Régularité des événements, processus de renouvellement.
+4.  **Binaire (Boolean Vector) :** Vecteur de bits indiquant la présence d'un saut dans chaque bin $\{b_1, \dots, b_r\}$.
+    *   *Usage :* Détection d'événements, perte de précision temporelle acceptée.
+
+**Critère de choix :** La représentation $R \in \{TimeStamp, Count, Interval, Binary\}$ est choisie pour minimiser la longueur de code totale estimée.
+
+## 4. Estimation de l'Intensité (Familles de Fonctions)
+Pour le codage LMD non-uniforme, on estime $\alpha(t)$ dans une famille de fonctions $\Gamma_n$. Selon votre demande et le contexte d'estimation non-paramétrique de `versatile_main.tex`, les familles candidates sont :
+
+1.  **Histogrammes (Step functions) :** $\alpha(t) = \sum c_i \mathbb{I}_{[t_i, t_{i+1}]}(t)$.
+2.  **Splines :** Fonctions polynomiales par morceaux lisses.
+3.  **Polynômes :** $\alpha(t) = \sum_{k=0}^d a_k t^k$.
+4.  **Ondelettes (Wavelets) :** Décomposition multi-résolution pour capturer les singularités locales.
+5.  **Polynômes Trigonométriques :** $\alpha(t) = \sum (a_k \cos(kt) + b_k \sin(kt))$ (pour données périodiques).
+
+## 5. Critère LMD (Minimum Description Length)
+Le cœur du projet repose sur la minimisation de la complexité stochastique. Selon `versatile_main.tex` et `uniform_temp_coding.tex`, l'estimateur LMD $\hat{P}_n$ est défini par :
+
+$$ \hat{P}_n = \arg \min_{Q \in \mathcal{P}} \left( -\log Q(X^n) + C_n(Q) \right) $$
+
+Où :
+*   $-\log Q(X^n)$ est la longueur de code des données给定 le modèle (négatif de la log-vraisemblance).
+*   $C_n(Q)$ est la pénalité de complexité du modèle (nombre de paramètres, dimension de la famille, etc.).
+
+**Bornes de Convergence :**
+La performance est mesurée via la distance de Hellinger $H^2$. D'après `versatile_main.tex`, l'estimateur satisfait presque sûrement :
+$$ H^2(P, \hat{P}_n) \leq \min_{Q \in \Gamma_n} \left[ H^2(P, Q) + \frac{1}{n} C_n(Q) \right] $$
+
+## 6. Classes de Processus Ponctuels Spécifiques
+Le système doit implémenter les vraisemblances spécifiques pour chaque classe (cf. `versatile_main.tex`) :
+
+1.  **Processus Ponctuel Réel (Standard) :**
+    *   Intensité scalaire $\lambda(t)$.
+    *   Vraisemblance de Poisson non-homogène.
+2.  **Processus Ponctuel Vectoriel (Multivarié) :**
+    *   Vecteur d'intensités $\boldsymbol{\lambda}(t) = (\lambda_1(t), \dots, \lambda_d(t))$.
+    *   Prend en compte les dépendances entre composantes.
+3.  **Processus Ponctuel Spatial :**
+    *   Intensité $\lambda(s)$ où $s \in \mathbb{R}^d$.
+    *   Utilisation de noyaux ou de discrétisation spatiale.
+4.  **Processus Markovien des Transitions :**
+    *   Modèle de type Aalen-Johansen.
+    *   Intensités de transition $\alpha^{hj}(t)$ entre états $h$ et $j$.
+    *   Vraisemblance : $L = \prod_{h,j} \exp \left( \int (1-\gamma^{hj})Y^h ds + \int \log \gamma^{hj} dN^{hj} \right)$.
+
+## 7. Codage Uniforme (Cas de Référence)
+Comme décrit dans `uniform_temp_coding.tex` et `Uniform_temporal.tex`, le codage uniforme correspond à l'absence d'estimation d'intensité (hypothèse d'uniformité sur $[0, T]$ et sur les marques).
+
+Les longueurs de code de référence sont :
+1.  **Encodage État Complet :** $L_1 = r \log m$ (où $r$ bins de temps, $m$ états).
+2.  **Liste des Sauts :** $L_2 = \log N + N \log(rm)$.
+3.  **Vecteur Booléen :** $L_3 = r + N \log m$.
+4.  **Adresse Combinatoire (Optimal Uniforme) :**
+    $$ L_4 = \log N + \log \binom{r}{N} + N \log m $$
+    *C'est la borne inférieure pour le codage uniforme.*
+
+**Règle de décision :** Le codage LMD (avec estimation) ne sera retenu que si sa longueur totale (Données + Modèle) est inférieure à $L_4$.
+
+## 8. Algorithme Global du Projet
+
+Voici la procédure étape par étape à implémenter :
+
+1.  **Prétraitement :**
+    *   Input : Données brutes (timestamps, marques).
+    *   Discrétisation optionnelle (paramètre $r$).
+
+2.  **Boucle sur les Représentations ($R$) :**
+    *   Pour chaque $R \in \{TimeStamp, Count, Interval, Binary\}$ :
+        *   Transformer les données selon $R$.
+
+3.  **Boucle sur les Classes de Processus ($\mathcal{C}$) :**
+    *   Pour chaque classe (Réel, Vectoriel, Markovien...) :
+
+4.  **Boucle sur les Familles d'Estimation ($\mathcal{F}$) :**
+    *   Pour chaque famille (Histogramme, Splines, Ondelettes...) :
+        *   **Estimation :** Calculer $\hat{\alpha}$ maximisant la vraisemblance (ou minimisant le risque).
+        *   **Complexité :** Calculer $C_n(\hat{\alpha})$ (ex: dimension du modèle $\times \log n$).
+        *   **Code Données :** Calculer $-\log L_{\hat{\alpha}}(Data)$.
+        *   **Code Total :** $L_{total} = -\log L_{\hat{\alpha}} + C_n(\hat{\alpha})$.
+
+5.  **Comparaison avec Uniforme :**
+    *   Calculer $L_{uniforme} = \min(L_1, L_2, L_3, L_4)$ selon les formules de `uniform_temp_coding.tex`.
+
+6.  **Sélection Finale :**
+    *   Choisir le triplet $(R^*, \mathcal{C}^*, \mathcal{F}^*)$ qui minimise $\min(L_{total}, L_{uniforme})$.
+
+7.  **Codage :**
+    *   Encoder les paramètres du modèle choisi.
+    *   Encoder les résidus (données) utilisant le modèle choisi (codage arithmétique ou entropique).
+
+## 9. Métriques de Performance
+Pour valider le projet, les métriques suivantes seront calculées (cf. `uniform_temp_coding.tex` section Numerical results) :
+*   **Longueur de Code Moyenne :** $E[L]$.
+*   **Redondance :** Différence entre la longueur obtenue et l'entropie théorique.
+*   **Taux de Compression :** Ratio entre taille brute et taille codée.
+*   **Temps de Calcul :** Pour évaluer la faisabilité temps-réel.
+
+## 10. Références Clés du Projet
+*   **Modèle d'intensité & Vraisemblance :** `Uniform_temporal.tex`, `versatile_main.tex`.
+*   **Formules de Codage Uniforme :** `uniform_temp_coding.tex`.
+*   **Choix de Représentation :** `versatile_pp.tex`.
+*   **Bornes Théoriques (Hellinger/MDL) :** `versatile_main.tex`.
+
+
+
+# Projet : Codage Vidéo par Processus Ponctuels Monochromatiques (CPPM)
+
+## 1. Modèle Mathématique
+
+Ce modèle formalise la transformation d'une vidéo en une somme de processus ponctuels non-marqués, permettant d'estimer les intensités par couleur et d'appliquer le principe de Longueur Minimale de Description (MDL).
+
+### 1.1. Formalisation de la Donnée Vidéo
+Soit une vidéo définie sur un domaine spatial $\mathcal{S}$ (ensemble de pixels ou de blocs) et un intervalle de temps $[0, T]$.
+Pour chaque source spatiale $i \in \{1, \dots, n\}$ (ex: un pixel), la couleur est une fonction $C_i(t) \in \mathcal{E}$, où $\mathcal{E} = \{c_1, \dots, c_m\}$ est l'espace des marques (palette de couleurs discrétisée, $m < \infty$).
+
+### 1.2. Transformation en Processus Ponctuel Marqué
+Classiquement, l'historique d'un pixel est un processus ponctuel marqué $N_i = \{(\tau_k, m_k)\}_{k=1}^{K_i}$, où $\tau_k$ sont les instants de changement de couleur et $m_k \in \mathcal{E}$ la nouvelle couleur.
+La vraisemblance standard inclut un terme de codage des marques ($N \log m$).
+
+### 1.3. Décomposition Monochromatique (Innovation)
+Au lieu de coder un processus marqué, nous définissons **$m$ processus ponctuels simples (non-marqués)** par source spatiale, notés $N_i^{(c)}$ pour chaque couleur $c \in \mathcal{E}$.
+*   **Définition :** $N_i^{(c)}(t) = \sum_{k} \mathbb{I}_{\{\tau_k \leq t, m_k = c\}}$.
+*   **Propriété :** Un saut dans $N_i^{(c)}$ à l'instant $t$ implique implicitement que la couleur du pixel $i$ devient $c$ à l'instant $t$.
+*   **Avantage Codage :** Le terme $N \log m$ (codage des marques) est supprimé. L'information de couleur est portée par l'indice du processus.
+
+### 1.4. Modèle d'Intensité Multiplicative (Aalen)
+Pour chaque processus monochromatique $N_i^{(c)}$, on assume un modèle d'intensité stochastique (cf. `Uniform_temporal.tex`, `versatile_main.tex`) :
+$$ \lambda_i^{(c)}(t) = \alpha_i^{(c)}(t) Y_i^{(c)}(t) $$
+où :
+*   $\alpha_i^{(c)}(t)$ est l'intensité de base déterministe (inconnue, à estimer).
+*   $Y_i^{(c)}(t)$ est un processus prévisible (ex: indicateur de risque, souvent $Y=1$ si le pixel est actif).
+
+La vraisemblance pour une couleur $c$ sur l'ensemble des $n$ sources est (cf. `versatile_main.tex`) :
+$$ L_{\alpha^{(c)}} = \prod_{i=1}^n \exp \left( \int_0^T \log(\alpha_i^{(c)}(s)) dN_i^{(c)}(s) - \int_0^T \alpha_i^{(c)}(s)Y_i^{(c)}(s) ds \right) $$
+
+### 1.5. Critère de Sélection de Modèle (MDL)
+Conformément à `versatile_main.tex`, l'estimateur $\hat{\alpha}$ est choisi pour minimiser la complexité stochastique :
+$$ \hat{\alpha} = \arg \min_{\alpha \in \Gamma} \left( -\log L_{\alpha} + C_n(\alpha) \right) $$
+où $C_n(\alpha)$ est la pénalité de complexité (nombre de paramètres, dimension de la famille de fonctions).
+
+### 1.6. Représentations Versatiles
+Pour chaque processus $N_i^{(c)}$, on choisit la représentation $R \in \{\text{Timestamp, Count, Interval, Binary}\}$ (cf. `versatile_pp.tex`) qui minimise la longueur de code.
+Les longueurs de code de référence (codage uniforme) sont adaptées de `uniform_temp_coding.tex` pour la décomposition monochromatique :
+1.  **Vecteur d'état (Binaires) :** $L_{bin} = \sum_{c=1}^m r$ (où $r$ est le nombre de bins temporels).
+2.  **Liste de sauts (Sans marques) :** $L_{list} = \sum_{c=1}^m (\log N_c + N_c \log r)$.
+3.  **Adresse Combinatoire (Optimal Uniforme) :** $L_{comb} = \sum_{c=1}^m (\log N_c + \log \binom{r}{N_c})$.
+
+Le codage MDL non-uniforme sera retenu si :
+$$ -\log L_{\hat{\alpha}} + C_n(\hat{\alpha}) < \min(L_{bin}, L_{list}, L_{comb}) $$
+
+---
+
+## 2. Cahier des Charges Informatique
+
+### 2.1. Objectifs du Système
+*   **Entrée :** Flux vidéo brut (séquence d'images).
+*   **Sortie :** Flux binaire compressé (bitstream) et vidéo reconstruite (décompression).
+*   **Contrainte Principale :** Exploiter la parcimonie temporelle (peu de changements de couleur par pixel) et la régularité des intensités par couleur.
+*   **Performance :** Taux de compression supérieur aux codecs standards (type H.264/HEVC) pour les vidéos à faible mouvement ou à couleurs discrètes, avec possibilité de décision en temps réel.
+
+### 2.2. Architecture Logicielle
+
+Le système se décompose en 4 modules principaux :
+
+#### Module 1 : Extraction et Discrétisation (Preprocessing)
+*   **Fonction :** Transformer le flux vidéo en données de processus ponctuels.
+*   **Tâches :**
+    1.  **Quantification Colorimétrique :** Réduire l'espace colorimétrique continu à $m$ couleurs dominantes (ex: $m=16, 64, 256$). *Référence : `uniform_temp_coding.tex` (paramètre $m$).*
+    2.  **Détection de Sauts :** Pour chaque pixel $(x,y)$, identifier les instants $t$ où $C(x,y,t) \neq C(x,y,t-1)$.
+    3.  **Séparation par Canal :** Aiguiller chaque saut vers le processus $N^{(c)}$ correspondant à la nouvelle couleur.
+    4.  **Discrétisation Temporelle :** Mapper le temps continu sur $r$ bins (ex: $r=256, 512, \dots$ par GOP - Group of Pictures).
+*   **Output :** Structure de données $\{ N_i^{(c)} \}_{i,c}$.
+
+#### Module 2 : Estimation et Sélection de Modèle (MDL Core)
+*   **Fonction :** Choisir la meilleure stratégie de codage par bloc de pixels.
+*   **Tâches :**
+    1.  **Estimation d'Intensité :** Pour chaque couleur $c$, estimer $\hat{\alpha}^{(c)}(t)$ dans plusieurs familles (Histogramme, Splines, Polynômes, Ondelettes). *Référence : `versatile_main.tex`.*
+    2.  **Calcul de Complexité :** Calculer $C_n(\hat{\alpha})$ (coût de description du modèle).
+    3.  **Choix de Représentation :** Comparer les représentations (Timestamp vs Binary vs Count) pour chaque canal. *Référence : `versatile_pp.tex`.*
+    4.  **Décision Uniforme vs MDL :** Appliquer l'Algorithme 1 de `uniform_temp_coding.tex` adapté pour comparer le coût MDL au coût uniforme $L_{comb}$.
+*   **Output :** Métadonnées du modèle (type de fonction, paramètres, représentation choisie).
+
+#### Module 3 : Codage et Compression (Encoder)
+*   **Fonction :** Générer le bitstream.
+*   **Tâches :**
+    1.  **Codage des Paramètres :** Encoder les coefficients du modèle choisi (ex: coefficients de spline) using un code universel d'entiers (ex: code $\delta$ de Rissanen). *Référence : `uniform_temp_coding.tex` section Universal encoding.*
+    2.  **Codage des Résidus :** Encoder les temps de sauts réels par rapport au modèle d'intensité (codage arithmétique ou entropique basé sur $\hat{\alpha}$).
+    3.  **Multiplexage :** Assembler les flux des $m$ canaux de couleur et des $n$ sources spatiales.
+*   **Output :** Fichier binaire compressé.
+
+#### Module 4 : Décompression et Reconstruction (Decoder)
+*   **Fonction :** Reconstruire la vidéo.
+*   **Tâches :**
+    1.  **Décodage des Métadonnées :** Lire le type de modèle et les paramètres.
+    2.  **Génération des Sauts :** Reconstruire les temps de sauts $\tau_k$ pour chaque processus $N^{(c)}$.
+    3.  **Reconstruction Temporelle :** Pour chaque pixel, fusionner les sauts des $m$ canaux pour reconstruire la chronologie des couleurs $C_i(t)$.
+    4.  **Rendu :** Générer les frames vidéo.
+
+### 2.3. Spécifications des Algorithmes Clés
+
+#### Algorithme de Choix de Codage (Adapté de `uniform_temp_coding.tex`)
+Pour chaque bloc de pixels et chaque couleur $c$ :
+1.  Compter $N_c$ (nombre de sauts) et fixer $r$ (résolution temps), $m$ (nombre de couleurs).
+2.  Calculer les seuils théoriques $\delta_{r,m}$, $\gamma_{34}$, etc. (cf. Proposition 1 de `uniform_temp_coding.tex`).
+3.  **Si** $N_c$ est très élevé (proche de $r$) : Choisir **Codage Vecteur Booléen** ($L_3$).
+4.  **Si** $N_c$ est faible : Choisir **Codage Combinatoire** ($L_4$) ou **MDL** si l'intensité est structurée.
+5.  **Si** MDL choisi : Estimer $\alpha$, calculer $-\log L + C_n$, comparer à $L_4$. Garder le minimum.
+
+#### Algorithme d'Estimation (Adapté de `versatile_main.tex`)
+1.  Définir une suite de modèles emboîtés $\Gamma_1 \subset \Gamma_2 \dots$ (ex: histogrammes de 2, 4, 8 bins...).
+2.  Pour chaque modèle, calculer la vraisemblance logarithmique.
+3.  Ajouter la pénalité $C_n$ (proportionnelle à la dimension du modèle $\times \log n$).
+4.  Sélectionner le modèle minimisant la somme.
+
+### 2.4. Exigences de Performance
+*   **Taux de Compression :** Viser un gain de 20% par rapport au codage uniforme optimal ($L_4$) sur les vidéos à faible entropie temporelle.
+*   **Complexité Temporelle :** L'estimation d'intensité doit être linéaire $O(N)$ ou $O(r)$ pour permettre le temps réel.
+*   **Robustesse :** Le système doit retomber sur le codage uniforme si l'estimation MDL échoue (sur-apprentissage).
+*   **Scalabilité :** Le paramètre $m$ (couleurs) doit être ajustable dynamiquement selon le contenu (ex: vidéo noir/blanc vs couleur).
+
+### 2.5. Livrables Attendus
+1.  **Bibliothèque C++/Python :** Implémentation des modules d'extraction et de codage.
+2.  **Moteur MDL :** Implémentation des estimateurs d'intensité (Splines, Histogrammes).
+3.  **Outil de Benchmarking :** Comparaison des longueurs de code ($L_1, L_2, L_3, L_4, L_{MDL}$) sur des datasets de référence.
+4.  **Documentation :** Spécification du format de fichier binaire (en-tête, métadonnées, flux de données).
+
+---
+
+## 3. Justification Théorique (Synthèse des Documents)
+
+1.  **Efficacité du Codage Monochromatique :** En supprimant le codage explicite des marques ($N \log m$), on se ramène à coder des processus de comptage simples. Cela réduit la borne inférieure de l'entropie, surtout si certaines couleurs sont rares (intensité $\alpha^{(c)}$ faible).
+2.  **Optimalité MDL :** Le théorème principal de `versatile_main.tex` garantit que l'estimateur $\hat{P}_n$ converge vers la vraie distribution $P$ avec un taux lié à la distance de Hellinger. Cela assure que le codage n'est pas seulement compressant, mais statistiquement consistant.
+3.  **Versatilité :** Grâce à `versatile_pp.tex`, le système n'est pas figé sur une représentation (ex: timestamps). Il peut basculer vers une représentation binaire si l'activité est dense, garantissant une robustesse face à différents types de vidéos (animation vs film réel).
+4.  **Bornes Uniformes :** Les formules de `uniform_temp_coding.tex` fournissent un "plancher" de performance. Le système MDL ne doit jamais faire pire que ce plancher (grâce à la clause de comparaison dans l'algorithme).
+
+Ce cahier des charges fournit une base solide pour développer un codeur vidéo novateur basé sur la théorie des processus ponctuels, alliant rigueur mathématique et implémentation pratique.
+
+
+# Projet : Codage LMD Versatile Multi-Classes pour Données Vidéo
+
+## 1. Modèle Mathématique Unifié
+
+Le cadre général repose sur le principe MDL décrit dans `versatile_main.tex`. L'objectif est de sélectionner le modèle $\hat{P}_n$ qui minimise la longueur de description totale :
+
+$$ \hat{P}_n = \arg \min_{P \in \mathcal{M}} \left( -\log L_P(Data) + C_n(P) \right) $$
+
+où $L_P$ est la vraisemblance du processus et $C_n(P)$ la complexité du modèle (pénalité).
+
+### 1.1. Classes de Processus et Vraisemblances Spécifiques
+
+Pour chaque type de processus, la fonction d'intensité $\lambda$ est estimée dans une famille de fonctions $\Gamma_n$ (Histogrammes, Splines, etc.).
+
+#### A. Processus Ponctuel Réel avec Marques (Marked Point Process)
+*   **Contexte Vidéo :** Historique d'un pixel. Les sauts sont les changements de couleur, la marque $m_k$ est la nouvelle couleur.
+*   **Modèle d'Intensité :** $\lambda(t, m) = \alpha(t, m)Y(t)$.
+*   **Vraisemblance (cf. `Uniform_temporal.tex` Eq. 2) :**
+    $$ L_{\alpha}(N) = \exp \left( \sum_{k=1}^N \log \alpha(\tau_k, m_k) - \int_0^T \sum_{m \in \mathcal{E}} \alpha(s, m)Y(s) ds \right) $$
+*   **Estimation :** On estime $\alpha(t, m)$ pour chaque couleur $m$ séparément ou conjointement.
+
+#### B. Processus Ponctuel Vectoriel (Multivarié)
+*   **Contexte Vidéo :** Canaux de couleur couplés (R, G, B) ou plusieurs pixels corrélés.
+*   **Modèle d'Intensité :** Vecteur $\boldsymbol{\lambda}(t) = (\lambda_1(t), \dots, \lambda_d(t))$.
+*   **Vraisemblance :** Produit des vraisemblances marginales si indépendants, ou modèle de copule si dépendants.
+    $$ L_{\boldsymbol{\alpha}}(N) = \prod_{j=1}^d \exp \left( \int_0^T \log \alpha_j(s) dN_j(s) - \int_0^T \alpha_j(s)Y_j(s) ds \right) $$
+*   **Estimation :** Estimation simultanée des composantes $\alpha_j(t)$ dans la même famille de fonctions.
+
+#### C. Processus Ponctuel Spatial
+*   **Contexte Vidéo :** Distribution des changements de pixels sur l'image à un instant donné ou sur un bloc spatio-temporel.
+*   **Modèle d'Intensité :** $\lambda(s)$ où $s \in \mathcal{S} \subset \mathbb{R}^2$ (coordonnées spatiales).
+*   **Vraisemblance (cf. `versatile_main.tex` Section Estimation of a Poisson process measure) :**
+    $$ L_{\alpha}(N) = \exp \left( \int_{\mathcal{S}} \log \alpha(s) dN(s) - \int_{\mathcal{S}} \alpha(s) ds \right) $$
+*   **Estimation :** Utilisation de fonctions de base 2D (ondelettes 2D, histogrammes 2D, polynômes tensoriels).
+
+#### D. Processus Markovien des Transitions (Markovian Transition Model)
+*   **Contexte Vidéo :** États discrets d'un pixel (ex: Noir, Blanc, Rouge) avec transitions permises.
+*   **Modèle d'Intensité :** Intensités de transition $\alpha^{hj}(t)$ de l'état $h$ vers $j$.
+*   **Vraisemblance (cf. `versatile_main.tex` Section The markovian transition model) :**
+    $$ L_{\gamma}(t) = \prod_{h,j} \exp \left( \int_0^t (1 - \gamma^{hj}(s))Y^h(s)ds + \int_0^t \log \gamma^{hj}(s)dN^{hj}(s) \right) $$
+    où $Y^h(s)$ est l'indicateur d'être dans l'état $h$ avant $s$.
+*   **Estimation :** Estimation des fonctions $\alpha^{hj}(t)$ pour chaque paire d'états connectés.
+
+### 1.2. Familles de Fonctions d'Intensité ($\Gamma_n$)
+Conformément à `versatile_main.tex`, l'estimateur $\hat{\alpha}$ est choisi dans une suite de modèles emboîtés. Pour chaque processus ci-dessus, $\alpha$ est approximée par :
+1.  **Histogrammes :** $\alpha(t) = \sum c_i \mathbb{I}_{[t_i, t_{i+1}]}(t)$.
+2.  **Splines :** Splines de lissage pour capturer la continuité temporelle.
+3.  **Polynômes :** Approximation globale sur $[0, T]$.
+4.  **Ondelettes :** Pour capturer les variations locales brusques (adapté aux vidéos à action rapide).
+5.  **Polynômes Trigonométriques :** Pour les vidéos périodiques (ex: clignotement, scènes cycliques).
+
+### 1.3. Versatilité des Représentations
+Avant d'appliquer la vraisemblance, les données sont transformées selon `versatile_pp.tex`. Pour chaque processus, on teste 4 représentations :
+1.  **Time Stamps :** $\{\tau_k\}$. Précision maximale.
+2.  **Counts (Histogrammes) :** $\{n_i\}$ dans des bins de temps.
+3.  **Intervals :** $\{\Delta_k = \tau_{k+1} - \tau_k\}$.
+4.  **Binary :** Vecteur binaire sur une grille temporelle.
+
+Le choix de la représentation $R$ influence la forme de la vraisemblance calculée (discrète vs continue).
+
+### 1.4. Codage Uniforme (Référence)
+Conformément à `uniform_temp_coding.tex`, le codage uniforme sert de borne inférieure (baseline). Si le modèle MDL est trop complexe, on retombe sur l'uniforme.
+Les longueurs de code sont :
+1.  **État Complet :** $L_1 = r \log m$
+2.  **Liste Sauts :** $L_2 = \log N + N \log(rm)$
+3.  **Vecteur Booléen :** $L_3 = r + N \log m$
+4.  **Adresse Combinatoire :** $L_4 = \log N + \log \binom{r}{N} + N \log m$
+
+**Règle de Décision :** Le modèle MDL est validé si et seulement si :
+$$ -\log L_{\hat{\alpha}} + C_n(\hat{\alpha}) < \min(L_1, L_2, L_3, L_4) $$
+
+---
+
+## 2. Cahier des Charges Informatique
+
+### 2.1. Architecture du Système
+
+Le système se compose de 5 modules interconnectés :
+
+1.  **Module d'Extraction Vidéo :**
+    *   Transforme la vidéo en trajectoires de pixels.
+    *   Détecte les sauts (changements d'état).
+    *   Segmente les données en blocs spatio-temporels.
+2.  **Module de Classification de Processus :**
+    *   Teste hypothèses : Est-ce spatial ? Vectoriel ? Markovien ?
+    *   Sélectionne la classe de processus la plus pertinente par bloc.
+3.  **Module d'Estimation d'Intensité (MDL Core) :**
+    *   Pour la classe choisie, estime $\hat{\alpha}$ dans les 5 familles (Histogrammes, Splines, etc.).
+    *   Calcule la pénalité de complexité $C_n(\hat{\alpha})$.
+4.  **Module de Choix de Représentation :**
+    *   Transforme les données dans les 4 formats (Timestamp, Count, etc.).
+    *   Sélectionne le format minimisant la longueur de code pour l'intensité estimée.
+5.  **Module de Codage/Décodage :**
+    *   Compare le coût MDL au coût Uniforme (`uniform_temp_coding.tex`).
+    *   Encode les paramètres du modèle + les résidus.
+    *   Décode et reconstruit la vidéo.
+
+### 2.2. Spécifications des Algorithmes
+
+#### Algorithme de Sélection de Modèle (Pseudo-code)
+```python
+Input: VideoData, Classes = [Real, Vector, Spatial, Markov], Families = [Hist, Spline, Wavelet...], Reps = [Time, Count, Binary, Interval]
+BestScore = Infinity
+BestConfig = None
+
+# 1. Calcul du bound Uniforme (Reference)
+L_uniform = min( CalcL1(), CalcL2(), CalcL3(), CalcL4() ) # Cf. uniform_temp_coding.tex
+
+# 2. Boucle sur les Classes de Processus
+for ProcessClass in Classes:
+    # 3. Boucle sur les Représentations
+    for Rep in Reps:
+        DataTransformed = Transform(VideoData, Rep)
+        
+        # 4. Boucle sur les Familles d'Intensité
+        for Family in Families:
+            # Estimation de l'intensité alpha
+            alpha_hat = EstimateIntensity(DataTransformed, Family)
+            
+            # Calcul de la Vraisemblance (Log-Likelihood)
+            # Utiliser les formules spécifiques de versatile_main.tex selon ProcessClass
+            LogLikelihood = ComputeLikelihood(DataTransformed, alpha_hat, ProcessClass)
+            
+            # Calcul de la Complexité (Penalité)
+            Complexity = ComputeComplexity(alpha_hat, Family)
+            
+            # Score MDL
+            MDL_Score = -LogLikelihood + Complexity
+            
+            # Comparaison
+            if MDL_Score < BestScore and MDL_Score < L_uniform:
+                BestScore = MDL_Score
+                BestConfig = (ProcessClass, Rep, Family, alpha_hat)
+
+# 5. Décision Finale
+if BestConfig is not None:
+    Encode(BestConfig)
+else:
+    EncodeUniform(L_uniform)
+```
+
+#### Détails d'Implémentation des Vraisemblances
+*   **Pour le Processus Markovien :** Implémenter la matrice de comptage $N^{hj}$ et le processus à risque $Y^h$. Utiliser la formule de vraisemblance produit sur $h,j$ de `versatile_main.tex`.
+*   **Pour le Processus Spatial :** Discrétiser l'espace en grille. L'intégrale spatiale devient une somme sur les pixels/blocs.
+*   **Pour le Processus Vectoriel :** Paralléliser l'estimation sur les composantes du vecteur.
+
+### 2.3. Structures de Données
+*   **Objet Processus :** Doit contenir `type` (enum), `intensity_params` (array), `representation_type` (enum), `family_type` (enum).
+*   **Grille Temporelle :** Paramètre $r$ (nombre de bins) ajustable dynamiquement selon `Uniform_temporal.tex` (proposition sur $r_n$).
+*   **Palette de Couleurs :** Paramètre $m$ (nombre d'états) issu de la quantification vidéo.
+
+### 2.4. Exigences de Performance
+*   **Convergence :** L'estimateur doit satisfaire les bornes de convergence en distance de Hellinger (Théorème principal de `versatile_main.tex`).
+*   **Temps Réel :** L'estimation d'intensité (ex: histogramme) doit être $O(N)$ ou $O(r)$. Les splines/ondelettes peuvent être plus lourdes et réservées au codage "offline".
+*   **Robustesse :** Si $N$ (nombre de sauts) est trop faible pour estimer une intensité complexe, le système doit automatiquement basculer vers le codage uniforme ou une famille simple (Histogramme 1 bin).
+
+### 2.5. Livrables
+1.  **Bibliothèque Mathématique :** Implémentation des vraisemblances pour les 4 classes de processus.
+2.  **Moteur d'Estimation :** Solveurs pour Histogrammes, Splines, Ondelettes.
+3.  **Codeur/Decodeur :** Implémentation des codes universels (`uniform_temp_coding.tex`) et arithmétiques.
+4.  **Rapport de Performance :** Comparaison des taux de compression selon la classe de processus détectée.
+
+---
+
+## 3. Justification Théorique (Lien avec les Documents)
+
+1.  **Consistance de l'Estimateur :** Le théorème principal de `versatile_main.tex` garantit que pour chaque classe de processus (Poisson, Markovien, Diffusion), l'estimateur MDL $\hat{P}_n$ converge vers la vraie distribution $P$ avec un taux lié à la distance de Hellinger :
+    $$ H^2(P, \hat{P}_n) \leq \min_{Q \in \Gamma_n} \left[ H^2(P, Q) + \frac{1}{n}C_n(Q) \right] $$
+    Cela valide l'approche d'estimation d'intensité pour chaque type de processus.
+
+2.  **Optimalité du Codage Uniforme :** Les propositions de `uniform_temp_coding.tex` (Proposition 1 et 2) fournissent les bornes exactes ($L_1$ à $L_4$) qui servent de seuil de décision. Le système ne doit jamais coder plus long que $L_4$ (Adresse Combinatoire).
+
+3.  **Versatilité :** `versatile_pp.tex` justifie le changement de représentation. Par exemple, si l'intensité est très variable, la représentation "Time Stamps" est préférée. Si l'intensité est faible et régulière, "Binary" ou "Count" peut être plus efficace pour le codage de la structure temporelle.
+
+4.  **Modèle Multiplicatif :** `Uniform_temporal.tex` valide l'utilisation du modèle $\lambda(t) = \alpha(t)Y(t)$ (modèle d'Aalen) comme base pour tous les processus ponctuels temporels considérés (Réel, Vectoriel, Markovien).
+
+Cette structure répond explicitement à votre exigence de prendre en compte le cadre statistique spécifique (type de processus) tout en conservant la flexibilité du codage LMD et la sécurité du codage uniforme.
+
+### USER
+Elabore un arbre de décision tenant compte du type de processus, du cadre statistique de la versatilité  du codage de la couleur etc.. Le but est ensuite de développer des heuristiques en entrainant le modèle sur plusieurs vidéos réelles en enregistrant certaines caractéristiques : nombre de couleurs d'un bloc, intensité des sauts, homogénéité spatiale.
+
+### ASSISTANT
+# Arbre de Décision et Cadre Heuristique pour le Codage Vidéo par Processus Ponctuels
+
+## 1. Arbre de Décision Global
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    DÉBUT : Bloc Vidéo (n pixels, T frames)              │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ÉTAPE 1 : EXTRACTION DES CARACTÉRISTIQUES STATISTIQUES               │
+│  ───────────────────────────────────────────────────────────────────    │
+│  • m = Nombre de couleurs distinctes dans le bloc                      │
+│  • N = Nombre total de sauts (changements d'état)                      │
+│  • r = Nombre de bins temporels (résolution temps)                     │
+│  • H_s = Homogénéité spatiale (variance inter-pixels)                  │
+│  • λ_avg = Intensité moyenne des sauts (N/T)                           │
+│  • ρ_corr = Corrélation spatiale entre pixels voisins                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ÉTAPE 2 : CLASSIFICATION DU TYPE DE PROCESSUS                         │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ H_s > seuil_homo ET ρ_corr > seuil_corr ?                      │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│              │                          │                               │
+│              │ OUI                      │ NON                           │
+│              ▼                          ▼                               │
+│  ┌──────────────────────┐    ┌──────────────────────────────┐          │
+│  │ PROCESSUS SPATIAL    │    │  TEST : m > 1 ET transitions │          │
+│  │ (corrélations fortes)│    │  structurées entre couleurs ?│          │
+│  └──────────────────────┘    └──────────────────────────────┘          │
+│                                        │                    │           │
+│                                        │ OUI                │ NON       │
+│                                        ▼                    ▼           │
+│                              ┌──────────────────┐  ┌──────────────────┐ │
+│                              │ PROCESSUS        │  │ PROCESSUS        │ │
+│                              │ MARKOVIEN        │  │ PONCTUEL RÉEL    │ │
+│                              │ (transitions)    │  │ (indépendant)    │ │
+│                              └──────────────────┘  └──────────────────┘ │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ TEST : Pixels multi-canaux (R,G,B) corrélés ?                   │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│              │                          │                               │
+│              │ OUI                      │ NON                           │
+│              ▼                          ▼                               │
+│  ┌──────────────────────┐    ┌──────────────────────┐                  │
+│  │ PROCESSUS VECTORIEL  │    │ PROCESSUS SIMPLE     │                  │
+│  │ (couplage canaux)    │    │ (monocanal)          │                  │
+│  └──────────────────────┘    └──────────────────────┘                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ÉTAPE 3 : DÉCOMPOSITION MONOCHROMATIQUE (versatile_pp.tex)           │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  Pour chaque couleur c ∈ {1, ..., m} :                                  │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ Créer processus N^(c) sans marques                              │    │
+│  │ → Élimine le terme N·log(m) du codage                           │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  Avantage : La couleur est portée par l'indice du processus            │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ÉTAPE 4 : CHOIX DE LA REPRÉSENTATION (versatile_pp.tex)              │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ λ_avg < seuil_faible ?                                          │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│              │                          │                               │
+│              │ OUI                      │ NON                           │
+│              ▼                          ▼                               │
+│  ┌──────────────────────┐    ┌──────────────────────────────┐          │
+│  │ TIME STAMPS          │    │  TEST : N/r > 0.5 ?          │          │
+│  │ (peu de sauts,       │    └──────────────────────────────┘          │
+│  │  précision max)      │              │                    │           │
+│  └──────────────────────┘              │ OUI                │ NON       │
+│                                        ▼                    ▼           │
+│                              ┌──────────────────┐  ┌──────────────────┐ │
+│                              │ BINARY           │  │ COUNT/HISTO      │ │
+│                              │ (activité dense) │  │ (activité modérée│ │
+│                              └──────────────────┘  └──────────────────┘ │
+│                                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ TEST : Régularité des intervalles (var(Δτ) faible) ?            │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│              │                          │                               │
+│              │ OUI                      │ NON                           │
+│              ▼                          ▼                               │
+│  ┌──────────────────────┐    ┌──────────────────────┐                  │
+│  │ INTERVAL              │    │ Garder représentation│                  │
+│  │ (processus régulier) │    │  précédente          │                  │
+│  └──────────────────────┘    └──────────────────────┘                  │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ÉTAPE 5 : ESTIMATION D'INTENSITÉ (versatile_main.tex)                │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  Familles de fonctions Γ_n :                                            │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ • Histogrammes (step functions)                                 │    │
+│  │ • Splines (lissage temporel)                                    │    │
+│  │ • Polynômes (tendance globale)                                  │    │
+│  │ • Ondelettes (variations locales)                               │    │
+│  │ • Polynômes trigonométriques (périodicité)                      │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  Critère MDL :                                                          │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ α̂ = arg min [ -log L_α(Data) + C_n(α) ]                        │    │
+│  │         α∈Γ_n                                                   │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ÉTAPE 6 : CHOIX DU CODAGE (uniform_temp_coding.tex)                  │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  Calcul des 4 longueurs de code uniformes :                             │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ L1 = r·log(m)           (État complet)                          │    │
+│  │ L2 = log(N) + N·log(r·m) (Liste sauts)                          │    │
+│  │ L3 = r + N·log(m)        (Vecteur booléen)                      │    │
+│  │ L4 = log(N) + log(C_r^N) + N·log(m) (Adresse combinatoire)      │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  Calcul du code MDL :                                                   │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ L_MDL = -log L_α̂ + C_n(α̂)                                      │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+│                                                                          │
+│  Décision finale :                                                      │
+│  ┌─────────────────────────────────────────────────────────────────┐    │
+│  │ L_final = min(L_MDL, L1, L2, L3, L4)                            │    │
+│  └─────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+┌─────────────────────────────────────────────────────────────────────────┐
+│                    SORTIE : Configuration optimale                      │
+│  (Type_Processus, Représentation, Famille_Intensité, Méthode_Codage)  │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## 2. Seuils de Décision et Règles Heuristiques
+
+### 2.1. Tableau des Seuils (à apprendre sur données vidéo)
+
+| Paramètre | Symbole | Seuil Bas | Seuil Haut | Source Document |
+|-----------|---------|-----------|------------|-----------------|
+| Nombre de couleurs | m | m < 8 | m > 64 | `uniform_temp_coding.tex` |
+| Nombre de sauts | N | N < r/4 | N > 3r/4 | `uniform_temp_coding.tex` Prop.1 |
+| Densité de sauts | N/r | < 0.2 | > 0.5 | `versatile_pp.tex` |
+| Homogénéité spatiale | H_s | < 0.3 | > 0.7 | À apprendre |
+| Corrélation spatiale | ρ_corr | < 0.4 | > 0.8 | À apprendre |
+| Régularité temporelle | var(Δτ)/E[Δτ]² | < 0.5 | > 1.5 | `versatile_pp.tex` |
+| Intensité moyenne | λ_avg | < 0.1 | > 0.5 | `Uniform_temporal.tex` |
+
+### 2.2. Règles de Décision Détaillées
+
+```python
+# Pseudo-code pour l'arbre de décision
+
+def choisir_configuration(bloc_video):
+    # Étape 1 : Extraction caractéristiques
+    m = compter_couleurs(bloc_video)
+    N = compter_sauts(bloc_video)
+    r = resolution_temporelle
+    H_s = calculer_homogeneite_spatiale(bloc_video)
+    lambda_avg = N / (r * nombre_pixels)
+    rho_corr = calculer_correlation_spatiale(bloc_video)
+    var_delta_tau = variance_intervalles_sauts(bloc_video)
+    
+    # Étape 2 : Classification processus
+    if H_s > 0.7 and rho_corr > 0.8:
+        type_processus = "SPATIAL"
+        famille_intensite = "Ondelettes_2D"
+    elif m > 1 and transitions_structurees(bloc_video):
+        type_processus = "MARKOVIEN"
+        famille_intensite = "Histogrammes"
+    elif canaux_correles(bloc_video):  # R,G,B
+        type_processus = "VECTORIEL"
+        famille_intensite = "Splines"
+    else:
+        type_processus = "REEL"
+        famille_intensite = "Polynomes_Trigonometriques"
+    
+    # Étape 3 : Décomposition monochromatique
+    processus_mono = []
+    for c in range(m):
+        N_c = extraire_processus_couleur(bloc_video, c)
+        processus_mono.append(N_c)
+    
+    # Étape 4 : Choix représentation
+    if lambda_avg < 0.1:
+        representation = "TIME_STAMPS"
+    elif N / r > 0.5:
+        representation = "BINARY"
+    elif var_delta_tau / mean_delta_tau**2 < 0.5:
+        representation = "INTERVAL"
+    else:
+        representation = "COUNT"
+    
+    # Étape 5 : Estimation intensité MDL
+    meilleur_MDL = infinity
+    meilleure_famille = None
+    for famille in [Histogrammes, Splines, Polynomes, Ondelettes, Trigono]:
+        alpha_hat = estimer_intensite(processus_mono, famille)
+        vraisemblance = calculer_vraisemblance(processus_mono, alpha_hat, type_processus)
+        complexite = calculer_complexite(alpha_hat, famille)
+        MDL = -log(vraisemblance) + complexite
+        if MDL < meilleur_MDL:
+            meilleur_MDL = MDL
+            meilleure_famille = famille
+    
+    # Étape 6 : Comparaison avec codage uniforme
+    L1 = r * log(m)
+    L2 = log(N) + N * log(r * m)
+    L3 = r + N * log(m)
+    L4 = log(N) + log(comb(r, N)) + N * log(m)
+    L_uniforme = min(L1, L2, L3, L4)
+    
+    if meilleur_MDL < L_uniforme:
+        methode_codage = "MDL"
+        L_final = meilleur_MDL
+    else:
+        methode_codage = "UNIFORME"
+        L_final = L_uniforme
+    
+    return {
+        'type_processus': type_processus,
+        'representation': representation,
+        'famille_intensite': meilleure_famille,
+        'methode_codage': methode_codage,
+        'longueur_code': L_final
+    }
+```
+
+## 3. Cadre d'Apprentissage des Heuristiques
+
+### 3.1. Caractéristiques à Enregistrer par Bloc Vidéo
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  FICHIER DE TRAINING : video_features.csv                              │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  Colonnes :                                                              │
+│  ─────────                                                               │
+│  1.  video_id              : Identifiant vidéo                           │
+│  2.  bloc_id               : Identifiant bloc spatial                    │
+│  3.  frame_start           : Frame de début                              │
+│  4.  frame_end             : Frame de fin                                │
+│  5.  n_pixels              : Nombre de pixels dans le bloc               │
+│  6.  m_couleurs            : Nombre de couleurs distinctes               │
+│  7.  N_sauts               : Nombre total de sauts                       │
+│  8.  r_bins                : Nombre de bins temporels                    │
+│  9.  lambda_avg            : Intensité moyenne (N_sauts/r_bins)          │
+│  10. H_spatiale            : Homogénéité spatiale [0,1]                  │
+│  11. rho_correlation       : Corrélation spatiale [-1,1]                 │
+│  12. var_delta_tau         : Variance des intervalles                    │
+│  13. mean_delta_tau        : Moyenne des intervalles                     │
+│  14. type_processus_opt    : Type optimal (label)                        │
+│  15. representation_opt    : Représentation optimale (label)             │
+│  16. famille_opt           : Famille d'intensité optimale (label)        │
+│  17. methode_codage_opt    : MDL ou UNIFORME (label)                     │
+│  18. L_MDL                 : Longueur code MDL                           │
+│  19. L_uniforme            : Longueur code uniforme                      │
+│  20. gain_compression      : (L_uniforme - L_MDL) / L_uniforme           │
+│  21. temps_estimation      : Temps de calcul estimation                  │
+│  22. PSNR_reconstruction   : Qualité reconstruction                      │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.2. Procédure d'Entraînement
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  ALGORITHME D'APPRENTISSAGE DES SEUILS                                 │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  Input : Dataset de vidéos annotées                                      │
+│  Output : Seuils optimisés pour l'arbre de décision                      │
+│                                                                          │
+│  ÉTAPE 1 : Collecte des données                                         │
+│  ─────────────────────────                                               │
+│  Pour chaque vidéo dans le dataset :                                     │
+│    • Découper en blocs spatiaux (ex: 16x16 pixels)                       │
+│    • Extraire toutes les caractéristiques (22 colonnes)                  │
+│    • Tester exhaustivement toutes les configurations                     │
+│    • Enregistrer la configuration optimale                               │
+│                                                                          │
+│  ÉTAPE 2 : Apprentissage des seuils                                     │
+│  ───────────────────────────                                             │
+│  Utiliser un algorithme de type :                                        │
+│    • CART (Classification And Regression Trees)                          │
+│    • Random Forest pour la robustesse                                    │
+│    • Gradient Boosting pour la précision                                 │
+│                                                                          │
+│  Objectif : Maximiser le gain de compression moyen                       │
+│  Contrainte : PSNR > seuil_qualité (ex: 30 dB)                           │
+│                                                                          │
+│  ÉTAPE 3 : Validation croisée                                           │
+│  ───────────────────────────                                             │
+│  • k-fold cross-validation (k=5 ou 10)                                   │
+│  • Métriques : gain_compression_moyen, PSNR_moyen, temps_moyen           │
+│  • Sélection du modèle avec meilleur compromis                           │
+│                                                                          │
+│  ÉTAPE 4 : Ajustement des seuils                                        │
+│  ─────────────────────────────                                           │
+│  Pour chaque seuil dans le tableau 2.1 :                                 │
+│    • Grid search autour de la valeur initiale                            │
+│    • Validation sur ensemble de test indépendant                         │
+│    • Fixer le seuil optimal                                              │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### 3.3. Formules de Calcul des Caractéristiques
+
+#### Homogénéité Spatiale (H_s)
+$$H_s = 1 - \frac{\sigma_{couleurs}}{m_{max}}$$
+où $\sigma_{couleurs}$ est l'écart-type des couleurs dans le bloc et $m_{max}$ le nombre maximum de couleurs possibles.
+
+#### Corrélation Spatiale (ρ_corr)
+$$\rho_{corr} = \frac{1}{|V|} \sum_{(i,j) \in V} \frac{Cov(C_i, C_j)}{\sigma_{C_i} \sigma_{C_j}}$$
+où $V$ est l'ensemble des paires de pixels voisins.
+
+#### Régularité Temporelle
+$$R_{temp} = \frac{E[\Delta \tau]^2}{Var[\Delta \tau]}$$
+- $R_{temp} > 1$ : Processus régulier → Représentation INTERVAL
+- $R_{temp} \approx 1$ : Processus Poisson → Représentation TIME_STAMPS
+- $R_{temp} < 1$ : Processus groupé → Représentation BINARY
+
+## 4. Matrice de Décision Synthétique
+
+| Type Processus | m | N/r | H_s | ρ_corr | Représentation | Famille | Codage |
+|----------------|---|-----|-----|--------|----------------|---------|--------|
+| SPATIAL | >16 | <0.3 | >0.7 | >0.8 | BINARY | Ondelettes_2D | MDL |
+| SPATIAL | >16 | >0.5 | >0.7 | >0.8 | COUNT | Histogrammes | UNIFORME |
+| MARKOVIEN | 4-16 | <0.2 | 0.3-0.7 | 0.4-0.8 | TIME_STAMPS | Histogrammes | MDL |
+| MARKOVIEN | 4-16 | >0.3 | 0.3-0.7 | 0.4-0.8 | INTERVAL | Splines | MDL |
+| VECTORIEL | >8 | <0.2 | <0.3 | <0.4 | TIME_STAMPS | Splines | MDL |
+| VECTORIEL | >8 | >0.4 | <0.3 | <0.4 | BINARY | Polynômes | UNIFORME |
+| REEL | <8 | <0.1 | <0.3 | <0.4 | TIME_STAMPS | Trigonométriques | MDL |
+| REEL | <8 | >0.5 | <0.3 | <0.4 | COUNT | Histogrammes | UNIFORME |
+
+## 5. Métriques de Performance à Suivre
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│  TABLEAU DE BORD DE PERFORMANCE                                        │
+│  ───────────────────────────────────────────────────────────────────    │
+│                                                                          │
+│  1. TAUX DE COMPRESSION                                                 │
+│     ───────────────────                                                 │
+│     • Ratio = Taille_brute / Taille_codée                               │
+│     • Cible : > 2.0 pour vidéos faiblement dynamiques                   │
+│     • Cible : > 1.2 pour vidéos fortement dynamiques                    │
+│                                                                          │
+│  2. QUALITÉ DE RECONSTRUCTION                                           │
+│     ───────────────────────                                             │
+│     • PSNR (Peak Signal-to-Noise Ratio) > 30 dB                         │
+│     • SSIM (Structural Similarity) > 0.95                               │
+│     • Métrique spécifique processus : Hellinger_distance < 0.1          │
+│                                                                          │
+│  3. PERFORMANCE COMPUTATIONNELLE                                        │
+│     ───────────────────────────────                                     │
+│     • Temps d'estimation < 10ms par bloc (temps réel)                   │
+│     • Mémoire < 100 MB pour l'ensemble du modèle                        │
+│     • Scalabilité : O(n·r·m) où n=pixels, r=bins, m=couleurs            │
+│                                                                          │
+│  4. SÉLECTION DE MODÈLE                                                 │
+│     ───────────────────                                                 │
+│     • % de blocs utilisant MDL vs UNIFORME                              │
+│     • Distribution des types de processus sélectionnés                  │
+│     • Distribution des représentations sélectionnées                    │
+│                                                                          │
+│  5. ROBUSTESSE                                                          │
+│     ───────────                                                         │
+│     • Performance sur vidéos non vues pendant l'entraînement            │
+│     • Sensibilité aux paramètres (analyse de stabilité)                 │
+│     • Dégradation progressive avec bruit ajouté                         │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## 6. Références aux Documents
+
+| Composant | Document Source | Section/Équation |
+|-----------|-----------------|------------------|
+| Codage uniforme L1-L4 | `uniform_temp_coding.tex` | Proposition 1 |
+| Seuils δ_r,m, γ_34 | `uniform_temp_coding.tex` | Proposition 1 |
+| Modèle multiplicatif | `Uniform_temporal.tex` | Section 2.1 |
+| Vraisemblance processus | `Uniform_temporal.tex` | Éq. (2), (3) |
+| Représentations versatiles | `versatile_pp.tex` | Section 2 |
+| Critère MDL | `versatile_main.tex` | Théorème 1 |
+| Distance Hellinger | `versatile_main.tex` | Section 2 |
+| Modèle Markovien | `versatile_main.tex` | Section 4.4 |
+| Processus Poisson | `versatile_main.tex` | Section 4.2 |
+| Processus Diffusion | `versatile_main.tex` | Section 4.5 |
+
+---
+
+Ce cadre fournit une base complète pour développer, entraîner et déployer un système de codage vidéo basé sur les processus ponctuels avec sélection automatique de modèle via le principe MDL.
+
+
+---
+
+## 1. Résumé Exécutif
+
+Ce projet vise à développer un framework de compression vidéo innovant basé sur la modélisation des trajectoires de pixels comme des processus ponctuels. Contrairement aux méthodes standards (DCT, MPEG), cette approche exploite l'historique temporel individuel des pixels. Le système utilise le principe de la **Longueur Minimale de Description (MDL)** pour sélectionner automatiquement le modèle statistique optimal parmi plusieurs classes de processus (Réel, Vectoriel, Spatial, Markovien) et plusieurs représentations (Temporelle, Comptage, Intervalle, Binaire). Un codage uniforme sert de borne de référence pour garantir la robustesse. Ce rapport formalise le modèle mathématique, l'architecture logicielle, les heuristiques de décision et le protocole d'entraînement.
+
+---
+
+## 2. Cadre Théorique
+
+### 2.1. Modèle Général des Processus Ponctuels
+Conformément à `Uniform_temporal.tex` et `versatile_main.tex`, un processus ponctuel marqué $N$ est observé sur un intervalle $[0, T]$. Un réalisé est noté $\omega = \{(\tau_k, m_k)\}_{k=1}^N$, où $\tau_k$ sont les temps de sauts et $m_k \in \mathcal{E}$ les marques (couleurs).
+
+Le modèle d'intensité stochastique utilisé est le **modèle multiplicatif d'Aalen** :
+$$ \lambda(t) = \alpha(t)Y(t) $$
+où $\alpha(t)$ est l'intensité de base (inconnue) et $Y(t)$ un processus prévisible observable.
+
+### 2.2. Classes de Processus et Vraisemblances
+Le système doit être capable de modéliser quatre classes principales, dont les vraisemblances sont définies dans `versatile_main.tex` :
+
+1.  **Processus Ponctuel Réel (Standard) :**
+    *   Intensité scalaire $\lambda(t)$.
+    *   Vraisemblance : $L_{\alpha}(N) = \exp \left( \int_0^T \log(\alpha(s)) dN(s) - \int_0^T \alpha(s)Y(s) ds \right)$.
+2.  **Processus Ponctuel Vectoriel (Multivarié) :**
+    *   Vecteur d'intensités $\boldsymbol{\lambda}(t) = (\lambda_1(t), \dots, \lambda_d(t))$.
+    *   Vraisemblance : Produit des vraisemblances marginales (ou copules).
+3.  **Processus Ponctuel Spatial :**
+    *   Intensité $\lambda(s)$ sur un domaine spatial $\mathcal{S}$.
+    *   Vraisemblance : $L_{\alpha}(N) = \exp \left( \int_{\mathcal{S}} \log \alpha(s) dN(s) - \int_{\mathcal{S}} \alpha(s) ds \right)$.
+4.  **Processus Markovien des Transitions :**
+    *   Intensités de transition $\alpha^{hj}(t)$ entre états $h$ et $j$.
+    *   Vraisemblance (cf. `versatile_main.tex` Section 4.4) :
+        $$ L_{\gamma}(t) = \prod_{h,j} \exp \left( \int_0^t (1 - \gamma^{hj}(s))Y^h(s)ds + \int_0^t \log \gamma^{hj}(s)dN^{hj}(s) \right) $$
+
+### 2.3. Principe MDL (Minimum Description Length)
+Conformément à `versatile_main.tex`, l'estimateur $\hat{P}_n$ est choisi pour minimiser la complexité stochastique :
+$$ \hat{P}_n = \arg \min_{Q \in \mathcal{P}} \left( -\log Q(X^n) + C_n(Q) \right) $$
+où $-\log Q$ est la longueur de code des données et $C_n(Q)$ la pénalité de complexité du modèle.
+Le théorème principal garantit la convergence en distance de Hellinger :
+$$ H^2(P, \hat{P}_n) \leq \min_{Q \in \Gamma_n} \left[ H^2(P, Q) + \frac{1}{n} C_n(Q) \right] $$
+
+### 2.4. Codage Uniforme (Référence)
+Conformément à `uniform_temp_coding.tex`, le codage uniforme sert de borne inférieure (baseline). Si le modèle MDL est trop complexe, on retombe sur l'uniforme. Les longueurs de code sont :
+1.  **État Complet :** $L_1 = r \log m$
+2.  **Liste Sauts :** $L_2 = \log N + N \log(rm)$
+3.  **Vecteur Booléen :** $L_3 = r + N \log m$
+4.  **Adresse Combinatoire :** $L_4 = \log N + \log \binom{r}{N} + N \log m$
+
+**Règle de Décision :** Le modèle MDL est validé si et seulement si :
+$$ -\log L_{\hat{\alpha}} + C_n(\hat{\alpha}) < \min(L_1, L_2, L_3, L_4) $$
+
+---
+
+## 3. Méthodologie de Codage Vidéo
+
+### 3.1. Extraction et Transformation
+Le module d'extraction transforme le flux vidéo en processus ponctuels :
+1.  **Quantification Colorimétrique :** Réduction de l'espace colorimétrique à $m$ couleurs dominantes.
+2.  **Détection de Sauts :** Identification des instants $t$ où $C(x,y,t) \neq C(x,y,t-1)$ pour chaque pixel.
+3.  **Décomposition Monochromatique :** Au lieu de coder un processus marqué, nous définissons $m$ processus ponctuels simples $N_i^{(c)}$ par source spatiale.
+    *   *Avantage :* Élimine le terme de codage explicite des marques ($N \log m$). La couleur est portée par l'indice du processus.
+
+### 3.2. Versatilité des Représentations
+Conformément à `versatile_pp.tex`, pour chaque processus, on teste 4 représentations :
+1.  **Time Stamps :** Liste exacte des temps $\{\tau_k\}$.
+2.  **Counts (Histogrammes) :** Vecteur de comptes dans des bins de temps fixes.
+3.  **Intervals :** Durées entre sauts $\{\Delta_k\}$.
+4.  **Binary :** Vecteur de bits indiquant la présence d'un saut dans chaque bin.
+
+### 3.3. Estimation d'Intensité
+L'intensité $\alpha(t)$ est estimée dans plusieurs familles de fonctions ($\Gamma_n$) :
+*   Histogrammes (fonctions en escalier).
+*   Splines (lissage temporel).
+*   Polynômes (tendance globale).
+*   Ondelettes (variations locales).
+*   Polynômes Trigonométriques (périodicité).
+
+---
+
+## 4. Arbre de Décision et Heuristiques
+
+### 4.1. Caractéristiques à Extraire
+Pour chaque bloc vidéo, les caractéristiques suivantes sont calculées pour alimenter l'arbre de décision :
+*   $m$ : Nombre de couleurs distinctes.
+*   $N$ : Nombre total de sauts.
+*   $r$ : Nombre de bins temporels.
+*   $H_s$ : Homogénéité spatiale (variance inter-pixels).
+*   $\lambda_{avg}$ : Intensité moyenne des sauts ($N/T$).
+*   $\rho_{corr}$ : Corrélation spatiale entre pixels voisins.
+*   $R_{temp}$ : Régularité temporelle ($E[\Delta \tau]^2 / Var[\Delta \tau]$).
+
+### 4.2. Logique de Décision (Synthèse)
+1.  **Classification du Processus :**
+    *   Si $H_s > 0.7$ et $\rho_{corr} > 0.8$ $\rightarrow$ **Spatial**.
+    *   Si $m > 1$ et transitions structurées $\rightarrow$ **Markovien**.
+    *   Si canaux corrélés (R,G,B) $\rightarrow$ **Vectoriel**.
+    *   Sinon $\rightarrow$ **Réel**.
+2.  **Choix de la Représentation :**
+    *   Si $\lambda_{avg} < 0.1$ $\rightarrow$ **Time Stamps**.
+    *   Si $N/r > 0.5$ $\rightarrow$ **Binary**.
+    *   Si $R_{temp} > 1$ (régulier) $\rightarrow$ **Interval**.
+    *   Sinon $\rightarrow$ **Count**.
+3.  **Sélection MDL vs Uniforme :**
+    *   Calculer $L_{MDL}$ pour la meilleure famille d'intensité.
+    *   Calculer $L_{uniforme} = \min(L_1, L_2, L_3, L_4)$.
+    *   Choisir le minimum.
+
+### 4.3. Tableau des Seuils (À apprendre)
+| Paramètre | Symbole | Seuil Bas | Seuil Haut | Source |
+|-----------|---------|-----------|------------|--------|
+| Nombre de couleurs | $m$ | $m < 8$ | $m > 64$ | `uniform_temp_coding.tex` |
+| Densité de sauts | $N/r$ | $< 0.2$ | $> 0.5$ | `versatile_pp.tex` |
+| Homogénéité spatiale | $H_s$ | $< 0.3$ | $> 0.7$ | À apprendre |
+| Régularité temporelle | $R_{temp}$ | $< 0.5$ | $> 1.5$ | `versatile_pp.tex` |
+
+---
+
+## 5. Architecture Logicielle
+
+Le système se compose de 5 modules interconnectés :
+
+1.  **Module d'Extraction Vidéo :**
+    *   Transforme la vidéo en trajectoires de pixels.
+    *   Détecte les sauts et segmente les données en blocs spatio-temporels.
+2.  **Module de Classification de Processus :**
+    *   Teste les hypothèses (Spatial, Vectoriel, Markovien, Réel).
+    *   Sélectionne la classe de processus la plus pertinente par bloc.
+3.  **Module d'Estimation d'Intensité (MDL Core) :**
+    *   Estime $\hat{\alpha}$ dans les 5 familles (Histogrammes, Splines, etc.).
+    *   Calcule la pénalité de complexité $C_n(\hat{\alpha})$.
+4.  **Module de Choix de Représentation :**
+    *   Transforme les données dans les 4 formats (Timestamp, Count, etc.).
+    *   Sélectionne le format minimisant la longueur de code.
+5.  **Module de Codage/Décodage :**
+    *   Compare le coût MDL au coût Uniforme.
+    *   Encode les paramètres du modèle + les résidus (codage arithmétique/universel).
+    *   Décode et reconstruit la vidéo.
+
+---
+
+## 6. Protocole d'Entraînement des Heuristiques
+
+### 6.1. Collecte de Données
+Un dataset de vidéos annotées est utilisé. Pour chaque bloc :
+*   Extraction des 22 caractéristiques (voir Section 4.1).
+*   Test exhaustif de toutes les configurations (Processus × Représentation × Famille).
+*   Enregistrement de la configuration optimale (label).
+
+### 6.2. Apprentissage des Seuils
+*   **Algorithme :** CART, Random Forest ou Gradient Boosting.
+*   **Objectif :** Maximiser le gain de compression moyen.
+*   **Contrainte :** PSNR > 30 dB (qualité de reconstruction).
+*   **Validation :** k-fold cross-validation (k=5 ou 10).
+
+### 6.3. Fichier de Training (`video_features.csv`)
+Les colonnes incluent : `video_id`, `bloc_id`, `m_couleurs`, `N_sauts`, `lambda_avg`, `H_spatiale`, `type_processus_opt`, `representation_opt`, `famille_opt`, `methode_codage_opt`, `gain_compression`, `PSNR_reconstruction`.
+
+---
+
+## 7. Métriques de Performance
+
+Conformément aux sections "Numerical results" de `uniform_temp_coding.tex` et "Convergence rates" de `versatile_main.tex` :
+
+1.  **Taux de Compression :** Ratio = Taille_brute / Taille_codée.
+    *   Cible : > 2.0 pour vidéos faiblement dynamiques.
+2.  **Qualité de Reconstruction :**
+    *   PSNR > 30 dB.
+    *   Distance de Hellinger $H^2 < 0.1$ entre processus original et estimé.
+3.  **Performance Computationnelle :**
+    *   Temps d'estimation < 10ms par bloc (temps réel).
+    *   Complexité : $O(n \cdot r \cdot m)$.
+4.  **Sélection de Modèle :**
+    *   % de blocs utilisant MDL vs UNIFORME.
+    *   Distribution des types de processus sélectionnés.
+
+---
+
+## 8. Conclusion
+
+Ce rapport présente un cadre complet pour le codage vidéo basé sur la théorie des processus ponctuels. En intégrant la versatilité des représentations (`versatile_pp.tex`), la rigueur des bornes de codage uniforme (`uniform_temp_coding.tex`), et la consistance statistique des estimateurs MDL (`versatile_main.tex`), le système promet une compression adaptative et robuste. La décomposition monochromatique permet d'éviter le codage explicite des marques, optimisant ainsi la longueur de description. La prochaine étape consiste à implémenter les modules d'estimation d'intensité et à entraîner les heuristiques sur un dataset vidéo représentatif.
+
+---
+
+## 9. Références Bibliographiques (Documents du Projet)
+
+1.  **Nembé, J.** "Uniform temporal encoding of massive video datasets." (`uniform_temp_coding.tex`)
+    *   *Usage :* Bornes de codage uniforme ($L_1$ à $L_4$), algorithmes de sélection, propositions sur les seuils.
+2.  **Nembé, J.** "Strong Uniform coding of temporal Data using Counting Processes." (`Uniform_temporal.tex`)
+    *   *Usage :* Modèle d'intensité multiplicative (Aalen), modélisation vidéo par processus ponctuels.
+3.  **Nembé, J.** "Versatile Point Process Encoding Using the MDL Principle." (`versatile_pp.tex`)
+    *   *Usage :* Représentations versatiles (Count, Timestamp, Interval, Binary), codes universels.
+4.  **Nembé, J.** "MDL estimator for a class of stochastic processes." (`versatile_main.tex`)
+    *   *Usage :* Théorie MDL, distances de Hellinger, vraisemblances spécifiques (Markovien, Poisson, Diffusion), taux de convergence.
+
+
+## 1. Résumé Exécutif
+
+Ce projet vise à développer un framework de compression vidéo innovant basé sur la modélisation des trajectoires de pixels comme des processus ponctuels. Contrairement aux méthodes standards, cette approche exploite l'historique temporel individuel des pixels. Le système utilise le principe de la **Longueur Minimale de Description (MDL)** pour sélectionner automatiquement le modèle statistique optimal. Ce rapport intègre les spécifications révisées concernant la gestion des marques (couleurs), la distinction entre processus réels et vectoriels, les structures de données de pré-codage, et les trois modes de compression (Universel, Uniforme, Statistique).
+
+---
+
+## 2. Cadre Mathématique et Classes de Processus
+
+Conformément à `Uniform_temporal.tex` et `versatile_main.tex`, le système doit gérer deux approches distinctes pour la modélisation des états (couleurs).
+
+### 2.1. Processus Ponctuel Réel Marqué vs. Somme de Processus Monochromatiques
+
+Pour un pixel donné, l'historique des couleurs peut être modélisé de deux façons :
+
+1.  **Processus Ponctuel Marqué (Standard) :**
+    *   Un seul processus $N$ avec des sauts $\tau_k$ et des marques $m_k \in \{1, \dots, m\}$.
+    *   **Vraisemblance :** Inclut un terme de codage des marques ($N \log m$).
+    *   **Référence :** `Uniform_temporal.tex` Eq. (2).
+    *   **Intensité :** $\lambda(t, m) = \alpha(t, m)Y(t)$.
+
+2.  **Somme de Processus Monochromatiques (Optimisation) :**
+    *   Décomposition en $m$ processus simples $N^{(c)}$ pour chaque couleur $c$.
+    *   **Avantage :** La couleur est implicite dans l'indice du processus. Élimine le terme $N \log m$ du codage des marques.
+    *   **Vraisemblance :** Produit des vraisemblances marginales pour chaque couleur.
+    *   **Référence :** `uniform_temp_coding.tex` (Comparaison entre codage avec et sans marques).
+
+### 2.2. Processus Ponctuel Vectoriel (Corrélations)
+
+Pour des blocs de pixels ou des canaux (R, G, B) :
+
+1.  **Approche Marginale (Indépendante) :**
+    *   Chaque dimension est codée comme un processus scalaire indépendant.
+    *   **Structure :** Somme de processus monochromatiques par dimension.
+2.  **Approche Conjointe (Vectorielle) :**
+    *   Prend en compte les corrélations entre états/dimensions.
+    *   **Modèle :** Processus de Markov ou Copules.
+    *   **Vraisemblance :** Inclut les termes de transition ou de dépendance.
+    *   **Référence :** `versatile_main.tex` Section 4.4 (Markovian transition model).
+
+---
+
+## 3. Structures de Données et Pré-Codage (Représentation)
+
+Le choix de la représentation précède le codage effectif (étape de "pré-codage"). Chaque approche (Marquée, Monochromatique, Vectorielle) génère une structure de données spécifique. Conformément à `versatile_pp.tex` et `uniform_temp_coding.tex`, quatre représentations principales sont supportées.
+
+### 3.1. Les 4 Représentations Canoniques
+
+| ID | Nom | Description | Structure de Données | Référence |
+|----|-----|-------------|----------------------|-----------|
+| **R1** | **Time Stamps** | Liste exacte des temps de sauts. | `List<Integer>` (Dates) + `List<Integer>` (Couleurs si marqué) | `versatile_pp.tex` |
+| **R2** | **Count (Histogramme)** | Nombre de sauts par bin temporel. | `Array<int>` (Comptes par bin) | `versatile_pp.tex` |
+| **R3** | **Boolean Vector** | Présence (1) ou absence (0) de saut par bin. | `BitSet` ou `Array<bool>` de taille $r$ | `uniform_temp_coding.tex` ($L_3$) |
+| **R4** | **Combinatorial Address** | Dérivé du Booléen. Index de la configuration. | `Integer N` (Nb sauts) + `Integer Index` (Parmi $\binom{r}{N}$) | `uniform_temp_coding.tex` ($L_4$) |
+
+*Note sur R4 :* Comme précisé dans la demande, à partir du vecteur booléen, on construit la représentation $(N, \text{Index})$. Cela correspond à la longueur de code $L_4 = \log N + \log \binom{r}{N} + N \log m$ (avec $m=1$ pour monochromatique).
+
+### 3.2. Primitives d'Accès (API de Pré-Codage)
+
+Pour chaque type de codage, des primitives d'accès aux couleurs et aux dates doivent être implémentées :
+
+*   **`get_jump_times()` :** Retourne la liste des $\tau_k$. (Optimisé pour R1, R4).
+*   **`get_color_at(t)` :** Retourne la couleur au temps $t$. (Optimisé pour R2, R3).
+*   **`get_count_in_bin(b)` :** Retourne le nombre de sauts dans le bin $b$. (Optimisé pour R2).
+*   **`has_jump_at(t)` :** Retourne booléen. (Optimisé pour R3).
+
+---
+
+## 4. Stratégies de Compression Effectives
+
+Une fois la représentation choisie, la compression effective suit l'une des trois méthodes ci-dessous, classées par complexité croissante.
+
+### 4.1. Codage Universel sur les Entiers
+*   **Usage :** Lorsque les paramètres (dates, comptes) ne sont pas bornés ou pour éviter de coder la borne maximale.
+*   **Méthode :** Codes de Elias ($\gamma, \delta$) ou Rissanen.
+*   **Référence :** `uniform_temp_coding.tex` Section 2.2 (Universal encoding of integers).
+*   **Formule :** $L(n) \approx \log n + 2 \log \log n$.
+*   **Avantage :** Robustesse, pas besoin de connaître $r$ ou $m$ à l'avance.
+
+### 4.2. Codage par Loi Uniforme (Baseline)
+*   **Usage :** Référence minimale (borne inférieure). Utilisé si l'estimation d'intensité échoue ou est trop coûteuse.
+*   **Méthode :** Supposition que les sauts et les couleurs sont uniformément distribués.
+*   **Longueurs de Code (`uniform_temp_coding.tex` Prop. 1) :**
+    1.  $L_1 = r \log m$ (État complet)
+    2.  $L_2 = \log N + N \log(rm)$ (Liste sauts)
+    3.  $L_3 = r + N \log m$ (Booléen)
+    4.  $L_4 = \log N + \log \binom{r}{N} + N \log m$ (Combinatoire)
+*   **Décision :** Le système choisit $\min(L_1, L_2, L_3, L_4)$ selon le nombre de sauts $N$ observé.
+
+### 4.3. Codage Statistique MDL (3 Étapes)
+*   **Usage :** Compression optimale lorsque des régularités temporelles existent.
+*   **Référence :** `versatile_main.tex` (MDL estimator).
+*   **Étape 1 : Sélection du Modèle Statistique**
+    *   Choix de la classe de processus (Poisson, Markov, etc.) et de la famille d'intensité (Histogramme, Splines, Ondelettes).
+    *   Critère : Minimisation de $-\log L + C_n$.
+*   **Étape 2 : Estimation de la Fonction d'Intensité**
+    *   Calcul de $\hat{\alpha}(t)$ dans le modèle multiplicatif $\lambda(t) = \alpha(t)Y(t)$.
+    *   Référence : `Uniform_temporal.tex` (Aalen model).
+*   **Étape 3 : Codage avec l'Intensité Cumulée**
+    *   Utilisation de la fonction de répartition cumulative pour le codage arithmétique.
+    *   La probabilité d'un saut dans un intervalle est donnée par $\int \hat{\alpha}(t) dt$.
+    *   Référence : `versatile_main.tex` (Likelihood coding).
+
+---
+
+## 5. Arbre de Décision Révisé
+
+```text
+DÉBUT (Bloc Vidéo)
+│
+├── 1. CHOIX MODÈLE PROCESSUS
+│   ├── Couleurs indépendantes ? ──OUI──> Somme Processus Monochromatiques (Pas de codage marque)
+│   │                                     (Structure: m processus simples)
+│   │
+│   ├── Transitions structurées ? ──OUI──> Processus Markovien (Codage transitions h->j)
+│   │                                     (Structure: Matrice de comptage N_hj)
+│   │
+│   └── Corrélations spatiales/canaux ? ──OUI──> Processus Vectoriel (Loi conjointe)
+│                                       (Structure: Vecteur d'intensités)
+│
+├── 2. CHOIX REPRÉSENTATION (Pré-Codage)
+│   ├── N (sauts) très faible ? ──OUI──> R1: Time Stamps (Liste dates)
+│   ├── N très élevé (proche de r) ? ──OUI──> R2: Count (Histogramme) ou R3: Boolean
+│   ├── N intermédiaire ? ──OUI──> R4: Combinatorial Address (N + Index Config)
+│   │                                     (Réf: uniform_temp_coding.tex L4)
+│   └── Défaut ──> R3: Boolean Vector
+│
+├── 3. CHOIX MÉTHODE COMPRESSION
+│   ├── Paramètres non bornés ? ──OUI──> Codage Universel Entiers (Elias/Rissanen)
+│   │
+│   ├── Estimation Intensité possible ? ──OUI──> Codage Statistique MDL
+│   │                                     1. Sélection Modèle (Hist/Spline/Wavelet)
+│   │                                     2. Estimation α(t)
+│   │                                     3. Codage Arithmétique (Cumulative Intensity)
+│   │                                     (Réf: versatile_main.tex)
+│   │
+│   └── Échec MDL ou Trop Coûteux ? ──OUI──> Codage Uniforme
+│                                         Choisir min(L1, L2, L3, L4)
+│                                         (Réf: uniform_temp_coding.tex Prop 1)
+│
+└── SORTIE : Bitstream + Métadonnées (Modèle, Représentation, Paramètres)
+```
+
+---
+
+## 6. Implémentation et Complexité
+
+### 6.1. Gestion des Structures de Données
+*   **Monochromatique :** Tableau de listes de sauts `List<Integer>[] jumps_by_color`.
+*   **Vectoriel :** Tableau d'objets Processus `Process[] dimensions`.
+*   **Combinatoire (R4) :** Nécessite une fonction efficace pour calculer l'index combinatoire $\sum \binom{r-i}{N-k}$ sans overflow (utilisation de logarithmes ou grandes entier).
+
+### 6.2. Primitives de Codage
+*   **`encode_universal(int n)` :** Implémente le code $\delta$ de Rissanen (`uniform_temp_coding.tex`).
+*   **`encode_uniform(int N, int r, int m)` :** Calcule et encode selon la formule $L_i$ choisie.
+*   **`encode_statistical(List<Integer> jumps, Function intensity)` :** Utilise l'intensité cumulée pour mapper les sauts dans $[0,1]$ puis code arithmétique.
+
+### 6.3. Complexité Algorithmique
+*   **Estimation Intensité :** $O(N)$ pour histogrammes, $O(N \log N)$ pour Splines/Ondelettes.
+*   **Calcul Index Combinatoire :** $O(N)$ ou $O(r)$ selon implémentation.
+*   **Décision MDL :** Doit rester inférieure au gain de compression espéré.
+
+---
+
+## 7. Références aux Documents
+
+| Composant | Document Source | Section/Équation |
+|-----------|-----------------|------------------|
+| **Longueurs de code Uniformes (L1-L4)** | `uniform_temp_coding.tex` | Proposition 1 |
+| **Codage Universel Entiers** | `uniform_temp_coding.tex` | Section 2.2 |
+| **Modèle Multiplicatif (Aalen)** | `Uniform_temporal.tex` | Section 2.1 |
+| **Vraisemblance Processus Marqué** | `Uniform_temporal.tex` | Éq. (2) |
+| **Représentations Versatiles** | `versatile_pp.tex` | Section 2 |
+| **Estimateur MDL & Hellinger** | `versatile_main.tex` | Théorème 1 & 2 |
+| **Modèle Markovien** | `versatile_main.tex` | Section 4.4 |
+| **Adresse Combinatoire** | `uniform_temp_coding.tex` | Eq. (4) ($\CR_3$) |
+
+---
+
+## 8. Conclusion
+
+Ce rapport révisé intègre les distinctions cruciales entre processus marqués et monochromatiques, ainsi que la hiérarchie des méthodes de compression (Universel, Uniforme, Statistique). La notion de "pré-codage" via le choix de représentation (notamment l'adresse combinatoire) est maintenant centrale. Le système repose sur les bornes théoriques de `uniform_temp_coding.tex` pour la sécurité du codage et sur la consistance statistique de `versatile_main.tex` pour l'optimisation MDL.
+
+
+
+## 1. Résumé Exécutif
+
+Ce rapport présente une version révisée du framework de compression vidéo basé sur les processus ponctuels. Les mises à jour majeures concernent :
+1.  **La gestion explicite du codage des couleurs :** Distinction entre codage par saut (marqué) et codage par processus (monochromatique), impactant les termes de longueur de code.
+2.  **L'identification unique des méthodes :** Un code identifiant chaque combinaison de stratégies pour le décodage.
+3.  **Un processus d'entraînement hors-ligne :** Une phase d'apprentissage par codage exhaustif pour générer des heuristiques de décision rapides.
+
+---
+
+## 2. Modèle Mathématique et Termes de Couleur
+
+Conformément à `uniform_temp_coding.tex` et `Uniform_temporal.tex`, la longueur de code dépend de la stratégie de gestion des marques (couleurs/états).
+
+### 2.1. Codage par Loi Uniforme et Universel (Processus Marqué)
+Dans le cas standard d'un processus ponctuel marqué $N = \{(\tau_k, m_k)\}$, les formules de `uniform_temp_coding.tex` (Proposition 1) incluent un terme de codage de la marque pour **chaque saut** :
+
+*   $L_2 = \log N + N \log r + \mathbf{N \log m}$ (Liste sauts + couleurs)
+*   $L_3 = r + \mathbf{N \log m}$ (Booléen + couleurs)
+*   $L_4 = \log N + \log C_r^N + \mathbf{N \log m}$ (Combinatoire + couleurs)
+
+Ici, le terme $N \log m$ représente le coût de codage de la couleur à chaque changement d'état.
+
+### 2.2. Codage État par État (Décomposition Monochromatique)
+Conformément à l'approche de décomposition discutée, le processus est vu comme une somme de $m$ processus monochromatiques $N^{(c)}$.
+*   **Avantage :** Les sauts dans $N^{(c)}$ n'ont pas de marque. Le terme $N \log m$ disparaît des formules de codage temporel.
+*   **Coût de Pré-codage :** Il faut encoder la correspondance "Indice du Processus $\leftrightarrow$ Couleur".
+    *   Si la palette est globale : Coût nul (implicite).
+    *   Si la palette est locale (par bloc) : Coût $\approx m \times \log |\mathcal{E}_{global}|$ ou $\log m$ par processus actif.
+*   **Nouvelle Formule (exemplaire) :**
+    $$ L_{mono} = \sum_{c=1}^m L_{time}(N^{(c)}) + \mathbf{C_{color\_map}} $$
+    Où $C_{color\_map}$ est codé **une fois par bloc** (et non par saut).
+
+### 2.3. Distinction au Niveau du Pré-Codage
+Le module de pré-codage doit sélectionner le **Mode de Couleur** :
+*   **Mode M (Marked) :** Couleur codée par saut. Terme $N \log m$ inclus.
+*   **Mode S (State-by-State) :** Couleur codée par bloc/processus. Terme $N \log m$ supprimé, remplacé par $C_{color\_map}$.
+
+---
+
+## 3. Identification Unique des Méthodes (Method ID)
+
+Pour assurer la réversibilité du codage, chaque bloc compressé doit être précédé d'un en-tête identifiant la stratégie utilisée. Nous définissons un **Code Méthode (Method ID)** binaire concaténé.
+
+### 3.1. Structure du Code Méthode
+Le Code Méthode est composé de 4 champs :
+
+| Champ | Bits | Description | Valeurs Exemples |
+|-------|------|-------------|------------------|
+| **PROC** | 2 | Classe de Processus | `00`: Réel, `01`: Vectoriel, `10`: Spatial, `11`: Markovien |
+| **REP** | 2 | Représentation (`versatile_pp.tex`) | `00`: Timestamp, `01`: Count, `10`: Interval, `11`: Boolean/Comb |
+| **COMP** | 2 | Méthode Compression | `00`: Uniforme, `01`: Universel Entier, `10`: MDL Statistique, `11`: Réservé |
+| **COL** | 1 | Mode Couleur | `0`: Marqué (Terme $N \log m$), `1 État par État (Terme $C_{map}$) |
+
+**Exemple :** `0110011`
+*   `01` (Vectoriel)
+*   `10` (Interval)
+*   `01` (Universel Entier)
+*   `1` (État par État)
+
+### 3.2. Intégration dans le Flux (Bitstream)
+Chaque bloc de données est structuré ainsi :
+```
+[ Header Bloc ] [ Code Méthode (7 bits) ] [ Paramètres Modèle ] [ Données Codées ] [ Checksum ]
+```
+*   **Header Bloc :** Coordonnées spatiales, taille, frame de début/fin.
+*   **Paramètres Modèle :** Dépend de la méthode (ex: coefficients de spline pour MDL, ou palette pour Mode Couleur État par État).
+
+---
+
+## 4. Processus d'Entraînement et Génération d'Heuristiques
+
+Pour éviter un codage exhaustif en temps réel (trop coûteux), un processus d'apprentissage hors-ligne est conçu pour prédire le meilleur **Code Méthode** à partir des caractéristiques du bloc.
+
+### 4.1. Phase 1 : Codage Exhaustif (Offline)
+Sur un dataset d'entraînement (vidéos variées), chaque bloc est codé avec **toutes les combinaisons possibles** de méthodes.
+
+*   **Entrée :** Bloc Vidéo $B$.
+*   **Boucle :** Pour chaque `Code Méthode` $k \in \{1, \dots, K\}$ :
+    1.  Appliquer le pré-codage (extraction sauts, décomposition couleur).
+    2.  Estimer les paramètres (si MDL).
+    3.  Calculer la longueur de code totale $L_k(B)$.
+*   **Sélection :** Identifier la méthode optimale $k^* = \arg \min_k L_k(B)$.
+*   **Enregistrement :** Stocker le tuple $(Features(B), k^*, \{L_k\})$.
+
+### 4.2. Phase 2 : Extraction de Caractéristiques (Features)
+Pour chaque bloc, les caractéristiques suivantes sont calculées (cf. `uniform_temp_coding.tex` et `versatile_main.tex`) :
+
+1.  **Statistiques Temporelles :**
+    *   $N$ : Nombre total de sauts.
+    *   $r$ : Nombre de bins temporels.
+    *   $\lambda_{avg} = N/r$ : Densité de sauts.
+    *   $Var(\Delta \tau)$ : Régularité des intervalles.
+2.  **Statistiques de Couleur :**
+    *   $m$ : Nombre de couleurs distinctes dans le bloc.
+    *   $Entropy(C)$ : Entropie spatiale des couleurs.
+    *   $Cost_{marked} = N \log m$.
+    *   $Cost_{state} = C_{color\_map}$.
+3.  **Statistiques Spatiales :**
+    *   $H_{spatiale}$ : Homogénéité du bloc.
+    *   $\rho_{corr}$ : Corrélation avec les blocs voisins.
+
+### 4.3. Phase 3 : Apprentissage du Modèle de Décision
+Un modèle de classification est entraîné sur les données collectées.
+
+*   **Input :** Vecteur de caractéristiques $X = [N, r, m, \lambda_{avg}, \dots]$.
+*   **Output :** Classe $Y = k^*$ (Le meilleur Code Méthode).
+*   **Algorithmes Suggérés :**
+    *   **Arbre de Décision (CART) :** Pour obtenir des règles interprétables (seuils sur $N, m$).
+    *   **Random Forest / Gradient Boosting :** Pour une meilleure précision prédictive.
+*   **Fonction de Perte :** Minimiser la différence entre la longueur de code prédite et la longueur de code optimale réelle (Redondance).
+
+### 4.4. Phase 4 : Outil d'Aide à la Décision (Online)
+Lors du codage réel (production) :
+1.  Calculer les caractéristiques $X$ du bloc.
+2.  Interroger le modèle entraîné pour obtenir le **Code Méthode Prédit** $\hat{k}$.
+3.  Appliquer uniquement la méthode $\hat{k}$.
+4.  (Optionnel) Vérifier rapidement si une méthode alternative simple (ex: Uniforme) est meilleure (sécurité).
+
+---
+
+## 5. Arbre de Décision Enrichi (Algorithme Révisé)
+
+Cet algorithme intègre le choix du mode couleur et l'identification de la méthode.
+
+```text
+DÉBUT (Bloc Vidéo)
+│
+├── 1. EXTRACTION FEATURES (X)
+│   ├── Calculer N, m, r, lambda_avg, H_spatiale...
+│   └── Estimer Cost_marked (N log m) vs Cost_state (C_map)
+│
+├── 2. PRÉ-SÉLECTION MODE COULEUR (COL)
+│   ├── Si Cost_state < Cost_marked - Seuil :
+│   │   └── Mode = État par État (COL=1)
+│   │       → Décomposer en m processus monochromatiques
+│   └── Sinon :
+│       └── Mode = Marqué (COL=0)
+│           → Garder processus unique avec marques
+│
+├── 3. SÉLECTION MÉTHODE (Via Modèle Entraîné)
+│   ├── Input : Features X + Mode Couleur
+│   ├── Modèle Heuristique → Prédit (PROC, REP, COMP)
+│   └── Output : Code Méthode Complet (ID)
+│
+├── 4. CODAGE EFFECTIF
+│   ├── Écrire [Code Méthode] dans le Header
+│   ├── Si Mode État par État :
+│   │   └── Écrire [Table de Correspondance Couleur] (C_map)
+│   ├── Si COMP == MDL :
+│   │   └── Estimer Intensité α(t) et Écrire [Paramètres]
+│   ├── Appliquer la compression (Uniforme/Universel/Statistique)
+│   └── Écrire [Données Codées]
+│
+└── FIN
+```
+
+---
+
+## 6. Références aux Documents et Justification
+
+| Composant | Document Source | Section/Équation | Justification |
+|-----------|-----------------|------------------|---------------|
+| **Termes $N \log m$** | `uniform_temp_coding.tex` | Proposition 1 ($L_2, L_3, L_4$) | Base pour le coût du codage marqué. |
+| **Décomposition Monochromatique** | `Uniform_temporal.tex` | Section 2.1 (Multiplicative Intensity) | Permet de traiter chaque couleur comme un processus indépendant $\lambda^{(c)}(t)$. |
+| **Représentations (REP)** | `versatile_pp.tex` | Section 2 (Versatility) | Justifie le choix entre Timestamp, Count, Interval, Boolean. |
+| **MDL & Complexité** | `versatile_main.tex` | Théorème 1 (MDL Estimator) | Justifie la sélection du modèle statistique (COMP=MDL). |
+| **Codes Universels** | `uniform_temp_coding.tex` | Section 2.2 (Universal encoding) | Justifie le codage des entiers non bornés (COMP=Universel). |
+| **Distance Hellinger** | `versatile_main.tex` | Section 2 (Statistical Setting) | Utilisée pour évaluer la qualité de l'estimation MDL durant l'entraînement. |
+
+---
+
+## 7. Conclusion
+
+Cette version révisée du rapport intègre les contraintes opérationnelles de codage des couleurs et d'identification des méthodes. La distinction claire entre le coût par saut (marqué) et par bloc (état par état) permet d'optimiser la longueur de description totale. Le processus d'entraînement par codage exhaustif garantit que les heuristiques de décision sont basées sur des données empiriques réelles, alignant la théorie MDL (`versatile_main.tex`) avec la pratique de la compression vidéo. 
+Le **Code Méthode** assure la robustesse du flux binaire pour le d
+
+## 1. Contexte et Objectifs du Projet
+
+### 1.1. Contexte
+Les techniques de compression vidéo standards (DCT, MPEG, HEVC) reposent sur la compression spatiale à intervalles de temps réguliers, sans considérer l'historique individuel des pixels. Ce projet propose une approche alternative basée sur la modélisation des trajectoires temporelles de pixels comme des **processus ponctuels**, exploitant le principe de la **Longueur Minimale de Description (MDL)** pour une compression adaptative et statistiquement optimale.
+
+### 1.2. Objectifs Principaux
+1.  **Développer un codeur/décodeur vidéo** basé sur la théorie des processus ponctuels.
+2.  **Implémenter la versatilité des représentations** (Timestamp, Count, Interval, Binary/Combinatorial) conformément à `versatile_pp.tex`.
+3.  **Intégrer le codage MDL** avec estimation d'intensité pour les régularités temporelles (`versatile_main.tex`).
+4.  **Garantir la robustesse** via le codage uniforme de référence (`uniform_temp_coding.tex`).
+5.  **Créer un système d'apprentissage d'heuristiques** pour la sélection automatique de méthode.
+
+### 1.3. Périmètre
+*   **Entrée :** Flux vidéo brut (séquences d'images).
+*   **Sortie :** Flux binaire compressé (bitstream) et vidéo reconstruite.
+*   **Cible :** Vidéos à faible mouvement, surveillance, drones (UAS), données spatiotemporelles massives.
+
+---
+
+## 2. Spécifications Fonctionnelles
+
+### 2.1. Module d'Extraction et Pré-Codage
+**Fonction :** Transformer le flux vidéo en données de processus ponctuels.
+
+| Fonctionnalité | Description | Référence |
+|----------------|-------------|-----------|
+| **Quantification Colorimétrique** | Réduire l'espace colorimétrique à $m$ couleurs dominantes. | `uniform_temp_coding.tex` |
+| **Détection de Sauts** | Identifier les instants $t$ où $C(x,y,t) \neq C(x,y,t-1)$. | `Uniform_temporal.tex` |
+| **Décomposition Monochromatique** | Créer $m$ processus simples $N^{(c)}$ par couleur (élimine $N \log m$). | `uniform_temp_coding.tex` |
+| **Discrétisation Temporelle** | Mapper le temps sur $r$ bins (ex: 256, 512 par GOP). | `Uniform_temporal.tex` |
+
+### 2.2. Module de Classification de Processus
+**Fonction :** Identifier le type de processus statistique par bloc.
+
+| Classe de Processus | Critère de Détection | Vraisemblance Associée |
+|---------------------|----------------------|------------------------|
+| **Réel Marqué** | Couleurs indépendantes, sauts rares. | Eq. (2) `Uniform_temporal.tex` |
+| **Monochromatique** | Décomposition par couleur (Somme de processus). | Produit de vraisemblances marginales |
+| **Vectoriel** | Canaux (R,G,B) ou pixels corrélés. | Produit ou Copule `versatile_main.tex` |
+| **Spatial** | Homogénéité spatiale forte ($H_s > 0.7$). | Intégrale spatiale `versatile_main.tex` |
+| **Markovien** | Transitions structurées entre états. | Eq. Section 4.4 `versatile_main.tex` |
+
+### 2.3. Module de Choix de Représentation (Versatilité)
+**Fonction :** Sélectionner la représentation des données la plus compacte.
+
+| Représentation | ID | Structure de Données | Cas d'Usage Optimal |
+|----------------|----|----------------------|---------------------|
+| **Time Stamps** | `00` | `List<Integer>` (Dates) | $\lambda_{avg} < 0.1$ (Peu de sauts) |
+| **Count** | `01` | `Array<int>` (Comptes/bin) | Activité modérée, régularité |
+| **Interval** | `10` | `List<Integer>` (Durées) | Processus régulier ($Var(\Delta\tau)$ faible) |
+| **Boolean/Comb** | `11` | `Integer N` + `Integer Index` | $N/r > 0.5$ ou Codage Uniforme $L_4$ |
+
+*Référence : `versatile_pp.tex` Section 2, `uniform_temp_coding.tex` Proposition 1.*
+
+### 2.4. Module de Compression Effectives
+**Fonction :** Appliquer la méthode de codage sélectionnée.
+
+| Méthode | ID | Description | Formule de Longueur |
+|---------|----|-------------|---------------------|
+| **Uniforme** | `00` | Loi uniforme sur temps/états. | $\min(L_1, L_2, L_3, L_4)$ |
+| **Universel** | `01` | Code universel sur entiers (Elias/Rissanen). | $\log n + 2\log\log n$ |
+| **MDL Statistique** | `10` | Estimation d'intensité + Codage arithmétique. | $-\log L_{\hat{\alpha}} + C_n(\hat{\alpha})$ |
+
+*Référence : `uniform_temp_coding.tex` Section 2.2, `versatile_main.tex` Théorème 1.*
+
+### 2.5. Gestion des Couleurs (Mode Couleur)
+**Fonction :** Encoder l'information de couleur efficacement.
+
+| Mode | ID | Description | Coût |
+|------|----|-------------|------|
+| **Marqué (M)** | `0` | Couleur codée par saut. | Terme $N \log m$ inclus (`uniform_temp_coding.tex` $L_2, L_3, L_4$) |
+| **État par État (S)** | `1` | Couleur codée par bloc/processus. | Terme $N \log m$ supprimé, remplacé par $C_{map}$ (codé une fois) |
+
+---
+
+## 3. Spécifications Techniques
+
+### 3.1. Structure du Bitstream
+Chaque bloc compressé doit contenir un en-tête identifiant la stratégie utilisée.
+
+```
+┌─────────────────┬──────────────────┬───────────────────┬──────────────────┬─────────────────┐
+│  Header Bloc    │   Code Méthode   │  Paramètres       │  Données Codées │    Checksum     │
+│  (Coords, Size) │   (7 bits)       │  (Variable)       │  (Variable)     │    (16 bits)    │
+└─────────────────┴──────────────────┴───────────────────┴──────────────────┴─────────────────┘
+```
+
+**Détail du Code Méthode (7 bits) :**
+| Bits | Champ | Valeurs |
+|------|-------|---------|
+| `[6:5]` | **PROC** | `00`: Réel, `01`: Vectoriel, `10`: Spatial, `11`: Markovien |
+| `[4:3]` | **REP** | `00`: Timestamp, `01`: Count, `10`: Interval, `11`: Boolean/Comb |
+| `[2:1]` | **COMP** | `00`: Uniforme, `01`: Universel, `10`: MDL, `11`: Réservé |
+| `[0]` | **COL** | `0`: Marqué, `1`: État par État |
+
+### 3.2. Primitives d'Accès (API)
+Le système doit fournir les primitives suivantes pour chaque type de codage :
+
+*   `get_jump_times()` : Retourne la liste des $\tau_k$. (Optimisé R1, R4)
+*   `get_color_at(t)` : Retourne la couleur au temps $t$. (Optimisé R2, R3)
+*   `get_count_in_bin(b)` : Retourne le nombre de sauts dans le bin $b$. (Optimisé R2)
+*   `has_jump_at(t)` : Retourne booléen. (Optimisé R3)
+*   `get_color_map()` : Retourne la table de correspondance (Mode État par État).
+
+### 3.3. Algorithmes Clés
+
+#### Algorithme de Sélection de Méthode (Entraînement)
+```python
+def entrainer_heuristiques(dataset_video):
+    """
+    Phase Offline : Codage exhaustif pour générer les labels d'entraînement.
+    """
+    donnees_training = []
+    for bloc in dataset_video:
+        features = extraire_features(bloc) # N, m, r, H_s, rho_corr, etc.
+        meilleurs_resultats = {}
+        
+        # Tester toutes les combinaisons (PROC x REP x COMP x COL)
+        for methode in toutes_les_methodes():
+            longueur = coder_bloc(bloc, methode)
+            meilleurs_resultats[methode] = longueur
+        
+        # Sélectionner la méthode optimale
+        methode_optimale = argmin(meilleurs_resultats)
+        
+        # Enregistrer pour l'apprentissage
+        donnees_training.append({
+            'features': features,
+            'label': methode_optimale,
+            'gain': calculer_gain(methode_optimale, uniforme)
+        })
+    
+    # Entraîner le modèle de décision (Random Forest / Gradient Boosting)
+    modele = entrainer_modele(donnees_training)
+    return modele
+```
+
+#### Algorithme de Codage (Production)
+```python
+def coder_bloc_production(bloc, modele_entraîne):
+    """
+    Phase Online : Utilisation des heuristiques pour éviter le codage exhaustif.
+    """
+    # 1. Extraction Features
+    features = extraire_features(bloc)
+    
+    # 2. Prédiction Méthode via Modèle
+    code_methode = modele_entraîne.predict(features)
+    
+    # 3. Vérification de Sécurité (Optionnel)
+    L_pred = estimer_longueur(code_methode)
+    L_uniforme = calculer_L_uniforme(bloc) # L1, L2, L3, L4
+    if L_pred > L_uniforme:
+        code_methode = set_uniforme_optimal(bloc)
+    
+    # 4. Encodage Effectif
+    bitstream = encoder(bloc, code_methode)
+    
+    return bitstream
+```
+
+### 3.4. Estimation d'Intensité (MDL)
+Pour la méthode **MDL Statistique**, le système doit implémenter les familles de fonctions suivantes (`versatile_main.tex`) :
+1.  **Histogrammes :** $\alpha(t) = \sum c_i \mathbb{I}_{[t_i, t_{i+1}]}(t)$.
+2.  **Splines :** Fonctions polynomiales par morceaux lisses.
+3.  **Polynômes :** $\alpha(t) = \sum_{k=0}^d a_k t^k$.
+4.  **Ondelettes :** Décomposition multi-résolution.
+5.  **Polynômes Trigonométriques :** Pour données périodiques.
+
+**Critère de Sélection :**
+$$ \hat{\alpha} = \arg \min_{\alpha \in \Gamma} \left( -\log L_{\alpha}(Data) + C_n(\alpha) \right) $$
+
+---
+
+## 4. Processus d'Entraînement des Heuristiques
+
+### 4.1. Dataset d'Entraînement
+*   **Contenu :** Vidéos variées (faible mouvement, fort mouvement, animation, réel).
+*   **Découpage :** Blocs spatiaux (ex: 16x16 pixels) sur des GOP (Group of Pictures).
+*   **Taille Minimale :** 100 heures de vidéo annotées.
+
+### 4.2. Caractéristiques à Extraire (Features)
+| Catégorie | Paramètre | Symbole | Description |
+|-----------|-----------|---------|-------------|
+| **Temporel** | Nombre de sauts | $N$ | Total des changements d'état. |
+| | Densité de sauts | $N/r$ | Ratio sauts / bins temporels. |
+| | Régularité | $R_{temp}$ | $E[\Delta \tau]^2 / Var[\Delta \tau]$. |
+| **Couleur** | Nombre de couleurs | $m$ | Couleurs distinctes dans le bloc. |
+| | Coût Marqué | $C_M$ | $N \log m$. |
+| | Coût État | $C_S$ | $C_{color\_map}$. |
+| **Spatial** | Homogénéité | $H_s$ | Variance inter-pixels. |
+| | Corrélation | $\rho_{corr}$ | Corrélation voisins. |
+
+### 4.3. Modèle de Décision
+*   **Type :** Forêt Aléatoire (Random Forest) ou Gradient Boosting.
+*   **Input :** Vecteur de features.
+*   **Output :** Code Méthode (Classe multi-label).
+*   **Métrique d'Optimisation :** Maximiser le gain de compression moyen.
+*   **Contrainte :** PSNR > 30 dB.
+
+---
+
+## 5. Métriques de Performance et Validation
+
+### 5.1. Taux de Compression
+*   **Définition :** Ratio = Taille_brute / Taille_codée.
+*   **Cibles :**
+    *   Vidéos faiblement dynamiques : > 2.0
+    *   Vidéos fortement dynamiques : > 1.2
+*   **Comparaison :** HEVC/H.265 en mode "All Intra".
+
+### 5.2. Qualité de Reconstruction
+*   **PSNR (Peak Signal-to-Noise Ratio) :** Cible > 30 dB.
+*   **SSIM (Structural Similarity) :** Cible > 0.95.
+*   **Distance de Hellinger :** $H^2(P_{original}, P_{estimée}) < 0.1$ (`versatile_main.tex`).
+
+### 5.3. Performance Computationnelle
+*   **Temps d'Estimation :** < 10ms par bloc (pour temps réel).
+*   **Mémoire :** < 100 MB pour le modèle d'heuristiques.
+*   **Complexité :** $O(n \cdot r \cdot m)$ où $n$=pixels, $r$=bins, $m$=couleurs.
+
+### 5.4. Robustesse
+*   **Généralisation :** Performance sur vidéos non vues pendant l'entraînement.
+*   **Fallback :** Le système doit toujours pouvoir retomber sur le codage uniforme ($L_4$) si MDL échoue.
+
+---
+
+## 6. Livrables Attendus
+
+| Livrable | Description | Format |
+|----------|-------------|--------|
+| **Bibliothèque Core** | Implémentation des vraisemblances (4 classes de processus). | C++ / Python |
+| **Moteur MDL** | Solveurs d'estimation d'intensité (5 familles). | C++ / Python |
+| **Codeur/Décodeur** | Implémentation des codes (Universel, Uniforme, Arithmétique). | Exécutable |
+| **Modèle Heuristique** | Fichier de modèle entraîné (.pkl, .onnx, etc.). | Binaire |
+| **Outil d'Entraînement** | Script de codage exhaustif et extraction de features. | Python |
+| **Documentation** | Spécification du format bitstream et API. | PDF / Markdown |
+| **Rapport de Performance** | Benchmarks sur dataset de référence. | PDF |
+
+---
+
+## 7. Planning Prévisionnel
+
+| Phase | Durée | Activités Principales |
+|-------|-------|-----------------------|
+| **1. Conception** | 4 semaines | Architecture détaillée, spécification bitstream. |
+| **2. Développement Core** | 8 semaines | Implémentation processus, vraisemblances, représentations. |
+| **3. Développement MDL** | 6 semaines | Estimateurs d'intensité, codes arithmétiques. |
+| **4. Entraînement** | 6 semaines | Collecte dataset, codage exhaustif, training modèle. |
+| **5. Intégration** | 4 semaines | Assemblage modules, optimisation performance. |
+| **6. Validation** | 4 semaines | Benchmarks, tests robustesse, documentation. |
+| **Total** | **32 semaines** | |
+
+---
+
+## 8. Références Bibliographiques (Documents du Projet)
+
+| Document | Usage Principal | Sections Clés |
+|----------|-----------------|---------------|
+| `uniform_temp_coding.tex` | Bornes codage uniforme ($L_1$-$L_4$), codes universels. | Prop. 1, Sec 2.2, Algo 1 |
+| `Uniform_temporal.tex` | Modèle multiplicatif (Aalen), modélisation vidéo. | Sec 2.1, Eq (2), Thm MainProp |
+| `versatile_pp.tex` | Représentations versatiles (Count, Timestamp, etc.). | Sec 2, Sec 3 |
+| `versatile_main.tex` | Théorie MDL, Hellinger, vraisemblances spécifiques. | Thm 1, Sec 4 (Poisson, Markov, Diffusion) |
+
+---
+
+## 9. Risques et Atténuation
+
+| Risque | Impact | Atténuation |
+|--------|--------|-------------|
+| **Complexité MDL trop élevée** | Temps de codage inacceptable en temps réel. | Limiter les familles de fonctions (ex: Histogrammes uniquement en temps réel). |
+| **Heuristiques non généralisables** | Mauvaise performance sur nouvelles vidéos. | Dataset d'entraînement très varié, clause de fallback uniforme. |
+| **Perte de qualité (PSNR)** | Reconstruction vidéo dégradée. | Contrainte PSNR > 30 dB dans la fonction de perte du modèle. |
+| **Overflow Index Combinatoire** | Erreur de calcul pour $L_4$ sur grands $r$. | Utilisation de logarithmes ou bibliothèques grands entiers. |
+
+---
+
+## 10. Conclusion
+Ce cahier des charges définit un cadre rigoureux pour le développement d'un outil de compression vidéo innovant, alliant la théorie des processus ponctuels (`Uniform_temporal.tex`, `versatile_main.tex`), la versatilité des représentations (`versatile_pp.tex`) et la robustesse des bornes uniformes (`uniform_temp_coding.tex`). La phase d'entraînement par codage exhaustif est cruciale pour opérationnaliser les heuristiques de décision en production.
+
+
+
+## 1. Modèle Conceptuel de Données (MCD)
+
+### 1.1. Diagramme Entité-Association
+
+```
+┌─────────────────────────────────────────────────────────────────────────────────────────┐
+│                              MODÈLE CONCEPTUEL DE DONNÉES                               │
+│                    Système de Codage Vidéo par Processus Ponctuels                      │
+└─────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                    ┌──────────────────┐
+                                    │    VIDEO_bloc    │
+                                    ├──────────────────┤
+                                    │ id_bloc          │
+                                    │ coords_x, y      │
+                                    │ frame_start      │
+                                    │ frame_end        │
+                                    │ n_pixels         │
+                                    └────────┬─────────┘
+                                             │ 1
+                                             │ contient
+                                             │ n
+                                    ┌────────▼─────────┐
+                                    │  Pixel_Trajectory│
+                                    ├──────────────────┤
+                                    │ id_pixel         │
+                                    │ jump_times[]     │
+                                    │ jump_colors[]    │
+                                    │ n_jumps          │
+                                    └────────┬─────────┘
+                                             │ 1
+                                             │ transformé_en
+                                             │ 1
+                                    ┌────────▼─────────┐
+                                    │  Point_Process   │
+                                    ├──────────────────┤
+                                    │ id_process       │
+                                    │ process_type     │
+                                    │ time_interval    │
+                                    │ n_events         │
+                                    └────────┬─────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+            ┌───────▼────────┐      ┌────────▼────────┐      ┌───────▼────────┐
+            │ Process_Reel   │      │ Process_Vector  │      │ Process_Spatial│
+            ├────────────────┤      ├─────────────────┤      ├────────────────┤
+            │ intensity(t)   │      │ dimensions[]    │      │ intensity(s)   │
+            │ marks[]        │      │ correlations[]  │      │ spatial_grid[] │
+            └────────────────┘      └─────────────────┘      └────────────────┘
+                    │                        │                        │
+                    └────────────────────────┼────────────────────────┘
+                                             │ 1
+                                             │ associé_à
+                                             │ 1
+                                    ┌────────▼─────────┐
+                                    │  Representation  │
+                                    ├──────────────────┤
+                                    │ id_rep           │
+                                    │ rep_type         │
+                                    │ data_structure   │
+                                    │ r_bins           │
+                                    └────────┬─────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+            ┌───────▼────────┐      ┌────────▼────────┐      ┌───────▼────────┐
+            │ Rep_Timestamp  │      │  Rep_Count      │      │ Rep_Interval   │
+            ├────────────────┤      ├─────────────────┤      ├────────────────┤
+            │ times[]        │      │ counts[]        │      │ intervals[]    │
+            └────────────────┘      └─────────────────┘      └────────────────┘
+                    │                        │                        │
+                    └────────────────────────┼────────────────────────┘
+                                             │ 1
+                                             │ codé_par
+                                             │ 1
+                                    ┌────────▼─────────┐
+                                    │Compression_Method│
+                                    ├──────────────────┤
+                                    │ id_method        │
+                                    │ method_type      │
+                                    │ code_length      │
+                                    │ method_code      │
+                                    └────────┬─────────┘
+                                             │
+                    ┌────────────────────────┼────────────────────────┐
+                    │                        │                        │
+            ┌───────▼────────┐      ┌────────▼────────┐      ┌───────▼────────┐
+            │  Comp_Uniform  │      │ Comp_Universal  │      │  Comp_MDL      │
+            ├────────────────┤      ├─────────────────┤      ├────────────────┤
+            │ L1, L2, L3, L4 │      │ Elias_code[]    │      │ intensity_func │
+            │ min_length     │      │ integer_codes[] │      │ complexity     │
+            └────────────────┘      └─────────────────┘      └────────┬────────┘
+                                                                      │
+                                                                      │ utilise
+                                                                      │ n
+                                                            ┌─────────▼─────────┐
+                                                            │ Intensity_Family  │
+                                                            ├───────────────────┤
+                                                            │ id_family         │
+                                                            │ family_type       │
+                                                            │ parameters[]      │
+                                                            │ complexity_penalty│
+                                                            └───────────────────┘
+                                                                    │
+                    ┌────────────────────────┬──────────────────────┼──────────────────────┬──────────────────────┐
+                    │                        │                      │                      │                      │
+            ┌───────▼────────┐      ┌────────▼────────┐    ┌───────▼────────┐    ┌────────▼────────┐    ┌───────▼────────┐
+            │ Fam_Histogram  │      │  Fam_Spline     │    │ Fam_Polynomial │    │ Fam_Wavelet     │    │ Fam_Trigono    │
+            ├────────────────┤      ├─────────────────┤    ├────────────────┤    ├─────────────────┤    ├────────────────┤
+            │ bins[]         │      │ coefficients[]  │    │ coefficients[] │    │ levels[]        │    │ frequencies[]  │
+            │ counts[]       │      │ degree          │    │ degree         │    │ wavelet_type    │    │ amplitudes[]   │
+            └────────────────┘      └─────────────────┘    └────────────────┘    └─────────────────┘    └────────────────┘
+
+                                    ┌──────────────────┐
+                                    │   Color_Mode     │
+                                    ├──────────────────┤
+                                    │ id_mode          │
+                                    │ mode_type        │
+                                    │ n_colors         │
+                                    │ color_map[]      │
+                                    │ cost_term        │
+                                    └────────┬─────────┘
+                                             │
+                    ┌────────────────────────┴────────────────────────┐
+                    │                                                 │
+            ┌───────▼────────┐                              ┌────────▼────────┐
+            │  Mode_Marked   │                              │Mode_StateByState│
+            ├────────────────┤                              ├─────────────────┤
+            │ cost=N*log(m)  │                              │ cost=C_map      │
+            │ per_jump       │                              │ per_block       │
+            └────────────────┘                              └─────────────────┘
+
+                                    ┌──────────────────┐
+                                    │  Training_Data   │
+                                    ├──────────────────┤
+                                    │ id_sample        │
+                                    │ video_id         │
+                                    │ block_id         │
+                                    │ features[]       │
+                                    │ optimal_method   │
+                                    │ code_lengths[]   │
+                                    │ gain_compression │
+                                    │ psnr             │
+                                    └──────────────────┘
+```
+
+### 1.2. Dictionnaire de Données
+
+| Entité | Attribut | Type | Description | Référence |
+|--------|----------|------|-------------|-----------|
+| **Video_bloc** | id_bloc | UUID | Identifiant unique du bloc | - |
+| | coords_x, y | Integer | Coordonnées spatiales | - |
+| | frame_start | Integer | Frame de début | - |
+| | frame_end | Integer | Frame de fin | - |
+| | n_pixels | Integer | Nombre de pixels | - |
+| **Point_Process** | id_process | UUID | Identifiant processus | `versatile_main.tex` |
+| | process_type | Enum | Réel, Vectoriel, Spatial, Markovien | `versatile_main.tex` Sec 4 |
+| | time_interval | Float | Intervalle [0, T] | `Uniform_temporal.tex` |
+| | n_events | Integer | Nombre de sauts N | - |
+| **Representation** | id_rep | UUID | Identifiant représentation | `versatile_pp.tex` Sec 2 |
+| | rep_type | Enum | Timestamp, Count, Interval, Boolean | `versatile_pp.tex` |
+| | data_structure | JSON | Structure de données | - |
+| | r_bins | Integer | Nombre de bins temporels | `uniform_temp_coding.tex` |
+| **Compression_Method** | id_method | UUID | Identifiant méthode | - |
+| | method_type | Enum | Uniforme, Universel, MDL | `uniform_temp_coding.tex` |
+| | code_length | Float | Longueur de code calculée | - |
+| | method_code | Integer(7) | Code binaire 7 bits | - |
+| **Intensity_Family** | id_family | UUID | Identifiant famille | `versatile_main.tex` |
+| | family_type | Enum | Histogramme, Spline, etc. | `versatile_main.tex` |
+| | parameters[] | Float[] | Paramètres de la fonction | - |
+| | complexity_penalty | Float | Pénalité C_n(α) | `versatile_main.tex` Thm 1 |
+| **Color_Mode** | id_mode | UUID | Identifiant mode | `uniform_temp_coding.tex` |
+| | mode_type | Enum | Marqué, État par État | - |
+| | n_colors | Integer | Nombre de couleurs m | - |
+| | color_map[] | Integer[] | Table de correspondance | - |
+| | cost_term | Float | Terme de coût couleur | `uniform_temp_coding.tex` Prop 1 |
+| **Training_Data** | id_sample | UUID | Identifiant échantillon | - |
+| | video_id | String | ID vidéo source | - |
+| | features[] | Float[] | Vecteur de caractéristiques | - |
+| | optimal_method | Integer | Méthode optimale | - |
+| | gain_compression | Float | Gain de compression | - |
+| | psnr | Float | Qualité reconstruction | - |
+
+### 1.3. Règles de Gestion
+
+1. **RG1** : Un bloc vidéo est associé à un et un seul type de processus optimal.
+2. **RG2** : Chaque processus utilise exactement une représentation.
+3. **RG3** : Chaque représentation utilise exactement une méthode de compression.
+4. **RG4** : La méthode MDL nécessite une famille de fonctions d'intensité.
+5. **RG5** : Le mode couleur est choisi au niveau du bloc (Marqué ou État par État).
+6. **RG6** : Le code méthode (7 bits) identifie de manière unique la combinaison (PROC, REP, COMP, COL).
+7. **RG7** : Les données d'entraînement sont collectées par codage exhaustif hors-ligne.
+
+---
+
+## 2. Bibliothèque Python
+
+### 2.1. Architecture de la Bibliothèque
+
+```
+point_process_video_coding/
+├── __init__.py
+├── core/
+│   ├── __init__.py
+│   ├── process.py          # Classes de processus ponctuels
+│   ├── representation.py   # Représentations versatiles
+│   └── intensity.py        # Familles de fonctions d'intensité
+├── compression/
+│   ├── __init__.py
+│   ├── uniform.py          # Codage uniforme (L1-L4)
+│   ├── universal.py        # Codage universel entiers
+│   └── mdl.py              # Codage statistique MDL
+├── color/
+│   ├── __init__.py
+│   └── mode.py             # Modes de gestion des couleurs
+├── training/
+│   ├── __init__.py
+│   ├── extractor.py        # Extraction de caractéristiques
+│   ├── exhaustive.py       # Codage exhaustif
+│   └── heuristic.py        # Modèle de décision
+├── utils/
+│   ├── __init__.py
+│   ├── bitstream.py        # Gestion du flux binaire
+│   └── metrics.py          # Métriques de performance
+└── examples/
+    └── demo.py
+```
+
+### 2.2. Implémentation des Classes Principales
+
+#### 2.2.1. Classes de Processus Ponctuels (`core/process.py`)
+
+```python
+"""
+core/process.py - Classes de processus ponctuels
+Référence: versatile_main.tex Section 4, Uniform_temporal.tex Section 2
+"""
+
+from abc import ABC, abstractmethod
+from typing import List, Tuple, Optional
+import numpy as np
+from enum import Enum
+
+class ProcessType(Enum):
+    REAL = 0
+    VECTOR = 1
+    SPATIAL = 2
+    MARKOV = 3
+
+class PointProcess(ABC):
+    """Classe de base pour les processus ponctuels"""
+    
+    def __init__(self, time_interval: Tuple[float, float], process_id: str = None):
+        self.time_interval = time_interval
+        self.process_id = process_id
+        self.jump_times: List[float] = []
+        self.n_events = 0
+    
+    @abstractmethod
+    def likelihood(self, intensity_func) -> float:
+        """Calcule la vraisemblance du processus"""
+        pass
+    
+    @abstractmethod
+    def get_intensity(self) -> callable:
+        """Retourne la fonction d'intensité"""
+        pass
+    
+    def add_jump(self, time: float):
+        """Ajoute un saut au processus"""
+        if self.time_interval[0] <= time <= self.time_interval[1]:
+            self.jump_times.append(time)
+            self.n_events += 1
+    
+    def get_jump_times(self) -> List[float]:
+        """Primitive d'accès aux temps de sauts"""
+        return sorted(self.jump_times)
+
+class RealMarkedProcess(PointProcess):
+    """Processus ponctuel réel avec marques (couleurs)"""
+    
+    def __init__(self, time_interval: Tuple[float, float], n_states: int, **kwargs):
+        super().__init__(time_interval, **kwargs)
+        self.process_type = ProcessType.REAL
+        self.n_states = n_states
+        self.marks: List[int] = []  # Couleurs associées aux sauts
+    
+    def add_jump(self, time: float, mark: int):
+        """Ajoute un saut avec marque"""
+        super().add_jump(time)
+        self.marks.append(mark)
+    
+    def likelihood(self, intensity_func) -> float:
+        """
+        Vraisemblance pour processus marqué
+        Référence: Uniform_temporal.tex Eq. (2)
+        """
+        log_likelihood = 0.0
+        for tau, m in zip(self.jump_times, self.marks):
+            log_likelihood += np.log(intensity_func(tau, m))
+        
+        # Terme d'intégrale
+        integral = 0.0
+        for c in range(self.n_states):
+            integral += self._numerical_integral(
+                lambda t: intensity_func(t, c), 
+                self.time_interval[0], 
+                self.time_interval[1]
+            )
+        
+        return np.exp(log_likelihood - integral)
+    
+    def _numerical_integral(self, f, a, b, n=1000):
+        """Intégration numérique simple"""
+        x = np.linspace(a, b, n)
+        return np.trapz(f(x), x)
+
+class MonochromaticProcess(PointProcess):
+    """Processus monochromatique (décomposition par couleur)"""
+    
+    def __init__(self, time_interval: Tuple[float, float], color_id: int, **kwargs):
+        super().__init__(time_interval, **kwargs)
+        self.color_id = color_id
+        self.process_type = ProcessType.REAL
+    
+    def likelihood(self, intensity_func) -> float:
+        """
+        Vraisemblance pour processus monochromatique
+        Référence: versatile_main.tex Section 4.2
+        """
+        log_likelihood = sum(np.log(intensity_func(t)) for t in self.jump_times)
+        integral = self._numerical_integral(
+            intensity_func, 
+            self.time_interval[0], 
+            self.time_interval[1]
+        )
+        return np.exp(log_likelihood - integral)
+
+class VectorProcess(PointProcess):
+    """Processus ponctuel vectoriel (canaux corrélés)"""
+    
+    def __init__(self, time_interval: Tuple[float, float], dimensions: int, **kwargs):
+        super().__init__(time_interval, **kwargs)
+        self.process_type = ProcessType.VECTOR
+        self.dimensions = dimensions
+        self.component_processes: List[PointProcess] = []
+        self.correlations: Optional[np.ndarray] = None
+    
+    def add_component(self, process: PointProcess):
+        """Ajoute une composante au processus vectoriel"""
+        self.component_processes.append(process)
+    
+    def likelihood(self, intensity_funcs: List[callable]) -> float:
+        """
+        Vraisemblance pour processus vectoriel
+        Référence: versatile_main.tex Section 4
+        """
+        if len(intensity_funcs) != self.dimensions:
+            raise ValueError("Nombre de fonctions d'intensité incorrect")
+        
+        # Produit des vraisemblances marginales (indépendance)
+        likelihood = 1.0
+        for proc, intensity in zip(self.component_processes, intensity_funcs):
+            likelihood *= proc.likelihood(intensity)
+        
+        # TODO: Ajouter terme de corrélation si modèle conjoint
+        if self.correlations is not None:
+            likelihood *= self._correlation_term()
+        
+        return likelihood
+    
+    def _correlation_term(self) -> float:
+        """Terme de corrélation entre composantes"""
+        # Implémentation dépend du modèle de copule choisi
+        return 1.0
+
+class MarkovTransitionProcess(PointProcess):
+    """Processus markovien des transitions"""
+    
+    def __init__(self, time_interval: Tuple[float, float], n_states: int, **kwargs):
+        super().__init__(time_interval, **kwargs)
+        self.process_type = ProcessType.MARKOV
+        self.n_states = n_states
+        self.transition_counts: np.ndarray = np.zeros((n_states, n_states))
+        self.state_occupation: np.ndarray = np.zeros(n_states)
+    
+    def add_transition(self, from_state: int, to_state: int, time: float):
+        """Ajoute une transition entre états"""
+        super().add_jump(time)
+        self.transition_counts[from_state, to_state] += 1
+    
+    def likelihood(self, intensity_matrix: np.ndarray) -> float:
+        """
+        Vraisemblance pour processus markovien
+        Référence: versatile_main.tex Section 4.4 Eq. (4.4)
+        """
+        log_likelihood = 0.0
+        
+        for h in range(self.n_states):
+            for j in range(self.n_states):
+                if h != j:
+                    # Terme d'intégrale
+                    log_likelihood += (1 - intensity_matrix[h, j]) * self.state_occupation[h]
+                    # Terme de sauts
+                    if self.transition_counts[h, j] > 0:
+                        log_likelihood += self.transition_counts[h, j] * np.log(intensity_matrix[h, j])
+        
+        return np.exp(log_likelihood)
+```
+
+#### 2.2.2. Représentations Versatiles (`core/representation.py`)
+
+```python
+"""
+core/representation.py - Représentations versatiles de processus ponctuels
+Référence: versatile_pp.tex Section 2, uniform_temp_coding.tex Proposition 1
+"""
+
+from abc import ABC, abstractmethod
+from typing import List, Tuple, Optional
+import numpy as np
+from enum import Enum
+
+class RepresentationType(Enum):
+    TIMESTAMP = 0
+    COUNT = 1
+    INTERVAL = 2
+    BOOLEAN = 3
+    COMBINATORIAL = 4
+
+class Representation(ABC):
+    """Classe de base pour les représentations"""
+    
+    def __init__(self, r_bins: int, rep_type: RepresentationType):
+        self.r_bins = r_bins
+        self.rep_type = rep_type
+        self.data = None
+    
+    @abstractmethod
+    def from_jump_times(self, jump_times: List[float], time_interval: Tuple[float, float]):
+        """Transforme les temps de sauts en représentation"""
+        pass
+    
+    @abstractmethod
+    def to_jump_times(self, time_interval: Tuple[float, float]) -> List[float]:
+        """Reconstruit les temps de sauts depuis la représentation"""
+        pass
+    
+    @abstractmethod
+    def code_length(self, n_jumps: int, m_colors: int) -> float:
+        """Calcule la longueur de code pour cette représentation"""
+        pass
+    
+    def get_jump_times(self) -> Optional[List[float]]:
+        """Primitive d'accès aux temps de sauts"""
+        return self.to_jump_times((0, self.r_bins)) if hasattr(self, '_time_interval') else None
+    
+    def has_jump_at(self, t: int) -> bool:
+        """Primitive: vérifie présence de saut au temps t"""
+        if self.rep_type == RepresentationType.BOOLEAN:
+            return self.data[t] == 1
+        return False
+    
+    def get_count_in_bin(self, b: int) -> int:
+        """Primitive: retourne le nombre de sauts dans le bin b"""
+        if self.rep_type == RepresentationType.COUNT:
+            return self.data[b]
+        return 0
+
+class TimestampRepresentation(Representation):
+    """Représentation par temps de sauts exacts"""
+    
+    def __init__(self, r_bins: int):
+        super().__init__(r_bins, RepresentationType.TIMESTAMP)
+    
+    def from_jump_times(self, jump_times: List[float], time_interval: Tuple[float, float]):
+        self.data = sorted(jump_times)
+        self._time_interval = time_interval
+    
+    def to_jump_times(self, time_interval: Tuple[float, float]) -> List[float]:
+        return self.data if self.data else []
+    
+    def code_length(self, n_jumps: int, m_colors: int) -> float:
+        """L = log(N) + N*log(r) + N*log(m)"""
+        if n_jumps == 0:
+            return 0
+        return np.log2(n_jumps) + n_jumps * np.log2(self.r_bins) + n_jumps * np.log2(m_colors)
+
+class CountRepresentation(Representation):
+    """Représentation par histogramme de comptes"""
+    
+    def __init__(self, r_bins: int):
+        super().__init__(r_bins, RepresentationType.COUNT)
+    
+    def from_jump_times(self, jump_times: List[float], time_interval: Tuple[float, float]):
+        self.data = np.zeros(self.r_bins, dtype=int)
+        dt = (time_interval[1] - time_interval[0]) / self.r_bins
+        for t in jump_times:
+            bin_idx = min(int((t - time_interval[0]) / dt), self.r_bins - 1)
+            self.data[bin_idx] += 1
+    
+    def to_jump_times(self, time_interval: Tuple[float, float]) -> List[float]:
+        # Reconstruction approximative (milieu du bin)
+        dt = (time_interval[1] - time_interval[0]) / self.r_bins
+        jump_times = []
+        for i, count in enumerate(self.data):
+            for _ in range(count):
+                jump_times.append(time_interval[0] + (i + 0.5) * dt)
+        return jump_times
+    
+    def code_length(self, n_jumps: int, m_colors: int) -> float:
+        """L = r + N*log(m)"""
+        return self.r_bins + n_jumps * np.log2(m_colors)
+
+class IntervalRepresentation(Representation):
+    """Représentation par intervalles entre sauts"""
+    
+    def __init__(self, r_bins: int):
+        super().__init__(r_bins, RepresentationType.INTERVAL)
+    
+    def from_jump_times(self, jump_times: List[float], time_interval: Tuple[float, float]):
+        sorted_times = sorted(jump_times)
+        if len(sorted_times) > 0:
+            self.data = [sorted_times[0]] + [
+                sorted_times[i] - sorted_times[i-1] 
+                for i in range(1, len(sorted_times))
+            ]
+        else:
+            self.data = []
+    
+    def to_jump_times(self, time_interval: Tuple[float, float]) -> List[float]:
+        if not self.
+            return []
+        jump_times = [self.data[0]]
+        for interval in self.data[1:]:
+            jump_times.append(jump_times[-1] + interval)
+        return jump_times
+    
+    def code_length(self, n_jumps: int, m_colors: int) -> float:
+        """L = N*log(r) + N*log(m)"""
+        if n_jumps == 0:
+            return 0
+        return n_jumps * np.log2(self.r_bins) + n_jumps * np.log2(m_colors)
+
+class BooleanRepresentation(Representation):
+    """Représentation par vecteur booléen"""
+    
+    def __init__(self, r_bins: int):
+        super().__init__(r_bins, RepresentationType.BOOLEAN)
+    
+    def from_jump_times(self, jump_times: List[float], time_interval: Tuple[float, float]):
+        self.data = np.zeros(self.r_bins, dtype=int)
+        dt = (time_interval[1] - time_interval[0]) / self.r_bins
+        for t in jump_times:
+            bin_idx = min(int((t - time_interval[0]) / dt), self.r_bins - 1)
+            self.data[bin_idx] = 1
+    
+    def to_jump_times(self, time_interval: Tuple[float, float]) -> List[float]:
+        dt = (time_interval[1] - time_interval[0]) / self.r_bins
+        return [time_interval[0] + (i + 0.5) * dt 
+                for i in range(self.r_bins) if self.data[i] == 1]
+    
+    def code_length(self, n_jumps: int, m_colors: int) -> float:
+        """L = r + N*log(m)"""
+        return self.r_bins + n_jumps * np.log2(m_colors)
+
+class CombinatorialRepresentation(Representation):
+    """Représentation par adresse combinatoire (N + Index)"""
+    
+    def __init__(self, r_bins: int):
+        super().__init__(r_bins, RepresentationType.COMBINATORIAL)
+        self.n_jumps = 0
+        self.config_index = 0
+    
+    def from_jump_times(self, jump_times: List[float], time_interval: Tuple[float, float]):
+        # Créer d'abord le vecteur booléen
+        bool_rep = BooleanRepresentation(self.r_bins)
+        bool_rep.from_jump_times(jump_times, time_interval)
+        
+        self.data = bool_rep.data
+        self.n_jumps = sum(self.data)
+        self.config_index = self._compute_combinatorial_index(self.data, self.n_jumps)
+    
+    def _compute_combinatorial_index(self, bool_vector: np.ndarray, n_ones: int) -> int:
+        """Calcule l'index combinatoire parmi C_r^N configurations"""
+        from math import comb
+        index = 0
+        ones_seen = 0
+        for i, bit in enumerate(bool_vector):
+            if bit == 1:
+                ones_seen += 1
+            else:
+                if ones_seen < n_ones:
+                    index += comb(self.r_bins - i - 1, n_ones - ones_seen)
+        return index
+    
+    def to_jump_times(self, time_interval: Tuple[float, float]) -> List[float]:
+        bool_rep = BooleanRepresentation(self.r_bins)
+        bool_rep.data = self.data
+        return bool_rep.to_jump_times(time_interval)
+    
+    def code_length(self, n_jumps: int, m_colors: int) -> float:
+        """L = log(N) + log(C_r^N) + N*log(m)"""
+        from math import comb, log2
+        if n_jumps == 0:
+            return 0
+        return log2(n_jumps) + log2(comb(self.r_bins, n_jumps)) + n_jumps * log2(m_colors)
+```
+
+#### 2.2.3. Méthodes de Compression (`compression/`)
+
+```python
+"""
+compression/uniform.py - Codage uniforme
+Référence: uniform_temp_coding.tex Proposition 1
+"""
+
+import numpy as np
+from math import comb, log2
+from typing import Tuple
+
+class UniformCoder:
+    """Codage uniforme avec les 4 méthodes L1-L4"""
+    
+    def __init__(self, r: int, m: int):
+        self.r = r  # Nombre de bins temporels
+        self.m = m  # Nombre de couleurs/états
+    
+    def L1_full_state(self) -> float:
+        """L1 = r * log(m) - État complet"""
+        return self.r * log2(self.m)
+    
+    def L2_list_jumps(self, N: int) -> float:
+        """L2 = log(N) + N * log(r*m) - Liste des sauts"""
+        if N == 0:
+            return 0
+        return log2(N) + N * log2(self.r * self.m)
+    
+    def L3_boolean(self, N: int) -> float:
+        """L3 = r + N * log(m) - Vecteur booléen"""
+        return self.r + N * log2(self.m)
+    
+    def L4_combinatorial(self, N: int) -> float:
+        """L4 = log(N) + log(C_r^N) + N * log(m) - Adresse combinatoire"""
+        if N == 0:
+            return 0
+        return log2(N) + log2(comb(self.r, N)) + N * log2(self.m)
+    
+    def optimal_length(self, N: int) -> Tuple[float, int]:
+        """Retourne la longueur minimale et la méthode optimale (1-4)"""
+        lengths = [
+            self.L1_full_state(),
+            self.L2_list_jumps(N),
+            self.L3_boolean(N),
+            self.L4_combinatorial(N)
+        ]
+        min_idx = np.argmin(lengths)
+        return lengths[min_idx], min_idx + 1
+    
+    def get_thresholds(self) -> dict:
+        """Calcule les seuils de décision δ_r,m, γ_34"""
+        delta_r_m = np.ceil(self.r * (1 - 1 / log2(self.m)))
+        return {
+            'delta_r_m': delta_r_m,
+            'r': self.r,
+            'm': self.m
+        }
+```
+
+```python
+"""
+compression/universal.py - Codage universel sur les entiers
+Référence: uniform_temp_coding.tex Section 2.2
+"""
+
+class UniversalCoder:
+    """Codes universels pour entiers (Elias, Rissanen)"""
+    
+    @staticmethod
+    def elias_gamma(n: int) -> str:
+        """Code Elias gamma"""
+        if n == 0:
+            return '0'
+        binary = bin(n)[2:]
+        return '0' * (len(binary) - 1) + binary
+    
+    @staticmethod
+    def elias_delta(n: int) -> str:
+        """Code Elias delta"""
+        if n == 0:
+            return '0'
+        binary = bin(n)[2:]
+        length_code = UniversalCoder.elias_gamma(len(binary) - 1)
+        return length_code + binary[1:]
+    
+    @staticmethod
+    def rissanen_code(n: int) -> str:
+        """Code de Rissanen (asymptotiquement optimal)"""
+        if n <= 0:
+            return '0'
+        # L(n) ≈ log(n) + 2*log(log(n))
+        code = UniversalCoder.elias_delta(n)
+        return code
+    
+    @staticmethod
+    def code_length(n: int) -> float:
+        """Longueur approximative du code universel"""
+        if n <= 0:
+            return 1
+        return np.log2(n) + 2 * np.log2(np.log2(n + 1)) + 1
+```
+
+```python
+"""
+compression/mdl.py - Codage statistique MDL
+Référence: versatile_main.tex Théorème 1
+"""
+
+import numpy as np
+from typing import List, Tuple
+from core.intensity import IntensityFamily
+
+class MDLCoder:
+    """Codage statistique avec principe MDL"""
+    
+    def __init__(self, candidate_families: List[IntensityFamily]):
+        self.candidate_families = candidate_families
+        self.selected_family = None
+        self.estimated_intensity = None
+    
+    def estimate_intensity(self, jump_times: List[float], time_interval: Tuple[float, float]):
+        """
+        Estime la fonction d'intensité par MDL
+        Référence: versatile_main.tex Eq. (1)
+        """
+        best_mdl = float('inf')
+        best_family = None
+        best_intensity = None
+        
+        for family in self.candidate_families:
+            # Estimer les paramètres
+            intensity_func = family.fit(jump_times, time_interval)
+            
+            # Calculer la vraisemblance
+            log_likelihood = sum(np.log(intensity_func(t)) for t in jump_times)
+            integral = family.numerical_integral(intensity_func, time_interval[0], time_interval[1])
+            log_likelihood -= integral
+            
+            # Calculer la complexité
+            complexity = family.complexity_penalty()
+            
+            # Critère MDL
+            mdl_score = -log_likelihood + complexity
+            
+            if mdl_score < best_mdl:
+                best_mdl = mdl_score
+                best_family = family
+                best_intensity = intensity_func
+        
+        self.selected_family = best_family
+        self.estimated_intensity = best_intensity
+        return best_intensity
+    
+    def code_length(self, jump_times: List[float], time_interval: Tuple[float, float]) -> float:
+        """
+        Calcule la longueur de code MDL
+        Référence: versatile_main.tex Thm 1
+        """
+        if self.estimated_intensity is None:
+            self.estimate_intensity(jump_times, time_interval)
+        
+        # Terme de vraisemblance
+        log_likelihood = sum(np.log(self.estimated_intensity(t)) for t in jump_times)
+        integral = self.selected_family.numerical_integral(
+            self.estimated_intensity, 
+            time_interval[0], 
+            time_interval[1]
+        )
+        log_likelihood -= integral
+        
+        # Terme de complexité
+        complexity = self.selected_family.complexity_penalty()
+        
+        return -log_likelihood + complexity
+```
+
+#### 2.2.4. Gestion des Couleurs (`color/mode.py`)
+
+```python
+"""
+color/mode.py - Modes de gestion des couleurs
+Référence: uniform_temp_coding.tex Proposition 1
+"""
+
+from enum import Enum
+from typing import List, Dict
+import numpy as np
+
+class ColorModeType(Enum):
+    MARKED = 0
+    STATE_BY_STATE = 1
+
+class ColorMode:
+    """Gestion du codage des couleurs"""
+    
+    def __init__(self, mode_type: ColorModeType, n_colors: int):
+        self.mode_type = mode_type
+        self.n_colors = n_colors
+        self.color_map: Dict[int, int] = {}  # Couleur globale -> Couleur locale
+    
+    def color_cost(self, n_jumps: int) -> float:
+        """
+        Calcule le terme de coût pour les couleurs
+        Référence: uniform_temp_coding.tex L2, L3, L4
+        """
+        if self.mode_type == ColorModeType.MARKED:
+            # Coût par saut: N * log(m)
+            return n_jumps * np.log2(self.n_colors)
+        else:
+            # Coût par bloc: C_map (codé une fois)
+            return self._color_map_cost()
+    
+    def _color_map_cost(self) -> float:
+        """Coût de la table de correspondance des couleurs"""
+        # Codage de m couleurs parmi l'espace global
+        # Approximation: m * log(|E_global|)
+        global_color_space = 256  # Ex: 256 couleurs possibles
+        return self.n_colors * np.log2(global_color_space)
+    
+    def set_color_map(self, color_mapping: Dict[int, int]):
+        """Définit la table de correspondance"""
+        self.color_map = color_mapping
+    
+    def get_local_color(self, global_color: int) -> int:
+        """Retourne la couleur locale pour une couleur globale"""
+        return self.color_map.get(global_color, global_color)
+```
+
+#### 2.2.5. Système d'Entraînement (`training/`)
+
+```python
+"""
+training/heuristic.py - Modèle de décision par heuristiques
+"""
+
+import numpy as np
+from typing import Dict, List, Tuple
+from sklearn.ensemble import RandomForestClassifier
+import joblib
+
+class DecisionHeuristic:
+    """Modèle de décision pour la sélection de méthode"""
+    
+    def __init__(self):
+        self.model = RandomForestClassifier(n_estimators=100, random_state=42)
+        self.is_trained = False
+    
+    def extract_features(self, block_data: Dict) -> np.ndarray:
+        """
+        Extrait les caractéristiques d'un bloc vidéo
+        """
+        features = [
+            block_data.get('n_jumps', 0),
+            block_data.get('r_bins', 256),
+            block_data.get('n_colors', 16),
+            block_data.get('lambda_avg', 0),  # N/r
+            block_data.get('H_spatial', 0),   # Homogénéité spatiale
+            block_data.get('rho_corr', 0),    # Corrélation spatiale
+            block_data.get('var_delta_tau', 0),  # Régularité temporelle
+            block_data.get('cost_marked', 0),    # N*log(m)
+            block_data.get('cost_state', 0),     # C_map
+        ]
+        return np.array(features).reshape(1, -1)
+    
+    def train(self, training_data: List[Dict], labels: List[int]):
+        """
+        Entraîne le modèle sur les données de codage exhaustif
+        """
+        X = np.vstack([self.extract_features(d) for d in training_data])
+        y = np.array(labels)
+        self.model.fit(X, y)
+        self.is_trained = True
+    
+    def predict_method(self, block_ Dict) -> int:
+        """
+        Prédit la méthode optimale pour un bloc
+        Retourne le code méthode (7 bits)
+        """
+        if not self.is_trained:
+            raise ValueError("Modèle non entraîné")
+        
+        features = self.extract_features(block_data)
+        prediction = self.model.predict(features)[0]
+        return prediction
+    
+    def save(self, filepath: str):
+        """Sauvegarde le modèle"""
+        joblib.dump(self.model, filepath)
+    
+    def load(self, filepath: str):
+        """Charge le modèle"""
+        self.model = joblib.load(filepath)
+        self.is_trained = True
+```
+
+#### 2.2.6. Gestion du Bitstream (`utils/bitstream.py`)
+
+```python
+"""
+utils/bitstream.py - Gestion du flux binaire
+"""
+
+class BitStream:
+    """Gestion du flux binaire pour le codage/décodage"""
+    
+    def __init__(self):
+        self.bits = []
+        self.position = 0
+    
+    def write_bits(self, value: int, n_bits: int):
+        """Écrit n bits"""
+        for i in range(n_bits - 1, -1, -1):
+            self.bits.append((value >> i) & 1)
+    
+    def write_method_code(self, proc_type: int, rep_type: int, comp_type: int, color_mode: int):
+        """
+        Écrit le code méthode (7 bits)
+        Structure: [PROC:2][REP:2][COMP:2][COL:1]
+        """
+        method_code = (proc_type << 5) | (rep_type << 3) | (comp_type << 1) | color_mode
+        self.write_bits(method_code, 7)
+    
+    def read_method_code(self) -> Dict:
+        """Lit le code méthode"""
+        code = 0
+        for i in range(7):
+            if self.position + i < len(self.bits):
+                code = (code << 1) | self.bits[self.position + i]
+        self.position += 7
+        
+        return {
+            'proc_type': (code >> 5) & 0b11,
+            'rep_type': (code >> 3) & 0b11,
+            'comp_type': (code >> 1) & 0b11,
+            'color_mode': code & 0b1
+        }
+    
+    def to_bytes(self) -> bytes:
+        """Convertit en bytes"""
+        byte_array = bytearray()
+        for i in range(0, len(self.bits), 8):
+            byte = 0
+            for j in range(8):
+                if i + j < len(self.bits):
+                    byte = (byte << 1) | self.bits[i + j]
+                else:
+                    byte = byte << 1
+            byte_array.append(byte)
+        return bytes(byte_array)
+```
+
+### 2.3. Exemple d'Utilisation (`examples/demo.py`)
+
+```python
+"""
+examples/demo.py - Démonstration du système de codage
+"""
+
+from core.process import RealMarkedProcess, MonochromaticProcess
+from core.representation import TimestampRepresentation, BooleanRepresentation, CombinatorialRepresentation
+from compression.uniform import UniformCoder
+from compression.mdl import MDLCoder
+from core.intensity import HistogramIntensity, SplineIntensity
+from color.mode import ColorMode, ColorModeType
+from utils.bitstream import BitStream
+
+def demo_video_coding():
+    """Démonstration complète du codage vidéo"""
+    
+    # 1. Création d'un processus ponctuel (historique d'un pixel)
+    time_interval = (0, 256)
+    jump_times = [10, 45, 89, 134, 178, 223]
+    colors = [1, 3, 2, 4, 1, 3]
+    
+    # 2. Choix du mode couleur
+    n_colors = 4
+    color_mode = ColorMode(ColorModeType.STATE_BY_STATE, n_colors)
+    
+    # 3. Décomposition monochromatique
+    mono_processes = {}
+    for c in range(n_colors):
+        mono_processes[c] = MonochromaticProcess(time_interval, c)
+    
+    for t, m in zip(jump_times, colors):
+        mono_processes[m].add_jump(t)
+    
+    # 4. Choix de la représentation
+    r_bins = 256
+    rep = CombinatorialRepresentation(r_bins)
+    rep.from_jump_times(jump_times, time_interval)
+    
+    # 5. Codage uniforme (référence)
+    uniform_coder = UniformCoder(r_bins, n_colors)
+    N = len(jump_times)
+    L_uniform, method_opt = uniform_coder.optimal_length(N)
+    print(f"Longueur uniforme optimale: {L_uniform:.2f} bits (Méthode L{method_opt})")
+    
+    # 6. Codage MDL
+    intensity_families = [
+        HistogramIntensity(n_bins=16),
+        SplineIntensity(degree=3, n_knots=8)
+    ]
+    mdl_coder = MDLCoder(intensity_families)
+    L_mdl = mdl_coder.code_length(jump_times, time_interval)
+    print(f"Longueur MDL: {L_mdl:.2f} bits")
+    
+    # 7. Ajout du coût couleur
+    color_cost = color_mode.color_cost(N)
+    L_total_uniform = L_uniform + color_cost
+    L_total_mdl = L_mdl + color_cost
+    
+    print(f"Longueur totale uniforme: {L_total_uniform:.2f} bits")
+    print(f"Longueur totale MDL: {L_total_mdl:.2f} bits")
+    
+    # 8. Sélection de la méthode
+    if L_total_mdl < L_total_uniform:
+        selected_method = 'MDL'
+        selected_length = L_total_mdl
+    else:
+        selected_method = 'UNIFORM'
+        selected_length = L_total_uniform
+    
+    print(f"Méthode sélectionnée: {selected_method}")
+    
+    # 9. Création du bitstream
+    bitstream = BitStream()
+    
+    # Code méthode (exemple: PROC=0, REP=3, COMP=1, COL=1)
+    bitstream.write_method_code(
+        proc_type=0,    # Réel
+        rep_type=3,     # Boolean/Combinatorial
+        comp_type=1,    # Universel
+        color_mode=1    # État par État
+    )
+    
+    print(f"Bitstream généré: {len(bitstream.bits)} bits (en-tête)")
+    
+    return {
+        'uniform_length': L_total_uniform,
+        'mdl_length': L_total_mdl,
+        'selected_method': selected_method,
+        'compression_ratio': (N * np.log2(r_bins * n_colors)) / selected_length
+    }
+
+if __name__ == '__main__':
+    results = demo_video_coding()
+    print(f"\nRatio de compression: {results['compression_ratio']:.2f}x")
+```
+
+---
+
+## 3. Installation et Dépendances
+
+### 3.1. Fichier `requirements.txt`
+
+```
+numpy>=1.21.0
+scipy>=1.7.0
+scikit-learn>=1.0.0
+joblib>=1.1.0
+matplotlib>=3.4.0
+```
+
+### 3.2. Installation
+
+```bash
+pip install -r requirements.txt
+python -m pip install -e .
+```
+
+---
+
+## 4. Références aux Documents
+
+| Module | Document Source | Section/Équation |
+|--------|-----------------|------------------|
+| **Processus Ponctuels** | `versatile_main.tex` | Section 4 (Poisson, Markov, Diffusion) |
+| **Représentations** | `versatile_pp.tex` | Section 2 (Versatility) |
+| **Codage Uniforme** | `uniform_temp_coding.tex` | Proposition 1 (L1-L4) |
+| **Codage Universel** | `uniform_temp_coding.tex` | Section 2.2 |
+| **MDL** | `versatile_main.tex` | Théorème 1 |
+| **Intensité** | `Uniform_temporal.tex` | Section 2.1 (Modèle multiplicatif) |
+| **Couleurs** | `uniform_temp_coding.tex` | Termes N*log(m) dans L2, L3, L4 |
+
+---
+
+Ce MCD et cette bibliothèque Python fournissent une base complète pour implémenter le système de codage vidéo par processus ponctuels tel que décrit dans les documents de référence.
+
+
+# Fonctionnalités Avancées basées sur la Structure des Processus Ponctuels
+
+## 1. Principe Fondamental : Préservation de l'Information Stochastique
+Conformément à `versatile_main.tex` et `uniform_temp_coding.tex`, le codage repose sur la description des sauts ($\tau_k$) et des états ($m_k$).
+*   **Sans perte :** La reconstruction est exacte ($X_{original} = X_{reconstruit}$).
+*   **Accès direct :** Les paramètres du modèle (intensité $\alpha(t)$, nombre de sauts $N$, carte de couleurs) sont des métadonnées du flux compressé.
+*   **Manipulation :** On peut modifier ces métadonnées pour altérer la vidéo reconstruite (ex: changer une couleur, supprimer une zone de faible intensité) avant même le décodage spatial.
+
+## 2. Fonctionnalités basées sur le Pré-Codage (Structure Brute)
+Ces fonctionnalités exploitent les données discrétisées avant l'estimation statistique fine. Elles correspondent aux représentations versatiles de `versatile_pp.tex`.
+
+### 2.1. Détection d'Événements Temporels (Event Detection)
+*   **Principe :** Utiliser la représentation **Boolean** ou **Timestamp**.
+*   **Fonctionnalité :** Identifier les instants précis où un changement sémantique occur (ex: flash, coupure, mouvement brusque).
+*   **Implémentation :**
+    *   Si $N_i > Seuil$ pour un bloc $i$, alors "Événement détecté".
+    *   Référence : `Uniform_temporal.tex` (Modélisation du nombre de sauts).
+*   **Usage :** Indexation vidéo, résumé automatique (keyframes aux sauts d'intensité).
+
+### 2.2. Quantification et Filtrage des Couleurs (Color Filtering)
+*   **Principe :** Exploiter la décomposition monochromatique (Processus par couleur).
+*   **Fonctionnalité :** Supprimer ou isoler certaines couleurs sans décoder l'image.
+*   **Implémentation :**
+    *   **Mode État par État :** Chaque couleur $c$ est un processus $N^{(c)}$. Pour supprimer le rouge, on met à zéro le processus $N^{(rouge)}$.
+    *   **Mode Marqué :** Filtrer la liste des marques $\{m_k\}$. Si $m_k = rouge$, on ignore le saut $\tau_k$.
+    *   Référence : `uniform_temp_coding.tex` (Termes de coût $N \log m$).
+*   **Usage :** Accessibilité (daltonisme), confidentialité (flouter des couleurs spécifiques), compression sélective.
+
+### 2.3. Rééchantillonnage Temporel (Temporal Resampling)
+*   **Principe :** Utiliser la représentation **Interval** ou **Timestamp**.
+*   **Fonctionnalité :** Accélérer ou ralentir la vidéo localement.
+*   **Implémentation :**
+    *   Multiplier les intervalles $\Delta \tau_k$ par un facteur $\beta$.
+    *   Si $\beta > 1$ (Ralentis sur les zones de mouvement).
+    *   Référence : `versatile_pp.tex` (Transformation entre représentations).
+
+## 3. Fonctionnalités basées sur la Compression (Modèles Statistiques)
+Ces fonctionnalités exploitent les paramètres estimés lors de la phase MDL (`versatile_main.tex`).
+
+### 3.1. Carte de Saillance par Intensité (Intensity Saliency Map)
+*   **Principe :** La fonction d'intensité estimée $\hat{\alpha}(t)$ représente la probabilité de changement par unité de temps.
+*   **Fonctionnalité :** Identifier les zones d'intérêt (ROI) dynamiques.
+*   **Implémentation :**
+    *   Calculer l'intensité moyenne par bloc spatial : $\bar{\alpha}_i = \frac{1}{T} \int_0^T \hat{\alpha}_i(t) dt$.
+    *   Les blocs avec $\bar{\alpha}_i > \lambda_{seuil}$ sont des zones d'activité (mouvement, changement de texture).
+    *   Référence : `versatile_main.tex` (Estimation de l'intensité d'un processus de Poisson).
+*   **Usage :** Compression adaptative (allouer plus de bits aux zones actives), surveillance (détection d'intrusion).
+
+### 3.2. Segmentation Spatio-Temporelle par Modèle
+*   **Principe :** Le choix du modèle MDL (Histogramme vs Splines vs Ondelettes) indique la nature du signal.
+*   **Fonctionnalité :** Classifier les types de mouvement.
+*   **Implémentation :**
+    *   **Modèle Constant (Histogramme 1 bin) :** Zone statique ou bruit de fond.
+    *   **Modèle Lisse (Splines) :** Mouvement régulier (objet en translation).
+    *   **Modèle Complexe (Ondelettes) :** Mouvement chaotique ou texture changeante.
+    *   Référence : `versatile_main.tex` (Sélection de modèle par pénalité de complexité).
+*   **Usage :** Analyse de comportement, classification de scènes.
+
+### 3.3. Modification de la Dynamique des Changements
+*   **Principe :** Modifier la fonction d'intensité cumulée utilisée pour le codage arithmétique.
+*   **Fonctionnalité :** Lisser ou accentuer les transitions temporelles.
+*   **Implémentation :**
+    *   Appliquer un filtre passe-bas sur $\hat{\alpha}(t)$ avant le décodage.
+    *   Résultat : Les sauts trop rapprochés sont fusionnés ou supprimés (réduction du bruit temporel).
+    *   Référence : `Uniform_temporal.tex` (Modèle multiplicatif d'intensité).
+
+## 4. Architecture des Fonctionnalités (API Proposée)
+
+Pour intégrer ces fonctionnalités, le système doit exposer une API permettant d'agir sur les structures de données sans décodage complet.
+
+```python
+class CompressedVideoProcessor:
+    def __init__(self, bitstream):
+        self.stream = parse_bitstream(bitstream) # Accès aux métadonnées
+
+    # --- Fonctionnalités Couleurs ---
+    def filter_colors(self, keep_colors: List[int]):
+        """
+        Conserve uniquement les processus monochromatiques spécifiés.
+        Modifie le header du bloc (Color_Mode = StateByState).
+        """
+        for block in self.stream.blocks:
+            block.active_processes = [p for p in block.processes if p.color_id in keep_colors]
+        return self.reencode_stream()
+
+    def recolor_zone(self, zone_coords, new_color_id):
+        """
+        Change la carte de couleur locale d'un bloc.
+        """
+        block = self.get_block(zone_coords)
+        block.color_map.update({old_id: new_color_id for old_id in block.color_map})
+        return self.reencode_stream()
+
+    # --- Fonctionnalités Intensité / Zones ---
+    def get_activity_map(self) -> np.ndarray:
+        """
+        Retourne une carte 2D de l'intensité moyenne par bloc.
+        Basé sur les paramètres MDL estimés.
+        """
+        activity = np.zeros((self.height, self.width))
+        for block in self.stream.blocks:
+            if block.model_type == 'MDL':
+                activity[block.y, block.x] = block.intensity_integral / block.duration
+        return activity
+
+    def select_roi_by_intensity(self, threshold: float) -> List[Block]:
+        """
+        Sélectionne les blocs où l'intensité dépasse le seuil.
+        Utile pour le cropping intelligent ou la surveillance.
+        """
+        return [b for b in self.stream.blocks if b.intensity_avg > threshold]
+
+    # --- Fonctionnalités Temporelles ---
+    def temporal_smooth(self, alpha_filter: float):
+        """
+        Lisse les fonctions d'intensité estimées pour réduire le bruit de sauts.
+        """
+        for block in self.stream.blocks:
+            if block.intensity_func:
+                block.intensity_func = low_pass_filter(block.intensity_func, alpha_filter)
+        return self.redecode_stream()
+```
+
+## 5. Justification Théorique et Liens aux Documents
+
+| Fonctionnalité | Concept Clé | Document de Référence | Section / Équation |
+| :--- | :--- | :--- | :--- |
+| **Carte de Saillance** | Fonction d'intensité $\alpha(t)$ | `versatile_main.tex` | Sec 4.2 (Estimation Poisson) |
+| **Filtrage Couleur** | Décomposition Monochromatique | `uniform_temp_coding.tex` | Prop 1 (Termes $N \log m$) |
+| **Détection Événement** | Comptage de sauts $N$ | `Uniform_temporal.tex` | Sec 2.3 (Modelling number of jumps) |
+| **Segmentation** | Sélection de Modèle MDL | `versatile_main.tex` | Thm 1 (MDL Estimator) |
+| **Représentation** | Versatilité (Booléen, Timestamp) | `versatile_pp.tex` | Sec 2 (Point Process Representation) |
+| **Sans Perte** | Codage Entropique/Arithmétique | `uniform_temp_coding.tex` | Sec 2.2 (Universal codes) |
+
+## 6. Avantages de cette Approche
+
+1.  **Efficacité Computationsnelle :** Traiter des métadonnées (quelques octets par bloc) est beaucoup plus rapide que de traiter des pixels (milliers d'octets par bloc).
+2.  **Sémantique Intégrée :** L'intensité $\alpha(t)$ est une mesure directe de l'information temporelle, contrairement aux coefficients DCT qui mélangent fréquence spatiale et temporelle.
+3.  **Flexibilité :** Grâce à la versatilité (`versatile_pp.tex`), on peut choisir la granularité d'analyse (précise avec Timestamp, grossière avec Boolean).
+4.  **Adaptabilité :** Le principe MDL (`versatile_main.tex`) assure que le modèle utilisé pour l'analyse est le plus pertinent pour les données, évitant le sur-apprentissage.
+
+## 7. Conclusion
+
+Intégrer ces fonctionnalités transforme le codeur vidéo en un **moteur d'analyse spatio-temporelle**. Au lieu de simplement compresser, le système comprend la structure stochastique de la vidéo (où et quand les changements ont lieu). Cela permet d'agir finement sur les couleurs (via les marks ou processus monochromatiques) et sur les zones (via l'intensité $\lambda$), tout en garantissant la réversibilité grâce au codage sans perte des résidus. C'est une application directe de la puissance des processus ponctuels décrits dans `versatile_main.tex` et `Uniform_temporal.tex`.
+
+
+---
+
+# Optimisation par Représentation Binaire Spatiale et Opérations Bitwise
+
+## 1. Formalisation Mathématique
+
+### 1.1. Masques Binaires Monochromes
+Soit une vidéo discrétisée spatialement en pixels $p \in \mathcal{S}$ et temporellement en frames $t \in \{1, \dots, T\}$.
+Pour chaque couleur $c \in \{1, \dots, m\}$, on définit un **champ binaire spatial** (ou masque) $M_c(t)$ à l'instant $t$ :
+
+$$ M_c(t, p) = \begin{cases} 
+1 & \text{si le pixel } p \text{ a la couleur } c \text{ à l'instant } t \\
+0 & \text{sinon}
+\end{cases} $$
+
+Cela correspond à la **représentation binaire** d'un processus ponctuel spatial vue dans `versatile_pp.tex`, où l'événement est la "présence de la couleur $c$".
+
+### 1.2. Détection de Sauts par XOR
+Un saut (changement d'état) pour la couleur $c$ au pixel $p$ entre $t$ et $t+1$ est défini par :
+$$ \text{Saut}_c(t, p) = 1 \iff M_c(t, p) \neq M_c(t+1, p) $$
+
+Cette opération logique est exactement un **OU Exclusif (XOR)** bit à bit :
+$$ \Delta_c(t) = M_c(t) \oplus M_c(t+1) $$
+
+où $\Delta_c(t)$ est la carte des changements pour la couleur $c$.
+
+### 1.3. Comptage des Sauts ($N$)
+Le nombre total de sauts $N_c$ pour la couleur $c$ sur l'intervalle $[0, T]$ est la somme des bits activés dans les cartes de changement (norme $L_0$ ou *Population Count*) :
+$$ N_c = \sum_{t=0}^{T-1} \text{popcount}(\Delta_c(t)) $$
+
+Ce comptage est essentiel pour appliquer les critères de sélection de codage ($L_1$ vs $L_3$ vs $L_4$) de la **Proposition 1 de `uniform_temp_coding.tex`**.
+
+---
+
+## 2. Impact sur l'Architecture de Codage
+
+Cette approche transforme des opérations de comparaison d'entiers (coûteuses) en opérations vectorielles sur les registres CPU/GPU (extrêmement rapides).
+
+### 2.1. Module d'Extraction Accéléré
+| Fonctionnalité | Méthode Classique | Méthode Optimisée (Bitwise) | Gain |
+| :--- | :--- | :--- | :--- |
+| **Comparaison** | `if (pixel[t] != pixel[t+1])` | `XOR(Register[t], Register[t+1])` | x64 (SIMD) |
+| **Comptage Sauts** | Boucle incrémentale | Instruction `POPCOUNT` | x10 |
+| **Localisation** | Parcours liste | Instruction `TZCNT` (Trail Zero Count) | Variable |
+| **Mémoire** | Stockage valeurs couleurs | Stockage bits (1/8ème de la taille) | x8 |
+
+### 2.2. Intégration dans le Cahier des Charges
+Il faut ajouter une contrainte d'alignement mémoire pour profiter des instructions SIMD (SSE, AVX, NEON).
+
+*   **Structure de Données :** Les masques $M_c(t)$ doivent être alignés sur des mots de 64 bits (ou 128/256 bits).
+*   **Primitives CPU :** Utiliser les intrinsèques compilateur (`_mm_xor_si128`, `_mm_popcnt_u64`).
+
+---
+
+## 3. Implications sur les Longueurs de Code (`uniform_temp_coding.tex`)
+
+Cette représentation favorise naturellement certains modes de codage décrits dans la **Proposition 1** :
+
+### 3.1. Favorisation du Codage Booléen ($L_3$)
+La formule $L_3 = r + N \log m$ devient très compétitive car :
+1.  Le terme $r$ (nombre de bins temporels) correspond directement à la structure de frames.
+2.  Le vecteur booléen est déjà construit nativement par l'opération XOR.
+3.  Si l'activité est dense (beaucoup de changements), $L_3$ est souvent optimal selon la **Proposition 1 (point 2)**.
+
+### 3.2. Favorisation du Codage Combinatoire ($L_4$)
+La formule $L_4 = \log N + \log C_r^N + N \log m$ est pertinente si $N$ est faible.
+*   Grâce au `POPCOUNT`, on obtient $N$ instantanément.
+*   Si $N \ll r$, on passe en mode codage d'adresse (liste des positions des bits à 1 dans le XOR).
+
+### 3.3. Élimination du Terme $N \log m$ (Mode État par État)
+Comme discuté précédemment, en traitant chaque couleur $c$ comme un processus indépendant :
+*   On code la position des bits à 1 dans $\Delta_c$.
+*   La couleur est implicite (c'est l'indice du processus $c$).
+*   Le terme $N \log m$ disparaît du codage temporel, remplacé par un coût fixe d'en-tête de bloc pour la palette.
+
+---
+
+## 4. Mise à jour des Heuristiques d'Apprentissage
+
+Les caractéristiques (features) extraites pour l'arbre de décision (Section 4 du Cahier des Charges) deviennent triviales à calculer :
+
+| Feature | Calcul Bitwise | Seuil de Décision |
+| :--- | :--- | :--- |
+| **Densité de sauts** ($N/r$) | `POPCOUNT(XOR) / TotalBits` | Si $> 0.5 \rightarrow$ Codage Booléen ($L_3$) |
+| **Homogénéité Spatiale** | `POPCOUNT(AND(M_c, Voisins))` | Si élevé $\rightarrow$ Processus Spatial |
+| **Activité Temporelle** | `POPCOUNT(XOR(t, t-1))` | Si faible $\rightarrow$ MDL (Intensity) |
+| **Corrélation Couleurs** | `POPCOUNT(XOR(M_c1, M_c2))` | Si faible $\rightarrow$ Processus Vectoriel |
+
+---
+
+## 5. Exemple d'Implémentation (C++ / Intrinsèques)
+
+Voici comment cela se traduit dans le module d'extraction :
+
+```cpp
+#include <immintrin.h> // Pour AVX2
+
+// Structure alignée pour les masques binaires
+struct alignas(32) BinaryMask {
+    uint64_t data[NUM_PIXELS / 64];
+};
+
+// Détection de sauts et comptage N pour une couleur c
+uint64_t extract_jumps_and_count(const BinaryMask& frame_t, 
+                                 const BinaryMask& frame_t1, 
+                                 std::vector<int>& jump_indices) {
+    uint64_t total_jumps = 0;
+    
+    // Parcours vectoriel (SIMD)
+    for (int i = 0; i < NUM_PIXELS / 64; ++i) {
+        // 1. XOR pour trouver les différences
+        uint64_t diff = frame_t.data[i] ^ frame_t1.data[i];
+        
+        // 2. POPCOUNT pour compter les sauts (N)
+        int jumps = _mm_popcnt_u64(diff);
+        total_jumps += jumps;
+        
+        // 3. Si besoin de localisation précise (pour TimeStamps)
+        if (jumps > 0 && !jump_indices.empty()) {
+            while (diff) {
+                int bit = _tzcnt_u64(diff); // Count Trailing Zeros
+                jump_indices.push_back(i * 64 + bit);
+                diff &= diff - 1; // Clear lowest set bit
+            }
+        }
+    }
+    return total_jumps;
+}
+```
+
+## 6. Conclusion et Validation Théorique
+
+Cette optimisation confirme la cohérence du projet avec les documents de référence :
+
+1.  **`versatile_pp.tex`** : Valide l'usage de la **représentation binaire** comme l'une des 4 formes versatiles, ici exploitée pour sa rapidité de calcul.
+2.  **`uniform_temp_coding.tex`** : Justifie le choix entre $L_3$ (Booléen) et $L_4$ (Combinatoire) basé sur le comptage rapide de $N$ via `POPCOUNT`.
+3.  **`Uniform_temporal.tex`** : Confirme la modélisation des changements de pixels comme des **sauts de processus ponctuels**.
+4.  **`versatile_main.tex`** : Permet d'alimenter l'estimateur MDL avec des statistiques ($N$, intensité empirique) calculées en temps réel sans surcoût.
+
+**Recommandation :** Intégrer cette contrainte d'alignement binaire dans le **Module 1 (Extraction)** du Cahier des Charges. C'est un gain de performance majeur qui rend le pré-codage compatible avec le temps réel haute définition.
+
+
+J aimerai introduire 6 fonctionnalités.
+1. En utilisant le Principe des etats organiser Les couleurs de manière hierarchique. Une marque par exemple peut contenir 3 dimensions correspondant à 3 niveaux de precision dans Les couleurs. Par exemple le premier octet peut preciser une couleur parmi 256. Le second octet precise pour cette couleur une nuance parmi 256. Etc....
+Ca pernettrait d'avoir la haute definition d'une part mais également la possibilité d'ajuster le richesse chromatique aux besoins.
+2. Augmenter la resolution spatiale de manière dynamique  en associant à chaque processus un ensemble de processus details selon une organisation en arbre.  
+3. Utiliser l'srchitecture precedented pour concevoir une fonction zoom qui permet de changer d'echelle pendant l'execution de la video.
+4. Concevoir une extension de HTML basée sur ces primitives.
+5. Introduire des requetes spatiales et temporelles.
+6. Concevoir un navigateur et un lecteir sur la base de cette architecture.
+
+## 1. Fonctionnalité 1 : Organisation Hiérarchique des Couleurs (Principe des États Multi-Niveaux)
+
+### 1.1. Modèle Mathématique
+
+Conformément au modèle de processus ponctuel marqué de `uniform_temp_coding.tex` (Section 2.1), l'espace des marques $\mathcal{E}$ est étendu pour supporter une structure hiérarchique :
+
+$$\mathcal{E} = \mathcal{E}_1 \times \mathcal{E}_2 \times \mathcal{E}_3$$
+
+où :
+- $\mathcal{E}_1$ : Niveau 1 - Couleur de base (256 valeurs, 8 bits)
+- $\mathcal{E}_2$ : Niveau 2 - Nuance (256 valeurs, 8 bits)
+- $\mathcal{E}_3$ : Niveau 3 - Finesse/Texture (256 valeurs, 8 bits)
+
+**Marque Hiérarchique :** $m = (m_1, m_2, m_3) \in \mathcal{E}$
+
+### 1.2. Avantages du Modèle
+
+| Niveau | Précision | Coût de Codage | Usage |
+|--------|-----------|----------------|-------|
+| **Niveau 1** | 256 couleurs | $\log(256) = 8$ bits | Aperçu, faible bande passante |
+| **Niveau 1-2** | 65 536 nuances | $16$ bits | Qualité standard HD |
+| **Niveau 1-3** | 16 777 216 couleurs | $24$ bits | Haute définition, HDR |
+
+### 1.3. Implémentation dans le Codage
+
+```python
+class HierarchicalColor:
+    def __init__(self, level1, level2=None, level3=None):
+        self.level1 = level1  # 0-255
+        self.level2 = level2  # 0-255 (optionnel)
+        self.level3 = level3  # 0-255 (optionnel)
+        self.precision_level = sum([1 if x else 0 for x in [level1, level2, level3]])
+    
+    def code_length(self, target_level=3):
+        """
+        Calcule la longueur de code selon le niveau de précision cible
+        Référence: uniform_temp_coding.tex Proposition 1 (terme N*log(m))
+        """
+        bits_per_level = 8
+        return self.precision_level * bits_per_level
+    
+    def downgrade(self, target_level):
+        """Réduit la précision chromatique selon les besoins"""
+        if target_level == 1:
+            return HierarchicalColor(self.level1)
+        elif target_level == 2:
+            return HierarchicalColor(self.level1, self.level2)
+        return self
+```
+
+### 1.4. Impact sur les Longueurs de Code
+
+Les formules de `uniform_temp_coding.tex` (Proposition 1) sont adaptées :
+
+- **L1 (État complet) :** $L_1 = r \times \sum_{i=1}^{L} \log(m_i)$
+- **L2 (Liste sauts) :** $L_2 = \log(N) + N \times (\log(r) + \sum_{i=1}^{L} \log(m_i))$
+- **L3 (Booléen) :** $L_3 = r + N \times \sum_{i=1}^{L} \log(m_i)$
+- **L4 (Combinatoire) :** $L_4 = \log(N) + \log(C_r^N) + N \times \sum_{i=1}^{L} \log(m_i)$
+
+où $L$ est le nombre de niveaux de précision actifs.
+
+---
+
+## 2. Fonctionnalité 2 : Résolution Spatiale Dynamique (Arbre de Processus)
+
+### 2.1. Modèle Mathématique
+
+Conformément à `versatile_main.tex` (Section 4.2 - Estimation of a Poisson process measure), chaque processus spatial $N_s$ peut avoir des processus enfants $N_{s,c}$ représentant des détails :
+
+$$N_s = \sum_{c \in Children(s)} N_{s,c}$$
+
+**Structure Arborescente :**
+```
+Racine (Basse résolution)
+├── Enfant 1 (Détail zone 1)
+│   ├── Petit-enfant 1.1 (Détail fin)
+│   └── Petit-enfant 1.2 (Détail fin)
+├── Enfant 2 (Détail zone 2)
+└── Enfant 3 (Détail zone 3)
+```
+
+### 2.2. Spécifications Techniques
+
+| Niveau | Résolution | Nombre de Processus | Usage |
+|--------|------------|---------------------|-------|
+| **Niveau 0** | 16x16 pixels | 1 processus/bloc | Aperçu rapide |
+| **Niveau 1** | 8x8 pixels | 4 processus/bloc | Qualité standard |
+| **Niveau 2** | 4x4 pixels | 16 processus/bloc | Haute définition |
+| **Niveau 3** | 2x2 pixels | 64 processus/bloc | Ultra HD |
+
+### 2.3. Implémentation de l'Arbre
+
+```python
+class SpatialProcessTree:
+    def __init__(self, level=0, coordinates=(0,0), size=16):
+        self.level = level
+        self.coordinates = coordinates
+        self.size = size
+        self.point_process = None
+        self.children = []  # Liste de SpatialProcessTree
+        self.parent = None
+    
+    def subdivide(self):
+        """Divise le processus en 4 enfants (quadtree)"""
+        if self.level >= 3:
+            return  # Niveau maximum atteint
+        
+        half_size = self.size // 2
+        offsets = [(0,0), (0,1), (1,0), (1,1)]
+        
+        for i, (dx, dy) in enumerate(offsets):
+            child = SpatialProcessTree(
+                level=self.level + 1,
+                coordinates=(self.coordinates[0] + dx * half_size,
+                           self.coordinates[1] + dy * half_size),
+                size=half_size
+            )
+            child.parent = self
+            self.children.append(child)
+    
+    def get_processes_at_level(self, target_level):
+        """Récupère tous les processus à un niveau de résolution donné"""
+        if self.level == target_level:
+            return [self]
+        elif self.level < target_level and self.children:
+            processes = []
+            for child in self.children:
+                processes.extend(child.get_processes_at_level(target_level))
+            return processes
+        return []
+    
+    def code_length(self, active_levels):
+        """
+        Calcule la longueur de code pour les niveaux actifs
+        Référence: versatile_main.tex (complexité C_n(Q))
+        """
+        total_length = 0
+        if self.level in active_levels and self.point_process:
+            total_length += self.point_process.code_length()
+        for child in self.children:
+            total_length += child.code_length(active_levels)
+        return total_length
+```
+
+---
+
+## 3. Fonctionnalité 3 : Zoom Dynamique pendant l'Exécution
+
+### 3.1. Principe de Fonctionnement
+
+Le zoom exploite la structure arborescente de la Fonctionnalité 2 pour changer d'échelle spatiale sans rechargement :
+
+```
+[Zoom Out] ←→ [Niveau 0] ←→ [Niveau 1] ←→ [Niveau 2] ←→ [Zoom In]
+              (Vue globale)                    (Détails fins)
+```
+
+### 3.2. Algorithme de Zoom
+
+```python
+class ZoomController:
+    def __init__(self, process_tree):
+        self.tree = process_tree
+        self.current_level = 0
+        self.zoom_factor = 1.0
+    
+    def zoom_in(self, focus_coordinates):
+        """Zoom avant sur une zone spécifique"""
+        if self.current_level < 3:
+            self.current_level += 1
+            self.zoom_factor *= 2
+            self.load_level(self.current_level, focus_coordinates)
+    
+    def zoom_out(self):
+        """Zoom arrière"""
+        if self.current_level > 0:
+            self.current_level -= 1
+            self.zoom_factor /= 2
+            self.load_level(self.current_level)
+    
+    def load_level(self, level, focus_coordinates=None):
+        """Charge les processus au niveau spécifié"""
+        if focus_coordinates:
+            # Charger uniquement la zone focalisée
+            processes = self.tree.get_processes_in_region(
+                focus_coordinates, level
+            )
+        else:
+            # Charger tout le niveau
+            processes = self.tree.get_processes_at_level(level)
+        
+        # Décoder les processus sélectionnés
+        for proc in processes:
+            proc.decode()
+    
+    def smooth_transition(self, from_level, to_level, duration_ms=300):
+        """Transition fluide entre niveaux de zoom"""
+        # Interpolation des processus entre niveaux
+        pass
+```
+
+### 3.3. Gestion de la Bande Passante
+
+| Action | Données Chargées | Latence | Qualité |
+|--------|------------------|---------|---------|
+| **Zoom Out** | Niveau 0 uniquement | < 50ms | Basse |
+| **Zoom Progressif** | Niveau N → N+1 | < 100ms | Moyenne |
+| **Zoom In Max** | Tous les niveaux | < 500ms | Haute |
+
+---
+
+## 4. Fonctionnalité 4 : Extension HTML (PPV-HTML)
+
+### 4.1. Nouvelles Balises HTML
+
+```html
+<!-- Conteneur vidéo principal -->
+<ppv-video 
+    src="video.ppv" 
+    width="1920" 
+    height="1080"
+    color-level="3"
+    spatial-level="2"
+    controls>
+</ppv-video>
+
+<!-- Zone de zoom définie -->
+<ppv-zoom-region 
+    x="100" 
+    y="200" 
+    width="400" 
+    height="300"
+    max-level="3">
+</ppv-zoom-region>
+
+<!-- Couche de métadonnées temporelles -->
+<ppv-timeline 
+    start="00:00:00" 
+    end="00:10:00"
+    query="intensity > 0.5">
+</ppv-timeline>
+
+<!-- Requête spatiale -->
+<ppv-spatial-query 
+    region="circle(500,500,100)"
+    condition="color.level1 = 255">
+</ppv-spatial-query>
+```
+
+### 4.2. Attributs Spécifiques
+
+| Attribut | Description | Valeurs |
+|----------|-------------|---------|
+| `color-level` | Niveau de précision chromatique | 1, 2, 3 |
+| `spatial-level` | Niveau de résolution spatiale | 0, 1, 2, 3 |
+| `intensity-threshold` | Seuil d'intensité pour affichage | 0.0 - 1.0 |
+| `query` | Requête spatio-temporelle | SQL-like |
+| `preload-levels` | Niveaux à précharger | [0,1,2] |
+
+### 4.3. API JavaScript
+
+```javascript
+// Initialisation du lecteur
+const player = document.querySelector('ppv-video');
+
+// Contrôle du zoom
+player.zoomTo({x: 500, y: 300, level: 2});
+
+// Changement de qualité chromatique
+player.setColorLevel(3); // HD complète
+
+// Exécution de requête
+const results = player.query({
+    temporal: {start: 10, end: 20},
+    spatial: {region: 'circle(100,100,50)'},
+    condition: 'intensity > 0.7'
+});
+
+// Événements
+player.addEventListener('zoomchange', (e) => {
+    console.log(`Niveau: ${e.level}, Facteur: ${e.factor}`);
+});
+
+player.addEventListener('intensityalert', (e) => {
+    console.log(`Activité détectée: ${e.coordinates}`);
+});
+```
+
+---
+
+## 5. Fonctionnalité 5 : Requêtes Spatiales et Temporelles
+
+### 5.1. Langage de Requête (PPV-QL)
+
+```sql
+-- Requête temporelle simple
+SELECT jump_times, colors
+FROM video_block(100, 200)
+WHERE time BETWEEN 10 AND 20
+  AND intensity > 0.5;
+
+-- Requête spatiale avec région
+SELECT process_id, intensity
+FROM spatial_region(circle(500, 500, 100))
+WHERE color.level1 = 255
+  AND spatial_level >= 2;
+
+-- Requête hiérarchique
+SELECT SUM(intensity)
+FROM process_tree
+WHERE level BETWEEN 0 AND 2
+GROUP BY level;
+
+-- Requête d'événements
+DETECT events
+WHERE intensity_change > 0.8
+  WITHIN time_window(5 seconds);
+```
+
+### 5.2. Moteur de Requêtes
+
+```python
+class PPVQueryEngine:
+    def __init__(self, video_data):
+        self.video_data = video_data
+        self.spatial_index = None
+        self.temporal_index = None
+    
+    def execute(self, query_string):
+        """Exécute une requête PPV-QL"""
+        parsed = self.parse_query(query_string)
+        
+        # Filtrage temporel
+        if parsed.temporal_condition:
+            results = self.filter_temporal(
+                parsed.temporal_condition
+            )
+        
+        # Filtrage spatial
+        if parsed.spatial_condition:
+            results = self.filter_spatial(
+                results, parsed.spatial_condition
+            )
+        
+        # Filtrage par intensité/couleur
+        if parsed.value_condition:
+            results = self.filter_values(
+                results, parsed.value_condition
+            )
+        
+        return results
+    
+    def filter_temporal(self, condition):
+        """
+        Filtre basé sur les temps de sauts
+        Référence: Uniform_temporal.tex (modèle d'intensité)
+        """
+        results = []
+        for block in self.video_data.blocks:
+            jump_times = block.process.get_jump_times()
+            if any(condition.check(t) for t in jump_times):
+                results.append(block)
+        return results
+    
+    def filter_spatial(self, blocks, region):
+        """Filtre basé sur la région spatiale"""
+        if not self.spatial_index:
+            self.build_spatial_index()
+        return self.spatial_index.query(region, blocks)
+    
+    def filter_values(self, blocks, condition):
+        """Filtre basé sur les valeurs (couleur, intensité)"""
+        results = []
+        for block in blocks:
+            if condition.evaluate(block.process):
+                results.append(block)
+        return results
+```
+
+### 5.3. Indexation pour Requêtes Rapides
+
+| Type d'Index | Structure | Temps de Recherche | Usage |
+|--------------|-----------|-------------------|-------|
+| **Temporal** | B-Tree sur $\tau_k$ | $O(\log N)$ | Requêtes par temps |
+| **Spatial** | Quadtree/R-Tree | $O(\log S)$ | Requêtes par région |
+| **Intensity** | Histogramme cumulé | $O(1)$ | Seuil d'activité |
+| **Color** | Hash table par marque | $O(1)$ | Filtrage couleur |
+
+---
+
+## 6. Fonctionnalité 6 : Navigateur et Lecteur
+
+### 6.1. Architecture du Lecteur
+
+```
+┌─────────────────────────────────────────────────────────────────┐
+│                    PPV Player Architecture                       │
+├─────────────────────────────────────────────────────────────────┤
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────────┐  │
+│  │   UI Layer  │  │  Query API  │  │   Event Dispatcher      │  │
+│  └──────┬──────┘  └──────┬──────┘  └────────────┬────────────┘  │
+│         │                │                       │               │
+│  ┌──────▼────────────────▼───────────────────────▼────────────┐  │
+│  │                    Core Engine                              │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │  │
+│  │  │ Zoom Controller│ │ Color Manager│ │ Process Decoder  │  │  │
+│  │  └──────┬───────┘  └──────┬───────┘  └────────┬─────────┘  │  │
+│  └─────────┼─────────────────┼───────────────────┼────────────┘  │
+│            │                 │                   │                │
+│  ┌─────────▼─────────────────▼───────────────────▼────────────┐  │
+│  │                  Data Layer                                 │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌──────────────────┐  │  │
+│  │  │ Process Tree │  │ Color Hierarchy│ │ Query Indexes   │  │  │
+│  │  └──────────────┘  └──────────────┘  └──────────────────┘  │  │
+│  └─────────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+```
+
+### 6.2. Spécifications du Navigateur
+
+| Composant | Technologie | Performance |
+|-----------|-------------|-------------|
+| **Moteur de Rendu** | WebGL 2.0 / Canvas | 60 fps @ 4K |
+| **Décodage** | WebAssembly (C++ core) | < 10ms par frame |
+| **Requêtes** | Index en mémoire | < 50ms réponse |
+| **Zoom** | Transition fluide | < 100ms latence |
+| **Cache** | Niveaux préchargés | Adaptatif |
+
+### 6.3. Interface Utilisateur
+
+```python
+class PPVPlayerUI:
+    def __init__(self):
+        self.controls = {
+            'play_pause': True,
+            'zoom_slider': (0, 3),  # Niveaux 0-3
+            'color_quality': (1, 3),  # Niveaux 1-3
+            'timeline': True,
+            'query_panel': True,
+            'intensity_overlay': True
+        }
+    
+    def render(self):
+        """Affiche l'interface"""
+        pass
+    
+    def handle_zoom(self, factor):
+        """Gère les interactions de zoom"""
+        pass
+    
+    def execute_query(self, query_string):
+        """Exécute une requête depuis l'UI"""
+        results = self.query_engine.execute(query_string)
+        self.highlight_results(results)
+    
+    def show_intensity_map(self, threshold=0.5):
+        """Affiche la carte d'intensité en overlay"""
+        intensity_map = self.get_intensity_map()
+        self.overlay(intensity_map > threshold)
+```
+
+### 6.4. Gestion du Cache et Préchargement
+
+```python
+class CacheManager:
+    def __init__(self, max_memory_mb=512):
+        self.max_memory = max_memory_mb * 1024 * 1024
+        self.current_usage = 0
+        self.cache = {}  # level -> data
+    
+    def preload_levels(self, video_id, levels=[0, 1]):
+        """Précharge les niveaux spécifiés"""
+        for level in levels:
+            data = self.fetch_level(video_id, level)
+            self.cache[(video_id, level)] = data
+            self.current_usage += len(data)
+    
+    def get_level(self, video_id, level):
+        """Récupère un niveau depuis le cache"""
+        key = (video_id, level)
+        if key in self.cache:
+            return self.cache[key]
+        else:
+            # Chargement à la demande
+            data = self.fetch_level(video_id, level)
+            self.evict_if_needed()
+            self.cache[key] = data
+            return data
+    
+    def evict_if_needed(self):
+        """Évince les niveaux les moins utilisés si nécessaire"""
+        if self.current_usage > self.max_memory:
+            # Stratégie LRU
+            pass
+```
+
+---
+
+## 7. Intégration avec le Cadre Théorique Existant
+
+### 7.1. Compatibilité MDL
+
+Toutes les extensions respectent le principe MDL de `versatile_main.tex` :
+
+$$\hat{P}_n = \arg \min_{Q \in \Gamma_n} \left( -\log Q(X^n) + C_n(Q) \right)$$
+
+- **Couleurs hiérarchiques :** $C_n(Q)$ inclut le coût des niveaux de précision actifs
+- **Arbre spatial :** $C_n(Q)$ inclut la complexité de la structure arborescente
+- **Zoom :** Sélection dynamique du sous-ensemble optimal de processus
+
+### 7.2. Bornes de Convergence
+
+Conformément à `versatile_main.tex` (Théorème 1) :
+
+$$H^2(P, \hat{P}_n) \leq \min_{Q \in \Gamma_n} \left[ H^2(P, Q) + \frac{1}{n} C_n(Q) \right]$$
+
+Les extensions maintiennent cette borne en ajoutant des termes de complexité contrôlés :
+- $C_{color} = L \times 8$ bits (L = niveaux de couleur)
+- $C_{spatial} = \log(\text{nb\_enfants})$ par nœud
+- $C_{zoom} = \text{niveau\_actif} \times \text{taille\_bloc}$
+
+### 7.3. Références Croisées
+
+| Fonctionnalité | Document Source | Section/Équation |
+|----------------|-----------------|------------------|
+| **Couleurs Hiérarchiques** | `uniform_temp_coding.tex` | Prop. 1 (termes $N \log m$) |
+| **Arbre Spatial** | `versatile_main.tex` | Sec. 4.2 (Poisson measure) |
+| **Zoom** | `versatile_pp.tex` | Sec. 2 (Versatility) |
+| **Requêtes** | `Uniform_temporal.tex` | Sec. 2.1 (Intensity model) |
+| **MDL Global** | `versatile_main.tex` | Thm. 1 (Convergence) |
+
+---
+
+## 8. Métriques de Performance Attendues
+
+| Métrique | Cible | Mesure |
+|----------|-------|--------|
+| **Latence Zoom** | < 100ms | Temps de transition niveau N→N+1 |
+| **Requête Temporelle** | < 50ms | Temps de réponse SQL-like |
+| **Requête Spatiale** | < 100ms | Temps de réponse région |
+| **Mémoire Cache** | < 512MB | Usage maximum |
+| **FPS Rendu** | 60 fps @ 4K | Fluidité playback |
+| **Compression** | > 2.0x | Ratio vs H.264 |
+| **Qualité Chromatique** | 24 bits | Niveaux 1-3 actifs |
+
+---
+
+## 9. Feuille de Route d'Implémentation
+
+| Phase | Durée | Livrables |
+|-------|-------|-----------|
+| **1. Couleurs Hiérarchiques** | 4 semaines | Module HierarchicalColor, tests |
+| **2. Arbre Spatial** | 6 semaines | SpatialProcessTree, subdivision |
+| **3. Zoom Controller** | 4 semaines | Zoom API, transitions |
+| **4. Extension HTML** | 6 semaines | Balises PPV, API JS |
+| **5. Moteur de Requêtes** | 8 semaines | PPV-QL, indexation |
+| **6. Lecteur Complet** | 10 semaines | Navigateur, UI, cache |
+| **7. Intégration & Tests** | 6 semaines | Benchmarks, documentation |
+| **Total** | **44 semaines** | |
+
+---
+
+## 10. Conclusion
+
+Ces 6 fonctionnalités transforment le système de codage vidéo par processus ponctuels en une **plateforme complète de gestion de contenu spatio-temporel**. L'architecture hiérarchique (couleurs + spatial) permet une adaptabilité sans précédent aux contraintes de bande passante et de qualité, tandis que le langage de requêtes et le lecteur dédié ouvrent de nouvelles possibilités d'analyse et d'interaction avec les données vidéo. Toutes les extensions restent compatibles avec le cadre théorique MDL des documents de référence, garantissant la consistance statistique et l'optimalité du codage.
+

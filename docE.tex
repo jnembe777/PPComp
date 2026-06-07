@@ -1,0 +1,930 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{float}
+\usepackage{geometry}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{tikz}
+\usetikzlibrary{shapes, arrows, positioning, trees}
+\usepackage{tcolorbox}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{multirow}
+
+\geometry{left=2.5cm,right=2.5cm,top=2.5cm,bottom=2.5cm}
+
+% ============================================================================
+% DÉFINITIONS DES ENVIRONNEMENTS
+% ============================================================================
+\newtheorem{theorem}{Théorème}[section]
+\newtheorem{prop}{Proposition}[section]
+\newtheorem{defi}{Définition}[section]
+\newtheorem{rem}{Remarque}[section]
+
+\definecolor{ppvblue}{RGB}{0,51,102}
+\definecolor{ppvgreen}{RGB}{0,102,51}
+\definecolor{ppvorange}{RGB}{255,102,0}
+
+\newtcolorbox{infobox}[1]{
+	colback=ppvblue!5,
+	colframe=ppvblue,
+	title=#1,
+	fonttitle=\bfseries,
+	sharp corners,
+	boxrule=1pt
+}
+
+% ============================================================================
+% MACROS ET NOTATIONS
+% ============================================================================
+\def \acn {{\hat \alpha}_n}
+\def \Pcn {{\hat P}_n}
+\def \DR {{\cal D}}
+\def \AR {{\cal A}}
+\def \BR {{\cal B}}
+\def \CR {{\cal C}}
+\def \LR {{\cal L}}
+\def \FR {{\cal F}}
+\def \ER {{\cal E}}
+\def \HR {{\cal H}}
+\def \IR {{\cal I}}
+\def \SR {{\cal S}}
+\def \RR {{\mathbb{R}}}
+\def \NN {{\mathbb{N}}}
+
+\newcommand{\argmin}{\mathop{\mathrm{arg\,min}}}
+\newcommand{\argmax}{\mathop{\mathrm{arg\,max}}}
+\newcommand{\var}{\mathrm{Var}}
+\newcommand{\esp}{\mathbb{E}}
+
+% ============================================================================
+% DÉBUT DU DOCUMENT
+% ============================================================================
+\begin{document}
+	
+	% ============================================================================
+	% PAGE DE GARDE
+	% ============================================================================
+	\begin{titlepage}
+		\centering
+		{\Huge\bfseries\color{ppvblue}Cahier des Charges\par}
+		\vspace{0.5cm}
+		{\Huge\bfseries Application PPV Codec v2.0\par}
+		\vspace{1cm}
+		{\Large Plateforme de Compression Vidéo\par}
+		{\Large par Processus Ponctuels Marqués\par}
+		\vspace{2cm}
+		{\large Dr. Jocelyn NEMBÉ\par}
+		{\large African Institute of Computing Sciences\par}
+		{\large P.O. Box 2263, Libreville, Gabon\par}
+		\vspace{1cm}
+		{\large Mars 2026\par}
+		\vspace{1cm}
+		{\large Version 2.0\par}
+		\vspace{1cm}
+		{\large Référence: PPV-CDC-2026-v2.0\par}
+		\vfill
+		{\small\color{red}Document Confidentiel\par}
+		{\small Ce document contient des informations propriétaires sur l'architecture,\par}
+		{\small les performances et la feuille de route du codec PPV.\par}
+		{\small Ne pas diffuser sans autorisation.\par}
+		{\small \copyright~2026 African Institute of Computing Sciences\par}
+	\end{titlepage}
+	
+	% ============================================================================
+	% RÉSUMÉ
+	% ============================================================================
+	\begin{abstract}
+		\noindent Ce cahier des charges décrit les spécifications complètes de l'application PPV Codec v2.0, une plateforme de compression vidéo basée sur les processus ponctuels marqués. Le document couvre les interfaces utilisateurs, le modèle conceptuel de données (MCD), le modèle physique de données (MPD), le modèle conceptuel de traitements (MCT) et le modèle logique de traitements (MLT). L'architecture permet d'atteindre des ratios de compression de 15-20x sur vidéo réelle avec des fonctionnalités impossibles avec les codecs classiques (zoom natif, requêtes sémantiques, adaptation couleur instantanée, navigation 3D).
+		
+		\medskip
+		\noindent \textbf{Mots-clés :} Processus ponctuels, Codage MDL, Compression vidéo, Estimation d'intensité, Distance de Hellinger, Interface utilisateur.
+		
+		\medskip
+		\noindent \textbf{Codes AMS :} 60G55; 62G05; 62G20; 62E25; 94A29.
+	\end{abstract}
+	
+	\tableofcontents
+	\newpage
+	
+	% ============================================================================
+	\section{Présentation Générale du Projet}
+	\label{sec:presentation}
+	% ============================================================================
+	
+	\subsection{Contexte et Objectifs}
+	\label{subsec:contexte}
+	
+	Le codec PPV (Point Process Video) représente un changement de paradigme dans la compression vidéo. Contrairement aux codecs classiques (H.264, H.265, AV1) qui compressent des \textbf{pixels}, le PPV encode des \textbf{événements} (sauts temporels) et des \textbf{marques} (couleurs/états).
+	
+	\begin{infobox}{Objectifs Principaux}
+		\begin{enumerate}
+			\item Compression lossless garantie (PSNR infini, bit-exact)
+			\item Ratio de compression 15-20x sur vidéo réelle (vs 2.77x v13)
+			\item Fonctionnalités impossibles avec les codecs classiques (zoom natif, requêtes sémantiques, adaptation couleur instantanée)
+			\item Temps-réel pour SD/HD (60 MPx/s encodage, 45 MPx/s décodage)
+		\end{enumerate}
+	\end{infobox}
+	
+	\subsection{Périmètre Fonctionnel}
+	\label{subsec:perimetre}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Modules et Fonctionnalités}
+		\label{tab:modules}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Module} & \textbf{Fonctionnalités} & \textbf{Priorité} \\
+			\midrule
+			Encodage & 4 cadres statistiques, 6 familles, MDL auto & P0 \\
+			Décodage & Lossless, zoom natif, LOD variable, 3D & P0 \\
+			Interface UI & Lecteur avancé, éditeur métadonnées, requêtes & P1 \\
+			API/SDK & Bibliothèque C++, Python/JS, WASM web & P1 \\
+			Gestion & Catalogue vidéo, index sémantique, historique & P2 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Description des Interfaces Utilisateurs}
+	\label{sec:interfaces}
+	% ============================================================================
+	
+	\subsection{Architecture Globale de l'Application}
+	\label{subsec:architecture_app}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[
+			every node/.style={font=\small},
+			bloc/.style={rectangle, draw, fill=blue!10, rounded corners, minimum width=25mm, minimum height=10mm, align=center},
+			arrow/.style={->, >=stealth, thick}
+			]
+			\node[bloc] (lecteur) {Lecteur\\Vidéo PPV};
+			\node[bloc, right=5mm of lecteur] (editeur) {Éditeur\\Métadonnées};
+			\node[bloc, right=5mm of editeur] (controle) {Panneau de\\Contrôle};
+			\node[bloc, below=10mm of editeur] (requete) {Moteur de\\Requêtes Sémantiques};
+			\node[bloc, below=10mm of lecteur] (catalogue) {Catalogue\\Vidéo};
+			\node[bloc, right=5mm of catalogue] (export) {Export\\PPV/MP4};
+			\node[bloc, right=5mm of export] (analyse) {Analyse\\IA};
+			\node[bloc, right=5mm of analyse] (params) {Paramètres\\Système};
+			
+			\draw[arrow] (lecteur) -- (requete);
+			\draw[arrow] (editeur) -- (requete);
+			\draw[arrow] (controle) -- (requete);
+		\end{tikzpicture}
+		\caption{Architecture Globale de l'Application PPV Studio v2.0}
+		\label{fig:architecture_app}
+	\end{figure}
+	
+	\subsection{Interface de Lecteur Vidéo Avancé}
+	\label{subsec:interface_lecteur}
+	
+	\begin{figure}[h]
+		\centering
+		\fbox{
+			\begin{minipage}{0.95\textwidth}
+				\begin{verbatim}
+					┌─────────────────────────────────────────────────────────────────┐
+					│  [◄◄] [◄] [►/❚❚] [►] [►►]  [00:02:34 / 00:15:42]  [🔊] [⛶]  │
+					├─────────────────────────────────────────────────────────────────┤
+					│                                                                 │
+					│                      ┌─────────────────┐                        │
+					│                      │   ZONE VIDÉO    │                        │
+					│                      │   (Canvas/WebGL)│                        │
+					│                      │   [Zoom: 100%]  │                        │
+					│                      │   [LOD: 2/2]    │                        │
+					│                      └─────────────────┘                        │
+					│                                                                 │
+					│  ┌───────────────────────────────────────────────────────────┐ │
+					│  │  Timeline Sémantique : [━━━🚗━━━][━━━━][━━🏃━━━][━━━━] │ │
+					│  │  (véhicule)          (rien)   (personne) (rien)          │ │
+					│  └───────────────────────────────────────────────────────────┘ │
+					├─────────────────────────────────────────────────────────────────┤
+					│  📊 Activité: 23% | 🎨 Couleurs: 12 | 🏷️ Tags: véhicule       │
+					└─────────────────────────────────────────────────────────────────┘
+				\end{verbatim}
+			\end{minipage}
+		}
+		\caption{Interface de Lecteur Vidéo Avancé}
+		\label{fig:interface_lecteur}
+	\end{figure}
+	
+	\textbf{Fonctionnalités :}
+	\begin{itemize}
+		\item \textbf{Zoom natif} : Molette souris ou pincement (mobile) pour zoomer sans re-buffering
+		\item \textbf{LOD variable} : Slider pour ajuster le niveau de détail (0=résumé, 2=détail maximal)
+		\item \textbf{Timeline sémantique} : Visualisation des événements tagués dans le temps
+		\item \textbf{Stats en temps réel} : Activité du bloc, nombre de couleurs, tags dominants
+	\end{itemize}
+	
+	\subsection{Panneau de Contrôle de Compression}
+	\label{subsec:panneau_controle}
+	
+	\begin{figure}[h]
+		\centering
+		\fbox{
+			\begin{minipage}{0.95\textwidth}
+				\begin{verbatim}
+					┌─────────────────────────────────────────────────────────────────┐
+					│  PARAMÈTRES D'ENCODAGE                                          │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Cadre Statistique : [▼ Marqué          ] [🔍 Auto-détection] │
+					│    ○ Vecteur (canaux RGB corrélés)                              │
+					│    ● Marqué (couleurs indépendantes)                            │
+					│    ○ Spatial (activité corrélée spatialement)                   │
+					│    ○ Markovien (transitions entre états)                        │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Famille de Fonctions : [▼ Histogramme K=8  ] [⚡ MDL Auto]    │
+					│    ○ Constante (1 paramètre)                                    │
+					│    ● Histogramme (4/8/16 bins)                                  │
+					│    ○ Polynômes (degré 1-5)                                      │
+					│    ○ Splines (8-32 noeuds)                                      │
+					│    ○ Ondelettes (niveau 2-5)                                    │
+					│    ○ Trigonométriques (périodique)                              │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Profondeur Couleur : [▼ 24 bits (RGB)  ]                       │
+					│    ○ 8 bits (256 couleurs)                                      │
+					│    ○ 16 bits (HDR médical)                                      │
+					│    ● 24 bits (RGB standard)                                     │
+					│    ○ 32 bits (RGB+A)                                            │
+					│    ○ Multispectral (N bandes)                                   │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Structure Pyramidale : [● Activée  ]                           │
+					│    Niveaux : ☑ N0(scène) ☑ N1(faces) ☑ N2(32x32) ☑ N3(16x16)   │
+					│             ☑ N4(4x4)   ☑ N5(pixels)                            │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Tags Sémantiques : [✏️ Éditer...]                              │
+					│    Véhicule, Personne, Animal, Incident, Mouvement, Statique   │
+					├─────────────────────────────────────────────────────────────────┤
+					│  [Estimer MDL]  [▶️ Encoder]  [💾 Sauvegarder Profil]          │
+					└─────────────────────────────────────────────────────────────────┘
+				\end{verbatim}
+			\end{minipage}
+		}
+		\caption{Panneau de Contrôle de Compression}
+		\label{fig:panneau_controle}
+	\end{figure}
+	
+	\subsection{Interface d'Éditeur de Métadonnées Sémantiques}
+	\label{subsec:interface_metadonnees}
+	
+	\begin{figure}[h]
+		\centering
+		\fbox{
+			\begin{minipage}{0.95\textwidth}
+				\begin{verbatim}
+					┌─────────────────────────────────────────────────────────────────┐
+					│  ÉDITEUR DE MÉTADONNÉES SÉMANTIQUES                             │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Bloc : B(5,3) [16x16] | Frames : 128-256 | Tags actuels : [🚗]│
+					├─────────────────────────────────────────────────────────────────┤
+					│  Ajouter un Tag : [▼ véhicule      ] [🕐 00:02:34-00:02:45] [+]│
+					│    véhicule, personne, animal, incident, mouvement, statique    │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Tags Existants :                                               │
+					│    🚗 véhicule | 00:02:34-00:02:45 | conf: 0.92 | [✏️] [🗑️]   │
+					│    🏃 personne | 00:03:12-00:03:28 | conf: 0.87 | [✏️] [🗑️]   │
+					│    🔥 incident | 00:05:45-00:06:02 | conf: 0.95 | [✏️] [🗑️]   │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Vecteur de Mouvement : [dx: 2] [dy: -1] [conf: 0.88] [🔍 Auto]│
+					├─────────────────────────────────────────────────────────────────┤
+					│  [💾 Appliquer]  [🔄 Réinitialiser]  [📊 Statistiques du Bloc] │
+					└─────────────────────────────────────────────────────────────────┘
+				\end{verbatim}
+			\end{minipage}
+		}
+		\caption{Interface d'Éditeur de Métadonnées Sémantiques}
+		\label{fig:interface_metadonnees}
+	\end{figure}
+	
+	\subsection{Interface de Requêtes Sémantiques}
+	\label{subsec:interface_requetes}
+	
+	\begin{figure}[h]
+		\centering
+		\fbox{
+			\begin{minipage}{0.95\textwidth}
+				\begin{verbatim}
+					┌─────────────────────────────────────────────────────────────────┐
+					│  MOTEUR DE REQUÊTES SÉMANTIQUES                                 │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Requête :                                                      │
+					│  SELECT time, location, tag                                     │
+					│  FROM video_stream                                              │
+					│  WHERE tag = 'véhicule' AND magnitude > 0.8                     │
+					│  AND location IN (B(0,0), B(0,1), B(1,0), B(1,1))              │
+					│  ORDER BY time ASC                                              │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Résultats (12 occurrences trouvées en 0.023s) :                │
+					│    00:02:34 | B(0,0) | véhicule | conf: 0.92 | [▶️ Lire]      │
+					│    00:02:45 | B(0,1) | véhicule | conf: 0.89 | [▶️ Lire]      │
+					│    00:03:12 | B(1,0) | personne | conf: 0.87 | [▶️ Lire]      │
+					│    00:05:45 | B(1,1) | incident | conf: 0.95 | [▶️ Lire]      │
+					├─────────────────────────────────────────────────────────────────┤
+					│  [💾 Exporter Résultats]  [📊 Analyser]  [🔍 Nouvelle Recherche]│
+					└─────────────────────────────────────────────────────────────────┘
+				\end{verbatim}
+			\end{minipage}
+		}
+		\caption{Interface de Requêtes Sémantiques}
+		\label{fig:interface_requetes}
+	\end{figure}
+	
+	\subsection{Interface de Navigation 3D (Cube 6 Faces)}
+	\label{subsec:interface_3d}
+	
+	\begin{figure}[h]
+		\centering
+		\fbox{
+			\begin{minipage}{0.95\textwidth}
+				\begin{verbatim}
+					┌─────────────────────────────────────────────────────────────────┐
+					│  NAVIGATEUR 3D — CUBE 6 FACES                                   │
+					├─────────────────────────────────────────────────────────────────┤
+					│                                                                 │
+					│                         ┌─────────┐                             │
+					│                         │  Haut   │                             │
+					│                    ┌────┴─────────┴────┐                        │
+					│                    │                   │                        │
+					│               ┌────┤     Arrière       ├────┐                   │
+					│               │    │                   │    │                   │
+					│          ┌────┴────┤                   ├────┴────┐              │
+					│          │ Gauche  │     Avant         │ Droite  │              │
+					│          │ (LOD 1) │     (LOD 2)       │ (LOD 1) │              │
+					│          │         │                   │         │              │
+					│          └────┬────┤                   ├────┬────┘              │
+					│               │    │                   │    │                   │
+					│               └────┤     Bas           ├────┘                   │
+					│                    │   (LOD 0)         │                        │
+					│                    └───────────────────┘                        │
+					├─────────────────────────────────────────────────────────────────┤
+					│  Direction : [◄] [▲] [▼] [►] | Zoom : [━━━━━━●━━━━━━] 100%    │
+					│  LOD Actuel : Avant=2, Latéral=1, Arrière=0                     │
+					├─────────────────────────────────────────────────────────────────┤
+					│  [🔄 Réinitialiser Vue]  [📷 Capture]  [🎥 Enregistrer Navig.] │
+					└─────────────────────────────────────────────────────────────────┘
+				\end{verbatim}
+			\end{minipage}
+		}
+		\caption{Interface de Navigation 3D}
+		\label{fig:interface_3d}
+	\end{figure}
+	
+	% ============================================================================
+	\section{Modèle Conceptuel de Données (MCD)}
+	\label{sec:mcd}
+	% ============================================================================
+	
+	\subsection{Entités Principales}
+	\label{subsec:entites_mcd}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[
+			every node/.style={font=\small},
+			entity/.style={rectangle, draw, fill=blue!10, minimum width=30mm, minimum height=10mm, align=center},
+			relationship/.style={diamond, draw, fill=yellow!10, minimum width=15mm, minimum height=15mm, align=center},
+			arrow/.style={->, >=stealth, thick}
+			]
+			\node[entity] (utilisateur) {UTILISATEUR};
+			\node[entity, below=15mm of utilisateur] (projet) {PROJET};
+			\node[entity, below=15mm of projet] (video) {VIDEO};
+			\node[entity, left=20mm of video] (config_enc) {CONFIG\_ENCODAGE};
+			\node[entity, right=20mm of video] (config_dec) {CONFIG\_DECODAGE};
+			\node[entity, below=15mm of video] (gop) {GOP};
+			\node[entity, below=15mm of gop] (bloc) {BLOC};
+			\node[entity, below=15mm of bloc] (processus) {PROCESSUS\_PP};
+			\node[entity, below=15mm of processus] (saut) {SAUT};
+			\node[entity, left=20mm of saut] (palette) {PALETTE};
+			\node[entity, below=15mm of palette] (couleur) {COULEUR};
+			
+			\draw[arrow] (utilisateur) -- node[right] {1,n} (projet);
+			\draw[arrow] (projet) -- node[right] {1,n} (video);
+			\draw[arrow] (config_enc) -- node[above] {1} (video);
+			\draw[arrow] (config_dec) -- node[above] {1} (video);
+			\draw[arrow] (video) -- node[right] {1,n} (gop);
+			\draw[arrow] (gop) -- node[right] {1,n} (bloc);
+			\draw[arrow] (bloc) -- node[right] {1,n} (processus);
+			\draw[arrow] (processus) -- node[right] {1,n} (saut);
+			\draw[arrow] (bloc) -- node[left] {1,1} (palette);
+			\draw[arrow] (palette) -- node[left] {1,n} (couleur);
+			\draw[arrow] (saut) -- node[left] {n,1} (couleur);
+		\end{tikzpicture}
+		\caption{Modèle Conceptuel de Données (MCD)}
+		\label{fig:mcd}
+	\end{figure}
+	
+	\subsection{Cardinalités et Contraintes}
+	\label{subsec:cardinalites}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Cardinalités et Contraintes du MCD}
+		\label{tab:cardinalites}
+		\begin{tabular}{@{}lllll@{}}
+			\toprule
+			\textbf{Relation} & \textbf{Entité 1} & \textbf{Entité 2} & \textbf{Cardinalité} & \textbf{Contrainte} \\
+			\midrule
+			Crée & UTILISATEUR & PROJET & 1,n & FK id\_utilisateur NOT NULL \\
+			Contient & PROJET & VIDEO & 1,n & FK id\_projet NOT NULL \\
+			Configure & VIDEO & CONFIG\_ENC & n,1 & FK id\_config\_enc NOT NULL \\
+			Configure & VIDEO & CONFIG\_DEC & n,1 & FK id\_config\_dec NOT NULL \\
+			Contient & VIDEO & GOP & 1,n & FK id\_video NOT NULL \\
+			Contient & GOP & BLOC & 1,n & FK id\_gop NOT NULL \\
+			Contient & BLOC & PROCESSUS & 1,n & FK id\_bloc NOT NULL \\
+			Contient & PROCESSUS & SAUT & 1,n & FK id\_processus NOT NULL \\
+			Contient & BLOC & PALETTE & 1,1 & FK id\_bloc UNIQUE \\
+			Contient & PALETTE & COULEUR & 1,n & FK id\_palette NOT NULL \\
+			Référence & SAUT & COULEUR & n,1 & FK id\_couleur NOT NULL \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Modèle Physique de Données (MPD)}
+	\label{sec:mpd}
+	% ============================================================================
+	
+	\subsection{Schéma de Base de Données (PostgreSQL)}
+	\label{subsec:schema_bdd}
+	
+	\begin{lstlisting}[language=SQL, basicstyle=\small\ttfamily, breaklines=true]
+		-- ============================================================================
+		-- SCHEMA PPV_CODEC v2.0
+		-- ============================================================================
+		
+		CREATE SCHEMA ppv_codec;
+		SET search_path TO ppv_codec;
+		
+		-- TABLE: UTILISATEUR
+		CREATE TABLE utilisateur (
+		id_utilisateur SERIAL PRIMARY KEY,
+		nom VARCHAR(100) NOT NULL,
+		email VARCHAR(255) UNIQUE NOT NULL,
+		role VARCHAR(50) DEFAULT 'user',
+		date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		CONSTRAINT chk_role CHECK (role IN ('admin', 'user', 'viewer'))
+		);
+		
+		-- TABLE: VIDEO
+		CREATE TABLE video (
+		id_video SERIAL PRIMARY KEY,
+		nom_fichier VARCHAR(500) NOT NULL,
+		chemin_fichier VARCHAR(1000) NOT NULL,
+		duree INTEGER NOT NULL,
+		resolution_x INTEGER NOT NULL,
+		resolution_y INTEGER NOT NULL,
+		nb_frames INTEGER NOT NULL,
+		nb_blocs INTEGER NOT NULL,
+		taille_bits BIGINT NOT NULL,
+		ratio_compress DECIMAL(5,2),
+		id_config_enc INTEGER NOT NULL REFERENCES config_encodage(id_config),
+		id_config_dec INTEGER NOT NULL REFERENCES config_decodage(id_config),
+		id_projet INTEGER REFERENCES projet(id_projet),
+		date_upload TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+		checksum_sha256 CHAR(64)
+		);
+		
+		-- TABLE: BLOC
+		CREATE TABLE bloc (
+		id_bloc SERIAL PRIMARY KEY,
+		id_gop INTEGER NOT NULL REFERENCES gop(id_gop) ON DELETE CASCADE,
+		position_x INTEGER NOT NULL,
+		position_y INTEGER NOT NULL,
+		taille_x INTEGER DEFAULT 16,
+		taille_y INTEGER DEFAULT 16,
+		niveau_pyramide INTEGER DEFAULT 3,
+		code_methode SMALLINT NOT NULL,
+		offset_bits BIGINT NOT NULL,
+		taille_bits BIGINT NOT NULL,
+		semantic_tags TEXT[]
+		);
+		
+		-- TABLE: PROCESSUS_PP
+		CREATE TABLE processus_pp (
+		id_processus SERIAL PRIMARY KEY,
+		id_bloc INTEGER NOT NULL REFERENCES bloc(id_bloc) ON DELETE CASCADE,
+		niveau_lod INTEGER DEFAULT 2,
+		nb_sauts INTEGER NOT NULL,
+		index_combin BIGINT,
+		elias_gamma BYTEA,
+		date_creation TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+		);
+		
+		-- TABLE: COULEUR
+		CREATE TABLE couleur (
+		id_couleur SERIAL PRIMARY KEY,
+		id_palette INTEGER NOT NULL REFERENCES palette(id_palette) ON DELETE CASCADE,
+		index SMALLINT NOT NULL,
+		valeur_r SMALLINT,
+		valeur_g SMALLINT,
+		valeur_b SMALLINT,
+		valeur_a SMALLINT DEFAULT 255,
+		semantic_tag VARCHAR(100),
+		motion_vec_dx SMALLINT,
+		motion_vec_dy SMALLINT,
+		confidence DECIMAL(3,2),
+		UNIQUE (id_palette, index)
+		);
+	\end{lstlisting}
+	
+	\subsection{Indexation et Optimisation}
+	\label{subsec:indexation}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Stratégie d'Indexation}
+		\label{tab:indexation}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Table} & \textbf{Index} & \textbf{Type} & \textbf{Justification} \\
+			\midrule
+			video & idx\_video\_projet & B-Tree & Requêtes par projet \\
+			video & idx\_video\_nom & B-Tree & Recherche par nom \\
+			gop & idx\_gop\_frames & B-Tree & Navigation temporelle \\
+			bloc & idx\_bloc\_position & B-Tree & Accès spatial O(1) \\
+			bloc & idx\_bloc\_niveau & B-Tree & Filtrage par LOD \\
+			saut & idx\_saut\_frame & B-Tree & Requêtes temporelles \\
+			couleur & idx\_couleur\_tag & B-Tree & Requêtes sémantiques \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Modèle Conceptuel de Traitements (MCT)}
+	\label{sec:mct}
+	% ============================================================================
+	
+	\subsection{Processus Métier Principaux}
+	\label{subsec:processus_metier}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[
+			every node/.style={font=\small},
+			actor/.style={rectangle, draw, fill=green!10, minimum width=20mm, minimum height=10mm, align=center},
+			process/.style={rectangle, draw, fill=blue!10, rounded corners, minimum width=25mm, minimum height=10mm, align=center},
+			data/.style={rectangle, draw, fill=yellow!10, minimum width=20mm, minimum height=10mm, align=center},
+			arrow/.style={->, >=stealth, thick}
+			]
+			\node[actor] (utilisateur) {UTILISATEUR};
+			\node[process, right=20mm of utilisateur] (encoder) {ENCODER\\VIDEO};
+			\node[data, right=20mm of encoder] (video_ppv) {VIDEO.PPV};
+			\node[process, below=15mm of encoder] (decoder) {DECODER\\VIDEO};
+			\node[process, right=20mm of decoder] (lecture) {LECTURE\\PPV};
+			\node[process, below=15mm of decoder] (affichage) {AFFICHAGE};
+			
+			\draw[arrow] (utilisateur) -- (encoder);
+			\draw[arrow] (encoder) -- (video_ppv);
+			\draw[arrow] (video_ppv) -- (lecture);
+			\draw[arrow] (lecture) -- (decoder);
+			\draw[arrow] (decoder) -- (affichage);
+		\end{tikzpicture}
+		\caption{Modèle Conceptuel de Traitements}
+		\label{fig:mct}
+	\end{figure}
+	
+	\subsection{Événements et Réponses}
+	\label{subsec:evenements}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Événements et Réponses du Système}
+		\label{tab:evenements}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Événement} & \textbf{Déclencheur} & \textbf{Processus} & \textbf{Résultat} \\
+			\midrule
+			Upload Vidéo & Utilisateur & ENCORDER VIDEO & Fichier .ppv + métadonnées \\
+			Lecture Vidéo & Utilisateur & LECTURE PPV & Flux décompressé \\
+			Zoom & Utilisateur & NAVIGATION & Blocs ROI décodés \\
+			Requête Sémantique & Utilisateur & REQUETER & Résultats filtrés \\
+			Changement LOD & Utilisateur & ADAPTER QUALITÉ & Niveau de détail ajusté \\
+			Export & Utilisateur & CONVERTIR & Fichier MP4/AVI \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Règles de Gestion}
+	\label{subsec:regles_gestion}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Règles de Gestion Principales}
+		\label{tab:regles_gestion}
+		\begin{tabular}{@{}llp{8cm}@{}}
+			\toprule
+			\textbf{ID} & \textbf{Règle} & \textbf{Description} \\
+			\midrule
+			RG01 & Lossless garanti & Toute vidéo encodée doit être décodable bit-exact \\
+			RG02 & MDL automatique & Le cadre/famille optimal est sélectionné automatiquement \\
+			RG03 & Zoom O(1) & L'accès à un bloc via offset table doit être en temps constant \\
+			RG04 & LOD cohérent & Les timestamps doivent être alignés entre niveaux pyramide \\
+			RG05 & Tags sémantiques & Les métadonnées sémantiques ne doivent pas dépasser 5\% du coût total \\
+			RG06 & Compression minimale & Le ratio de compression doit être ≥ 2.0x sur contenu réel \\
+			RG07 & Temps-réel SD & L'encodage SD (720x480@30fps) doit être réalisable en temps-réel \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Modèle Logique de Traitements (MLT)}
+	\label{sec:mlt}
+	% ============================================================================
+	
+	\subsection{Diagramme de Séquence : Encodage Vidéo}
+	\label{subsec:sequence_encodage}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[
+			every node/.style={font=\small},
+			lifeline/.style={rectangle, draw, minimum width=20mm, minimum height=8mm, align=center},
+			arrow/.style={->, >=stealth, thick},
+			dashed/.style={->, >=stealth, thick, dashed}
+			]
+			\node[lifeline] (utilisateur) {Utilisateur};
+			\node[lifeline, right=15mm of utilisateur] (interface) {Interface};
+			\node[lifeline, right=15mm of interface] (moteur) {Moteur\_PPV};
+			\node[lifeline, right=15mm of moteur] (bdd) {Base\_Données};
+			\node[lifeline, right=15mm of bdd] (fichier) {Fichier};
+			
+			\draw[arrow] (utilisateur) -- node[above] {Upload} (interface);
+			\draw[arrow] (interface) -- node[above] {Analyser (MDL)} (moteur);
+			\draw[dashed] (moteur) -- node[above] {Cadre/Famille Optimal} (interface);
+			\draw[arrow] (interface) -- node[above] {Encoder GOPs} (moteur);
+			\draw[arrow] (moteur) -- node[above] {Insérer (Métadonnées)} (bdd);
+			\draw[dashed] (bdd) -- node[above] {ID Vidéo} (moteur);
+			\draw[arrow] (interface) -- node[above] {Sérialiser (.ppv)} (moteur);
+			\draw[arrow] (bdd) -- node[above] {Écrire} (fichier);
+			\draw[dashed] (interface) -- node[above] {Succès} (utilisateur);
+		\end{tikzpicture}
+		\caption{Diagramme de Séquence : Encodage Vidéo}
+		\label{fig:sequence_encodage}
+	\end{figure}
+	
+	\subsection{Algorithmes Clés}
+	\label{subsec:algorithmes_cles}
+	
+	\begin{algo}[Sélection MDL]
+		\label{algo:selection_mdl}
+		\begin{algorithmic}[1]
+			\Procedure{SelectionMDL}{bloc\_video, frameworks, families, K\_max}
+			\State $LC_{\text{min}} \gets \infty$, $best\_config \gets \text{None}$
+			\For{$cadre \in frameworks$}
+			\For{$famille \in families$}
+			\For{$K = 1$ \textbf{to} $K_{\text{max}}$}
+			\State $\hat{\alpha} \gets \text{EstimerIntensite}(bloc\_video, cadre, famille, K)$
+			\State $\log L \gets \text{CalculerVraisemblance}(bloc\_video, \hat{\alpha})$
+			\State $C_n \gets \frac{K}{2} \log(bloc\_video.n\_pixels)$
+			\State $LC \gets -\log L + C_n + \text{CoderCouleurs}(bloc\_video.couleurs)$
+			\If{$LC < LC_{\text{min}}$}
+			\State $LC_{\text{min}} \gets LC$
+			\State $best\_config \gets (cadre, famille, K)$
+			\EndIf
+			\EndFor
+			\EndFor
+			\EndFor
+			\State \Return $best\_config, LC_{\text{min}}$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	\begin{algo}[Navigation Pyramidale]
+		\label{algo:navigation_pyramidale}
+		\begin{algorithmic}[1]
+			\Procedure{NavigationPyramidale}{video, roi, lod\_cible}
+			\State $resultats \gets [\,]$
+			\If{$lod\_cible \geq 0$}
+			\State $resultat \gets \text{DecoderNiveau}(video, niveau=0, roi=video.bounding\_box)$
+			\State $resultats.\text{append}(resultat)$
+			\EndIf
+			\If{$lod\_cible \geq 1$}
+			\State $blocs\_grossiers \gets \text{TrouverBlocsNiveau}(video, niveau=2, roi=roi)$
+			\For{$bloc \in blocs\_grossiers$}
+			\State $resultat \gets \text{DecoderBloc}(video, bloc, lod=1)$
+			\State $resultats.\text{append}(resultat)$
+			\EndFor
+			\EndIf
+			\If{$lod\_cible \geq 2$}
+			\State $blocs\_fins \gets \text{TrouverBlocsNiveau}(video, niveau=3, roi=roi)$
+			\For{$bloc \in blocs\_fins$}
+			\State $resultat \gets \text{DecoderBloc}(video, bloc, lod=2)$
+			\State $resultats.\text{append}(resultat)$
+			\EndFor
+			\EndIf
+			\State \Return $\text{FusionnerResultats}(resultats)$
+			\EndProcedure
+		\end{algorithmic}
+	\end{algo}
+	
+	% ============================================================================
+	\section{Spécifications Techniques}
+	\label{sec:specs_techniques}
+	% ============================================================================
+	
+	\subsection{Stack Technologique}
+	\label{subsec:stack_techno}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Stack Technologique}
+		\label{tab:stack_techno}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Couche} & \textbf{Technologie} & \textbf{Version} & \textbf{Justification} \\
+			\midrule
+			Backend & Python & 3.10+ & Prototypage rapide, bibliothèques ML \\
+			Core & C++ & 20 & Performance, SIMD (POPCNT/BMI2) \\
+			Base de Données & PostgreSQL & 14+ & JSONB, indexation avancée \\
+			Frontend & React & 18+ & Composants réutilisables \\
+			Rendu Vidéo & WebGL & 2.0 & Accélération GPU \\
+			Bindings & pybind11 & 2.10 & Interface Python/C++ \\
+			Web & WASM & 1.0 & Décodeur navigateur natif \\
+			API & FastAPI & 0.95+ & Async, documentation auto \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Performances Cibles}
+	\label{subsec:performances}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Performances Cibles}
+		\label{tab:performances}
+		\begin{tabular}{@{}lll@{}}
+			\toprule
+			\textbf{Métrique} & \textbf{Cible} & \textbf{Mesure} \\
+			\midrule
+			Encodage SD (720x480@30fps) & $< 33$ms/frame & Temps-réel \\
+			Encodage HD (1280x720@30fps) & $< 50$ms/frame & Quasi-temps-réel \\
+			Décodage SD & $< 22$ms/frame & Temps-réel \\
+			Décodage HD & $< 37$ms/frame & Quasi-temps-réel \\
+			Accès bloc (offset) & $< 1$ms & O(1) garanti \\
+			Requête sémantique & $< 100$ms & Index tags \\
+			Zoom (changement LOD) & $< 50$ms & Sans re-buffering \\
+			Ratio compression (réel) & $\geq 15$x & vs 2.77x v13 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Contraintes Non-Fonctionnelles}
+	\label{subsec:contraintes}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Contraintes Non-Fonctionnelles}
+		\label{tab:contraintes}
+		\begin{tabular}{@{}llp{8cm}@{}}
+			\toprule
+			\textbf{ID} & \textbf{Contrainte} & \textbf{Description} \\
+			\midrule
+			CNF01 & Lossless & Reconstruction bit-exact obligatoire \\
+			CNF02 & Scalabilité & Support jusqu'à 8K (7680x4320) \\
+			CNF03 & Portabilité & Windows, Linux, macOS, Web (WASM) \\
+			CNF04 & Sécurité & Chiffrement AES-256 optionnel \\
+			CNF05 & Disponibilité & 99.9\% pour service cloud \\
+			CNF06 & Maintenance & Mises à jour sans interruption \\
+			CNF07 & Documentation & API documentée (OpenAPI/Swagger) \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Planning et Livrables}
+	\label{sec:planning}
+	% ============================================================================
+	
+	\subsection{Feuille de Route (24 Mois)}
+	\label{subsec:feuille_route}
+	
+	\begin{figure}[h]
+		\centering
+		\begin{tikzpicture}[
+			every node/.style={font=\small},
+			phase/.style={rectangle, draw, fill=blue!10, minimum width=120mm, minimum height=10mm, align=left},
+			arrow/.style={->, >=stealth, thick}
+			]
+			\node[phase] (phase0) {Phase 0 (Actuelle) : Codec v13 complet, C++ 60 MPx/s [100\%]};
+			\node[phase, below=5mm of phase0] (phase1) {Phase 1 — Validation (3 mois) : Tests 100+ vidéos, Article recherche [0\%]};
+			\node[phase, below=5mm of phase1] (phase2) {Phase 2 — v2.0 Core (6 mois) : Pyramide, Sémantique, Offset Table [0\%]};
+			\node[phase, below=5mm of phase2] (phase3) {Phase 3 — Produit (6 mois) : SDK, API, Lecteur WASM, Demo web [0\%]};
+			\node[phase, below=5mm of phase3] (phase4) {Phase 4 — Marché (12 mois) : Partenariats, Revenue, Clients pilotes [0\%]};
+		\end{tikzpicture}
+		\caption{Feuille de Route PPV v2.0}
+		\label{fig:feuille_route}
+	\end{figure}
+	
+	\subsection{Livrables par Phase}
+	\label{subsec:livrables}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Livrables par Phase}
+		\label{tab:livrables}
+		\begin{tabular}{@{}llll@{}}
+			\toprule
+			\textbf{Phase} & \textbf{Livrable} & \textbf{Format} & \textbf{Durée} \\
+			\midrule
+			Phase 0 & Codec v13 & Python + C++ & Fait \\
+			Phase 1 & Rapport de tests & PDF & 3 mois \\
+			Phase 1 & Article recherche & PDF (arXiv) & 3 mois \\
+			Phase 2 & Pyramide v2.0 & C++ & 6 mois \\
+			Phase 2 & Métadonnées sémantiques & JSON Schema & 6 mois \\
+			Phase 3 & SDK & C++/Python/JS & 6 mois \\
+			Phase 3 & API REST & OpenAPI 3.0 & 6 mois \\
+			Phase 3 & Lecteur WASM & JavaScript & 6 mois \\
+			Phase 4 & Documentation & Markdown/PDF & 12 mois \\
+			Phase 4 & Cas d'usage & Études de cas & 12 mois \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Budget Estimatif}
+	\label{subsec:budget}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Budget Estimatif}
+		\label{tab:budget}
+		\begin{tabular}{@{}lrp{8cm}@{}}
+			\toprule
+			\textbf{Poste} & \textbf{Coût (EUR)} & \textbf{Justification} \\
+			\midrule
+			Équipe (9 mois) & 450 000 & 1 chercheur + 2 ingénieurs C++ + 1 produit \\
+			Infrastructure & 50 000 & Serveurs, stockage, bande passante \\
+			Tests \& Validation & 30 000 & Corpus vidéo, benchmarks \\
+			Marketing & 40 000 & Site web, démos, conférences \\
+			Contingence (15\%) & 85 500 & Imprévus \\
+			\midrule
+			\textbf{TOTAL} & \textbf{655 500} & Phase 1 + Phase 2 \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	% ============================================================================
+	\section{Annexes}
+	\label{sec:annexes}
+	% ============================================================================
+	
+	\subsection{Glossaire}
+	\label{subsec:glossaire}
+	
+	\begin{table}[h]
+		\centering
+		\caption{Glossaire des Termes}
+		\label{tab:glossaire}
+		\begin{tabular}{@{}lp{10cm}@{}}
+			\toprule
+			\textbf{Terme} & \textbf{Définition} \\
+			\midrule
+			PPV & Point Process Video — Codec basé sur les processus ponctuels \\
+			MDL & Minimum Description Length — Principe de sélection de modèle \\
+			LOD & Level of Detail — Niveau de détail dans la pyramide \\
+			GOP & Group of Pictures — Groupe d'images indépendantes \\
+			R4 & Représentation 4 — Index combinatoire + couleurs \\
+			VHR & Very High Resolution — Profondeur couleur 16/24/32 bits \\
+			\bottomrule
+		\end{tabular}
+	\end{table}
+	
+	\subsection{Références Bibliographiques}
+	\label{subsec:references}
+	
+	\begin{enumerate}
+		\item Nembé, J. (2015). \textit{Strong Uniform coding of temporal Data using Counting Processes}. Technical Report N° 003/22/02/2015/MD/JN.
+		\item Nembé, J. (2015). \textit{MDL estimator for a class of stochastic processes}. Technical Report N° 002/20/02/2015/MD/JN.
+		\item Nembé, J. (2015). \textit{Versatile Point Process Encoding Using the MDL Principle}. Technical Report.
+		\item Nembé, J. (2026). \textit{Codage Uniforme Fort de Données Temporelles par Processus de Comptage}. Version révisée.
+		\item Rissanen, J. (1983). \textit{A Universal Prior for Integers and Estimation by Minimum Description Length}. Annals of Statistics, 11(2), 416-431.
+		\item Aalen, O. (1978). \textit{Nonparametric Inference for a Family of Counting Processes}. Annals of Statistics.
+	\end{enumerate}
+	
+	% ============================================================================
+	% FIN DU DOCUMENT
+	% ============================================================================
+	\newpage
+	\begin{center}
+		\textbf{\Large Document généré automatiquement — Mars 2026\par}
+		\vspace{0.5cm}
+		\textbf{Codec PPV v2.0 — Processus Ponctuels Marqués pour la Compression Vidéo\par}
+		\vspace{0.5cm}
+		\textbf{\copyright~2026 African Institute of Computing Sciences — Tous droits réservés\par}
+		\vspace{0.5cm}
+		\textbf{\color{red}Confidentiel — Ne pas diffuser sans autorisation\par}
+	\end{center}
+	
+\end{document}

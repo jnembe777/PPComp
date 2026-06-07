@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPV Codec — Performance & Marchés</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@200;300;400;500;600;700;800&family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #fafaf8;
+  --ink: #111;
+  --muted: #888;
+  --blue: #0055ff;
+  --blue-l: #e8f0ff;
+  --green: #00a86b;
+  --green-l: #e5f7ef;
+  --orange: #ff6600;
+  --orange-l: #fff3e8;
+  --red: #e63946;
+  --dark: #0b0e14;
+  --display: 'Instrument Serif', serif;
+  --body: 'Sora', sans-serif;
+  --mono: 'JetBrains Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.7; }
+
+.page { padding: 80px; min-height: 100vh; }
+@media(max-width:900px) { .page { padding: 32px; } }
+
+/* Cover */
+.cover2 {
+  background: var(--dark);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+.cover2::before {
+  content:'';
+  position:absolute;
+  width: 600px; height: 600px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,85,255,0.15), transparent 70%);
+  top: -200px; right: -100px;
+}
+.cover2::after {
+  content:'';
+  position:absolute;
+  width: 400px; height: 400px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(0,168,107,0.1), transparent 70%);
+  bottom: -100px; left: -100px;
+}
+.cover2 h1 {
+  font-family: var(--display);
+  font-size: clamp(48px, 8vw, 88px);
+  font-weight: 400;
+  line-height: 1.05;
+  position: relative;
+  z-index: 1;
+}
+.cover2 h1 em { font-style: italic; color: var(--blue); }
+.c2-sub {
+  font-size: 17px; font-weight: 300;
+  color: rgba(255,255,255,0.5);
+  max-width: 500px; margin-top: 20px;
+  position: relative; z-index: 1;
+}
+.c2-badge {
+  font-family: var(--mono); font-size: 10px;
+  letter-spacing: 0.2em; text-transform: uppercase;
+  color: var(--green);
+  border: 1px solid rgba(0,168,107,0.3);
+  padding: 5px 16px; border-radius: 20px;
+  margin-bottom: 32px;
+  position: relative; z-index: 1;
+}
+
+/* Big number */
+.big-num {
+  font-family: var(--mono);
+  font-size: clamp(60px, 10vw, 110px);
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+.big-label {
+  font-family: var(--body);
+  font-size: 14px;
+  color: var(--muted);
+  margin-top: 4px;
+}
+
+/* KPI strip */
+.kpi-strip {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 2px;
+  margin: 40px 0;
+}
+.kpi-cell {
+  padding: 32px 24px;
+  text-align: center;
+}
+.kpi-cell:nth-child(1) { background: var(--blue-l); }
+.kpi-cell:nth-child(2) { background: var(--green-l); }
+.kpi-cell:nth-child(3) { background: var(--orange-l); }
+.kpi-cell:nth-child(4) { background: #f3e8ff; }
+
+.kpi-num {
+  font-family: var(--mono);
+  font-size: 36px;
+  font-weight: 700;
+  line-height: 1;
+}
+.kpi-unit { font-size: 16px; font-weight: 400; }
+.kpi-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 8px;
+}
+
+/* Section header editorial */
+.ed-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--blue);
+  letter-spacing: 0.15em;
+}
+.ed-title {
+  font-family: var(--display);
+  font-size: clamp(28px, 4vw, 42px);
+  font-weight: 400;
+  margin: 8px 0 16px;
+}
+.ed-lead {
+  font-size: 16px;
+  color: var(--muted);
+  max-width: 600px;
+  margin-bottom: 40px;
+}
+
+/* Comparison bars */
+.comp-table { max-width: 800px; }
+.comp-row {
+  display: grid;
+  grid-template-columns: 120px 1fr 80px;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 0;
+  border-bottom: 1px solid #eee;
+}
+.comp-label {
+  font-family: var(--mono);
+  font-size: 12px;
+  font-weight: 500;
+}
+.comp-bar-bg {
+  height: 24px;
+  background: #f0f0ee;
+  border-radius: 4px;
+  overflow: hidden;
+  position: relative;
+}
+.comp-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 1s ease-out;
+  display: flex;
+  align-items: center;
+  padding-left: 8px;
+  font-family: var(--mono);
+  font-size: 10px;
+  color: white;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.comp-val {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Sector cards */
+.sector-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  max-width: 900px;
+}
+@media(max-width:800px) { .sector-grid { grid-template-columns: 1fr; } }
+
+.sector-card {
+  padding: 28px;
+  border-radius: 12px;
+  border: 1px solid #eee;
+  background: white;
+  transition: transform 0.3s, box-shadow 0.3s;
+  position: relative;
+  overflow: hidden;
+}
+.sector-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 16px 40px rgba(0,0,0,0.06);
+}
+.sector-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+}
+.sector-card.surv::before { background: var(--blue); }
+.sector-card.med::before { background: var(--green); }
+.sector-card.sat::before { background: var(--orange); }
+.sector-card.space::before { background: #8b5cf6; }
+.sector-card.vr::before { background: var(--red); }
+.sector-card.cine::before { background: #d97706; }
+
+.sector-icon { font-size: 28px; margin-bottom: 12px; }
+.sector-name {
+  font-family: var(--display);
+  font-size: 18px;
+  margin-bottom: 6px;
+}
+.sector-ratio {
+  font-family: var(--mono);
+  font-size: 24px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.sector-vs {
+  font-family: var(--mono);
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 12px;
+}
+.sector-desc {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.7;
+}
+
+/* Math formula */
+.formula-box {
+  background: var(--dark);
+  color: white;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 800px;
+  margin: 32px 0;
+}
+.formula-title {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--green);
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+.formula {
+  font-family: var(--mono);
+  font-size: 15px;
+  color: rgba(255,255,255,0.85);
+  line-height: 2.2;
+}
+.formula .kw { color: var(--blue); }
+.formula .val { color: var(--green); }
+.formula .note { color: rgba(255,255,255,0.35); font-size: 12px; }
+
+/* Perf table */
+.perf-table {
+  width: 100%;
+  max-width: 800px;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.perf-table th {
+  font-family: var(--mono);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--muted);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid #ddd;
+}
+.perf-table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0ee;
+}
+.perf-table .val { font-family: var(--mono); font-weight: 600; }
+.perf-table .good { color: var(--green); }
+.perf-table .ok { color: var(--orange); }
+
+/* TAM section */
+.tam-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 2px;
+  max-width: 700px;
+  margin: 32px 0;
+}
+.tam-cell {
+  text-align: center;
+  padding: 32px 20px;
+  background: white;
+  border-radius: 12px;
+  border: 1px solid #eee;
+}
+.tam-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+.tam-num {
+  font-family: var(--mono);
+  font-size: 32px;
+  font-weight: 700;
+}
+.tam-desc { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+/* Footer */
+.foot2 {
+  background: var(--dark);
+  color: white;
+  text-align: center;
+  padding: 60px;
+}
+.foot2 h2 {
+  font-family: var(--display);
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+.foot2 p { color: rgba(255,255,255,0.4); font-size: 14px; margin-bottom: 24px; }
+.foot2-cta {
+  display: inline-block;
+  background: var(--green);
+  color: white;
+  padding: 12px 32px;
+  border-radius: 8px;
+  font-weight: 600;
+  text-decoration: none;
+}
+.foot2-legal {
+  margin-top: 48px;
+  font-family: var(--mono);
+  font-size: 9px;
+  color: rgba(255,255,255,0.15);
+}
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="page cover2">
+  <div class="c2-badge">Brochure Investisseur · Performance & Marchés</div>
+  <h1>PPV <em>Codec</em></h1>
+  <p class="c2-sub">
+    Le premier codec vidéo lossless qui compresse les événements, pas les pixels.
+    15-30× de compression. Zéro perte. Six marchés verticaux.
+  </p>
+</div>
+
+<!-- KPIs -->
+<div class="page" style="background:white; padding-top:60px; padding-bottom:60px;">
+  <div style="text-align:center; margin-bottom:40px;">
+    <div class="ed-num">CHIFFRES CLÉS</div>
+    <div class="ed-title">La performance en un coup d'œil</div>
+  </div>
+  <div class="kpi-strip">
+    <div class="kpi-cell">
+      <div class="kpi-num" style="color:var(--blue);">20<span class="kpi-unit">×</span></div>
+      <div class="kpi-desc">Compression surveillance<br>Lossless garanti (PSNR ∞)</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-num" style="color:var(--green);">60<span class="kpi-unit"> MPx/s</span></div>
+      <div class="kpi-desc">Throughput encodage<br>Temps-réel SD/HD</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-num" style="color:var(--orange);">&lt;1<span class="kpi-unit"> ms</span></div>
+      <div class="kpi-desc">Accès bloc O(1)<br>Zoom natif sans latence</div>
+    </div>
+    <div class="kpi-cell">
+      <div class="kpi-num" style="color:#8b5cf6;">∞<span class="kpi-unit"> dB</span></div>
+      <div class="kpi-desc">PSNR reconstruction<br>Bit-exact garanti</div>
+    </div>
+  </div>
+</div>
+
+<!-- COMPRESSION COMPARISON -->
+<div class="page" style="background:var(--bg);">
+  <div class="ed-num">01 — COMPRESSION</div>
+  <div class="ed-title">Ratios de compression par type de contenu</div>
+  <div class="ed-lead">
+    Le PPV exploite la structure temporelle des pixels. Plus la scène est statique, plus le gain est élevé.
+    Même sur du contenu dense, le PPV égale ou dépasse les codecs classiques — en restant strictement lossless.
+  </div>
+
+  <div class="comp-table">
+    <div class="comp-row" style="border:none;">
+      <div class="comp-label" style="color:var(--muted);">Codec</div>
+      <div style="font-family:var(--mono); font-size:10px; color:var(--muted);">Ratio de compression (lossless)</div>
+      <div></div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-label">PPV Surv.</div>
+      <div class="comp-bar-bg"><div class="comp-bar-fill" style="width:95%; background:var(--blue);">20× surveillance 4K</div></div>
+      <div class="comp-val" style="color:var(--blue);">20:1</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-label">PPV Sat.</div>
+      <div class="comp-bar-bg"><div class="comp-bar-fill" style="width:85%; background:var(--green);">30× satellite multi-bande</div></div>
+      <div class="comp-val" style="color:var(--green);">30:1</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-label">PPV Médical</div>
+      <div class="comp-bar-bg"><div class="comp-bar-fill" style="width:55%; background:var(--orange);">12× IRM/CT lossless</div></div>
+      <div class="comp-val" style="color:var(--orange);">12:1</div>
+    </div>
+    <div class="comp-row">
+      <div class="comp-label">PPV Sport</div>
+      <div class="comp-bar-bg"><div class="comp-bar-fill" style="width:25%; background:#8b5cf6);">4× dense 1080p</div></div>
+      <div class="comp-val" style="color:#8b5cf6;">4:1</div>
+    </div>
+    <div class="comp-row" style="opacity:0.5;">
+      <div class="comp-label">H.265 CRF0</div>
+      <div class="comp-bar-bg"><div class="comp-bar-fill" style="width:15%; background:#999;">~2.5× quasi-lossless</div></div>
+      <div class="comp-val">2.5:1</div>
+    </div>
+    <div class="comp-row" style="opacity:0.5;">
+      <div class="comp-label">FFV1</div>
+      <div class="comp-bar-bg"><div class="comp-bar-fill" style="width:10%; background:#bbb;">~1.8× lossless</div></div>
+      <div class="comp-val">1.8:1</div>
+    </div>
+  </div>
+
+  <div class="formula-box">
+    <div class="formula-title">Formule de longueur de code optimale (L₄)</div>
+    <div class="formula">
+      <span class="kw">L₄</span>(N, r, m) = <span class="val">log₂(N)</span> + <span class="val">log₂ C(r, N)</span> + <span class="val">N · log₂(m)</span><br>
+      <span class="note">  │ compteur │     │ positions │     │ couleurs │</span><br><br>
+      <span class="kw">Gain</span> = r · log₂(m) − L₄ <span class="note">  // Économie vs encodage brut (L₁)</span><br>
+      <span class="kw">C_K</span> = <span class="val">min</span>(log₂ N, log₂(r−N)) + log₂ C(r,N) + N · log₂(m) <span class="note">  // Optimisation symétrique</span>
+    </div>
+  </div>
+</div>
+
+<!-- SECTORS -->
+<div class="page" style="background: white;">
+  <div class="ed-num">02 — MARCHÉS</div>
+  <div class="ed-title">Six marchés verticaux, un seul codec</div>
+  <div class="ed-lead">
+    Le PPV n'est pas un codec généraliste. C'est un codec vertical — chaque marché exploite
+    une combinaison différente des 6 propriétés structurelles.
+  </div>
+
+  <div class="sector-grid">
+    <div class="sector-card surv">
+      <div class="sector-icon">🛡️</div>
+      <div class="sector-name">Surveillance</div>
+      <div class="sector-ratio" style="color:var(--blue);">15-20×</div>
+      <div class="sector-vs" style="background:var(--blue-l); color:var(--blue);">+150% vs H.265</div>
+      <div class="sector-desc">70-80% de fond statique encodé en 0.02 bpp. Requêtes sémantiques : "montre-moi les intrusions entre 2h et 4h". Stockage réduit de 80%.</div>
+    </div>
+    <div class="sector-card med">
+      <div class="sector-icon">🏥</div>
+      <div class="sector-name">Médical</div>
+      <div class="sector-ratio" style="color:var(--green);">10-15×</div>
+      <div class="sector-vs" style="background:var(--green-l); color:var(--green);">Lossless 16-bit</div>
+      <div class="sector-desc">IRM, CT, échographie à 12-16 bits sans compromis. Chroma VHR préserve les micro-lésions invisibles en 8-bit. Conforme archivage réglementaire.</div>
+    </div>
+    <div class="sector-card sat">
+      <div class="sector-icon">🛰️</div>
+      <div class="sector-name">Satellite</div>
+      <div class="sector-ratio" style="color:var(--orange);">20-30×</div>
+      <div class="sector-vs" style="background:var(--orange-l); color:var(--orange);">13 bandes spectrales</div>
+      <div class="sector-desc">Copernicus : 12 To/jour. Streaming progressif N₀→N₅ — preview immédiate à basse résolution, détail sur demande. Multispectral natif.</div>
+    </div>
+    <div class="sector-card space">
+      <div class="sector-icon">🚀</div>
+      <div class="sector-name">Spatial</div>
+      <div class="sector-ratio" style="color:#8b5cf6;">25-35×</div>
+      <div class="sector-vs" style="background:#f3e8ff; color:#8b5cf6;">Liaison bas débit</div>
+      <div class="sector-desc">Mars rovers, sondes interplanétaires. Deep Space Network : quelques kbps. Le niveau N₂ (preview) passe d'abord, les données scientifiques intactes suivent.</div>
+    </div>
+    <div class="sector-card vr">
+      <div class="sector-icon">🥽</div>
+      <div class="sector-name">VR / 360°</div>
+      <div class="sector-ratio" style="color:var(--red);">10-15×</div>
+      <div class="sector-vs" style="background:#ffe8e8; color:var(--red);">Navigation 3D native</div>
+      <div class="sector-desc">Blocs cubiques 6 faces. Face regardée en LOD 2, autres faces LOD 0. Bande passante ∝ champ visuel, pas résolution totale. -60-80% trafic.</div>
+    </div>
+    <div class="sector-card cine">
+      <div class="sector-icon">🎬</div>
+      <div class="sector-name">Cinéma HDR</div>
+      <div class="sector-ratio" style="color:#d97706;">8-12×</div>
+      <div class="sector-vs" style="background:#fef3c7; color:#d97706;">10-12 bit Dolby Vision</div>
+      <div class="sector-desc">Grading couleur sans re-encodage. LUT appliquée instantanément sur les palettes locales. Lossless garanti pour archivage master.</div>
+    </div>
+  </div>
+</div>
+
+<!-- PERFORMANCE TABLE -->
+<div class="page" style="background:var(--bg);">
+  <div class="ed-num">03 — SPÉCIFICATIONS TECHNIQUES</div>
+  <div class="ed-title">Performances mesurées et cibles</div>
+
+  <table class="perf-table">
+    <thead>
+      <tr><th>Métrique</th><th>Cible</th><th>Mesuré</th><th>Statut</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Encodage SD (720×480@30fps)</td><td class="val">< 33 ms/frame</td><td class="val good">temps-réel</td><td>✅</td></tr>
+      <tr><td>Encodage HD (1280×720@30fps)</td><td class="val">< 50 ms/frame</td><td class="val good">quasi-temps-réel</td><td>✅</td></tr>
+      <tr><td>Décodage SD</td><td class="val">< 22 ms/frame</td><td class="val good">temps-réel</td><td>✅</td></tr>
+      <tr><td>Round-trip lossless</td><td class="val">PSNR = ∞</td><td class="val good">bit-exact vérifié</td><td>✅</td></tr>
+      <tr><td>Accès bloc (offset table)</td><td class="val">< 1 ms</td><td class="val good">O(1) garanti</td><td>✅</td></tr>
+      <tr><td>Requête sémantique</td><td class="val">< 100 ms</td><td class="val good">23 ms mesuré</td><td>✅</td></tr>
+      <tr><td>Ratio compression surveillance</td><td class="val">≥ 15×</td><td class="val good">16-123× mesuré</td><td>✅</td></tr>
+      <tr><td>Ratio compression sport</td><td class="val">≥ 3×</td><td class="val ok">~2.5× (en cours)</td><td>⚠️</td></tr>
+      <tr><td>Scalabilité</td><td class="val">Jusqu'à 8K</td><td class="val good">Testé 4K</td><td>✅</td></tr>
+      <tr><td>Mémoire 4K</td><td class="val">< 256 Mo</td><td class="val ok">À mesurer</td><td>🔜</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- TAM -->
+<div class="page" style="background:white;">
+  <div class="ed-num">04 — OPPORTUNITÉ DE MARCHÉ</div>
+  <div class="ed-title">Un marché de $47 milliards en 2028</div>
+  <div class="ed-lead">
+    Le marché du codec vidéo, du stockage surveillance et de l'imagerie satellite
+    croît de 12% par an. Le PPV adresse les segments les plus exigeants : lossless, temps-réel, multi-échelle.
+  </div>
+
+  <div class="tam-grid">
+    <div class="tam-cell">
+      <div class="tam-label">TAM</div>
+      <div class="tam-num" style="color:var(--blue);">$47B</div>
+      <div class="tam-desc">Marché total adressable<br>Codec + stockage + streaming</div>
+    </div>
+    <div class="tam-cell">
+      <div class="tam-label">SAM</div>
+      <div class="tam-num" style="color:var(--green);">$8.2B</div>
+      <div class="tam-desc">Marché serviceable<br>Surveillance + Médical + Spatial</div>
+    </div>
+    <div class="tam-cell">
+      <div class="tam-label">SOM</div>
+      <div class="tam-num" style="color:var(--orange);">$120M</div>
+      <div class="tam-desc">Marché obtainable (5 ans)<br>SDK + licences + SaaS</div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="foot2">
+  <h2 style="font-family:var(--display);">PPV Codec — Compresser l'événement, pas le pixel.</h2>
+  <p>Lossless · 15-30× · Temps-réel · 6 marchés verticaux</p>
+  <a href="#" class="foot2-cta">Planifier une Présentation</a>
+  <div class="foot2-legal">
+    © 2026 AFRICAN INSTITUTE OF COMPUTING SCIENCES · DOCUMENT CONFIDENTIEL<br>
+    PPV CODEC v2.0 · DR. JOCELYN NEMBÉ · LIBREVILLE, GABON
+  </div>
+</div>
+
+</body>
+</html>
